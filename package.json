@@ -1,7 +1,9 @@
 {
   "name": "402md",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "build": "turbo build",
     "lint": "turbo lint",
@@ -12,11 +14,11 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs}": [
-      "prettier --write",
-      "eslint --fix"
+      "prettier --check",
+      "eslint"
     ],
     "*.{json,yml,yaml,md}": [
-      "prettier --write"
+      "prettier --check"
     ]
   },
   "devDependencies": {
