@@ -1,3 +1,6 @@
+import { initTracing } from './shared/tracing'
+if (process.env.OTEL_ENABLED === 'true') initTracing()
+
 import { NativeConnection, Worker } from '@temporalio/worker'
 import * as activities from './activities'
 
