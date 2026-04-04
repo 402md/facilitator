@@ -1,7 +1,9 @@
 import { getTemporalClient } from '@/shared/temporal'
 import { findByMerchantId } from '@/sellers/sellers.repository'
-import { SellerNotFoundError, InvalidPaymentError } from '@/shared/errors'
+import { SellerNotFoundError, InvalidPaymentError, ReplayError } from '@/shared/errors'
 import { calculateFees } from '@/shared/gas-schedule'
+import { checkCircuitBreakers, recordVolume } from '@/shared/circuit-breaker'
+import { checkReplay, markProcessed } from '@/shared/replay'
 import type { VerifyRequest, VerifyResponse, SettleRequest, SettleResponse, FeeQuote } from './settlements.types'
 
 const PLATFORM_FEE_BPS = parseInt(process.env.PLATFORM_FEE_BPS ?? '0', 10)
@@ -15,6 +17,11 @@ export async function verifyPayment(req: VerifyRequest): Promise<VerifyResponse>
 }
 
 export async function dispatchSettlement(req: SettleRequest): Promise<SettleResponse> {
+  await checkCircuitBreakers(req.paymentRequirements.maxAmountRequired)
+  const replayKey = req.paymentPayload.signature
+  if (await checkReplay(replayKey)) throw new ReplayError()
+  await markProcessed(replayKey)
+
   const merchantId = req.paymentRequirements.extra?.merchantId
   if (!merchantId) throw new InvalidPaymentError('Missing merchantId in extra')
 
@@ -80,6 +87,8 @@ export async function dispatchSettlement(req: SettleRequest): Promise<SettleResp
     args: [params],
     workflowExecutionTimeout: isSameChain ? '5m' : '30m',
   })
+
+  await recordVolume(req.paymentRequirements.maxAmountRequired)
 
   return {
     accepted: true,
