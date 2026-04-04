@@ -11,10 +11,34 @@ const FACILITATOR_ADDRESSES: Record<string, string> = {
   'stellar:pubnet': process.env.FACILITATOR_STELLAR ?? 'FacilitatorStellarAddr',
 }
 
+const FACILITATOR_URL = process.env.FACILITATOR_URL ?? 'https://api.402md.com'
+
 const USDC_ASSETS: Record<string, string> = {
   'eip155:8453': '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
   'solana:mainnet': 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
   'stellar:pubnet': 'USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN',
+}
+
+function buildCodeSnippet(merchantId: string, addresses: Record<string, string>): string {
+  const accepts = Object.entries(addresses)
+    .map(
+      ([network, payTo]) =>
+        `      { scheme: "exact", network: "${network}", payTo: "${payTo}", price: "$0.001", extra: { merchantId: "${merchantId}" } }`,
+    )
+    .join(',\n')
+
+  return `// Standard @x402/express — zero 402md dependencies
+const server = new x402ResourceServer(
+  new HTTPFacilitatorClient({ url: "${FACILITATOR_URL}" })
+)
+
+app.use(paymentMiddleware({
+  "GET /your-endpoint": {
+    accepts: [
+${accepts}
+    ],
+  },
+}, server))`
 }
 
 export async function registerSeller(req: RegisterRequest): Promise<RegisterResponse> {
@@ -29,6 +53,7 @@ export async function registerSeller(req: RegisterRequest): Promise<RegisterResp
       wallet: existing.walletAddress,
       network: existing.network,
       facilitatorAddresses: FACILITATOR_ADDRESSES,
+      codeSnippet: buildCodeSnippet(existing.merchantId, FACILITATOR_ADDRESSES),
     }
   }
 
@@ -44,6 +69,7 @@ export async function registerSeller(req: RegisterRequest): Promise<RegisterResp
     wallet: seller.walletAddress,
     network: seller.network,
     facilitatorAddresses: FACILITATOR_ADDRESSES,
+    codeSnippet: buildCodeSnippet(seller.merchantId, FACILITATOR_ADDRESSES),
   }
 }
 

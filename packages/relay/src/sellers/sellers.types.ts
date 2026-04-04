@@ -8,6 +8,7 @@ export interface RegisterResponse {
   wallet: string
   network: string
   facilitatorAddresses: Record<string, string>
+  codeSnippet: string
 }
 
 export interface DiscoveryNetworkEntry {
