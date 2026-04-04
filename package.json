@@ -1,0 +1,16 @@
+{
+  "name": "402md",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test"
+  },
+  "devDependencies": {
+    "turbo": "^2",
+    "prettier": "^3",
+    "eslint": "^9",
+    "typescript": "^5"
+  }
+}

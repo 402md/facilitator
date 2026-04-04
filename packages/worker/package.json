@@ -1,0 +1,29 @@
+{
+  "name": "@402md/worker",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/worker.ts",
+    "build": "tsc",
+    "test": "vitest run",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@temporalio/worker": "^1",
+    "@temporalio/workflow": "^1",
+    "@temporalio/activity": "^1",
+    "@temporalio/client": "^1",
+    "viem": "^2",
+    "@solana/web3.js": "^1",
+    "@stellar/stellar-sdk": "^12",
+    "drizzle-orm": "^0.38",
+    "postgres": "^3",
+    "ioredis": "^5"
+  },
+  "devDependencies": {
+    "@temporalio/testing": "^1",
+    "vitest": "^3",
+    "tsx": "^4",
+    "typescript": "^5"
+  }
+}

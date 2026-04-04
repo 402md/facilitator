@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "skills": {
+    "drizzle-orm": {
+      "source": "bobmatnyc/claude-mpm-skills",
+      "sourceType": "github",
+      "computedHash": "9aea7469d696c9b5fa54a84b7a92ea692872fb624fb028f866ab0f3deac84867"
+    },
+    "elysiajs": {
+      "source": "elysiajs/skills",
+      "sourceType": "github",
+      "computedHash": "55268e69a2c766ed67e56a0db57544f60cc52dba0c7f024a974baf965e525e1b"
+    },
+    "naming": {
+      "source": "jwynia/agent-skills",
+      "sourceType": "github",
+      "computedHash": "327a98e8784b6512237c71707b401b659b0121fd37b27aa1c525b5a8f626f6ea"
+    },
+    "plan-harder": {
+      "source": "am-will/codex-skills",
+      "sourceType": "github",
+      "computedHash": "a5a22b3a135f349474a4a482992c264e5c6f8bdaa614517522420d334a810a12"
+    },
+    "product-marketing-context": {
+      "source": "coreyhaines31/marketingskills",
+      "sourceType": "github",
+      "computedHash": "21dd05f970ba54406d7405f92240853f809d0fed09ef6ca2a9204abcdd21548a"
+    },
+    "technical-specification": {
+      "source": "aj-geddes/useful-ai-prompts",
+      "sourceType": "github",
+      "computedHash": "7cb78c4fd40ed0002880eb7c9f1ae33172efca59c34c9a1604186ff87e2e5777"
+    }
+  }
+}

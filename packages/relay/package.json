@@ -1,0 +1,29 @@
+{
+  "name": "@402md/relay",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "test": "bun test",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:migrate": "drizzle-kit migrate",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "elysia": "^1",
+    "@elysiajs/cors": "^1",
+    "@elysiajs/swagger": "^1",
+    "drizzle-orm": "^0.38",
+    "postgres": "^3",
+    "ioredis": "^5",
+    "@temporalio/client": "^1",
+    "nanoid": "^5"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.30",
+    "@types/bun": "latest",
+    "typescript": "^5"
+  }
+}
