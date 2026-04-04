@@ -12,14 +12,16 @@
     "lint": "eslint src/"
   },
   "dependencies": {
-    "elysia": "^1",
     "@elysiajs/cors": "^1",
     "@elysiajs/swagger": "^1",
-    "drizzle-orm": "^0.38",
-    "postgres": "^3",
-    "ioredis": "^5",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.214.0",
+    "@opentelemetry/sdk-node": "^0.214.0",
     "@temporalio/client": "^1",
-    "nanoid": "^5"
+    "drizzle-orm": "^0.38",
+    "elysia": "^1",
+    "ioredis": "^5",
+    "nanoid": "^5",
+    "postgres": "^3"
   },
   "devDependencies": {
     "drizzle-kit": "^0.30",

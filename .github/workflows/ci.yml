@@ -34,8 +34,9 @@ jobs:
       - name: Lint
         run: bun run lint
 
-      - name: Build
+      - name: Build relay
         run: bun run build
+        working-directory: packages/relay
 
       - name: Test relay
         run: bun test

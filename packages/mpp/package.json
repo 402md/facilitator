@@ -15,5 +15,8 @@
     "vitest": "^3",
     "typescript": "^5",
     "mppx": "latest"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
   }
 }
