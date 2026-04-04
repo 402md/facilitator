@@ -8,4 +8,5 @@ coverage
 
 # Markdown files (except skills)
 *.md
+!README.md
 !.claude/skills/**/*.md
