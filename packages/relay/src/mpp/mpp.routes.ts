@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia'
-import { getMppConfig, verifyCharge, settleCharge } from './mpp.service'
+import { getMppConfig, verifyCharge, settleCharge, handleSessionAction } from './mpp.service'
 
 export const mppRoutes = new Elysia({ prefix: '/merchants' })
   .get('/:merchantId/mpp/config', async ({ params }) => {
@@ -8,6 +8,9 @@ export const mppRoutes = new Elysia({ prefix: '/merchants' })
     params: t.Object({ merchantId: t.String() }),
   })
   .post('/:merchantId/mpp/verify', async ({ params, body }) => {
+    if (body.intent === 'session') {
+      return handleSessionAction(params.merchantId, body)
+    }
     return verifyCharge(params.merchantId, body)
   }, {
     params: t.Object({ merchantId: t.String() }),
