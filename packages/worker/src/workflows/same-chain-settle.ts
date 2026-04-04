@@ -1,4 +1,4 @@
-import { proxyActivities, defineQuery, setHandler } from '@temporalio/workflow'
+import { proxyActivities, defineQuery, setHandler, upsertSearchAttributes } from '@temporalio/workflow'
 import type { SameChainSettleParams, SameChainSettleResult } from '../shared/types'
 
 const { pullFromBuyer, transferToSeller } = proxyActivities<{
@@ -41,6 +41,13 @@ export async function sameChainSettle(
   let status: WorkflowStatus = { step: 'pulling' }
   setHandler(statusQuery, () => status)
 
+  upsertSearchAttributes({
+    sellerNetwork: [params.network],
+    buyerNetwork: [params.network],
+    settlementStatus: ['pulling'],
+    protocol: ['x402'],
+  })
+
   const pullTxHash = await pullFromBuyer({
     network: params.network,
     buyer: params.buyerAddress,
@@ -48,6 +55,7 @@ export async function sameChainSettle(
     authorization: params.authorization,
   })
   status = { ...status, step: 'transferring', pullTxHash }
+  upsertSearchAttributes({ settlementStatus: ['transferring'] })
 
   const sellerAmount = (
     BigInt(params.amount) - BigInt(params.gasAllowance) - BigInt(params.platformFee)
@@ -59,6 +67,7 @@ export async function sameChainSettle(
     amount: sellerAmount,
   })
   status = { ...status, step: 'recording', transferTxHash }
+  upsertSearchAttributes({ settlementStatus: ['recording'] })
 
   await recordPayment({
     type: 'SAME_CHAIN',
@@ -80,6 +89,7 @@ export async function sameChainSettle(
   })
 
   status.step = 'settled'
+  upsertSearchAttributes({ settlementStatus: ['settled'] })
 
   return {
     success: true,

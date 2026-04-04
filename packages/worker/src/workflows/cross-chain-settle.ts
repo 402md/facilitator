@@ -1,4 +1,4 @@
-import { proxyActivities, defineQuery, setHandler } from '@temporalio/workflow'
+import { proxyActivities, defineQuery, setHandler, upsertSearchAttributes } from '@temporalio/workflow'
 import type { CrossChainSettleParams, CrossChainSettleResult, CctpBurnResult, AttestationResult } from '../shared/types'
 
 const { pullFromBuyer, cctpBurn, cctpMint } = proxyActivities<{
@@ -56,6 +56,13 @@ export async function crossChainSettle(
   let status: WorkflowStatus = { step: 'pulling' }
   setHandler(statusQuery, () => status)
 
+  upsertSearchAttributes({
+    sellerNetwork: [params.sellerNetwork],
+    buyerNetwork: [params.buyerNetwork],
+    settlementStatus: ['pulling'],
+    protocol: ['x402'],
+  })
+
   const pullTxHash = await pullFromBuyer({
     network: params.buyerNetwork,
     buyer: params.buyerAddress,
@@ -63,6 +70,7 @@ export async function crossChainSettle(
     authorization: params.authorization,
   })
   status = { ...status, step: 'burning', pullTxHash }
+  upsertSearchAttributes({ settlementStatus: ['burning'] })
 
   const sellerAmount = (
     BigInt(params.amount) - BigInt(params.gasAllowance) - BigInt(params.platformFee)
@@ -76,11 +84,13 @@ export async function crossChainSettle(
     destinationDomain: params.destinationDomain,
   })
   status = { ...status, step: 'attesting', burnTxHash: burnResult.txHash }
+  upsertSearchAttributes({ settlementStatus: ['attesting'] })
 
   const attestation = await waitAttestation({
     messageHash: burnResult.messageHash,
   })
   status.step = 'minting'
+  upsertSearchAttributes({ settlementStatus: ['minting'] })
 
   const paymentData = {
     type: 'BRIDGE_SETTLEMENT' as const,
@@ -114,6 +124,7 @@ export async function crossChainSettle(
     })
 
     status.step = 'settled'
+    upsertSearchAttributes({ settlementStatus: ['settled'] })
 
     return {
       success: true,
@@ -132,6 +143,7 @@ export async function crossChainSettle(
       burnTxHash: burnResult.txHash,
       error: `Mint failed: ${(err as Error).message}. Attestation valid for manual retry.`,
     }
+    upsertSearchAttributes({ settlementStatus: ['failed'] })
     await recordPayment({
       ...paymentData,
       mintTx: null,
