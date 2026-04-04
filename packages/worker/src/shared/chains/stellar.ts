@@ -4,7 +4,7 @@ import {
   TransactionBuilder,
   Operation,
   Asset,
-  Server,
+  Horizon,
 } from '@stellar/stellar-sdk'
 import type { ChainAdapter } from './types'
 import type {
@@ -18,7 +18,7 @@ import { getChainConfig } from './config'
 
 export function createStellarAdapter(): ChainAdapter {
   const config = getChainConfig('stellar:pubnet')
-  const server = new Server(config.rpcUrl)
+  const server = new Horizon.Server(config.rpcUrl)
   const facilitatorKeypair = Keypair.fromSecret(process.env.FACILITATOR_PRIVATE_KEY_STELLAR!)
   const usdc = new Asset('USDC', config.usdcAddress)
 

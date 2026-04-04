@@ -9,16 +9,20 @@
     "lint": "eslint src/"
   },
   "dependencies": {
-    "@temporalio/worker": "^1",
-    "@temporalio/workflow": "^1",
-    "@temporalio/activity": "^1",
-    "@temporalio/client": "^1",
-    "viem": "^2",
+    "@opentelemetry/auto-instrumentations-node": "^0.72.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.214.0",
+    "@opentelemetry/sdk-node": "^0.214.0",
+    "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1",
     "@stellar/stellar-sdk": "^12",
+    "@temporalio/activity": "^1",
+    "@temporalio/client": "^1",
+    "@temporalio/worker": "^1",
+    "@temporalio/workflow": "^1",
     "drizzle-orm": "^0.38",
+    "ioredis": "^5",
     "postgres": "^3",
-    "ioredis": "^5"
+    "viem": "^2"
   },
   "devDependencies": {
     "@temporalio/testing": "^1",
