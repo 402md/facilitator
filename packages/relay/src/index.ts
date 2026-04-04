@@ -7,6 +7,7 @@ import { swagger } from '@elysiajs/swagger'
 import { sql } from 'drizzle-orm'
 import { sellersRoutes } from '@/sellers/sellers.routes'
 import { settlementsRoutes } from '@/settlements/settlements.routes'
+import { mppRoutes } from '@/mpp/mpp.routes'
 import { db } from '@/shared/db'
 import { redis } from '@/shared/redis'
 import { getTemporalClient } from '@/shared/temporal'
@@ -33,6 +34,7 @@ export const app = new Elysia()
   })
   .use(sellersRoutes)
   .use(settlementsRoutes)
+  .use(mppRoutes)
   .get('/health', async () => {
     const checks = {
       db: 'unknown' as string,
