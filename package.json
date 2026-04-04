@@ -5,12 +5,26 @@
   "scripts": {
     "build": "turbo build",
     "lint": "turbo lint",
-    "test": "turbo test"
+    "test": "turbo test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,mjs}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "*.{json,yml,yaml,md}": [
+      "prettier --write"
+    ]
   },
   "devDependencies": {
     "turbo": "^2",
     "prettier": "^3",
     "eslint": "^9",
-    "typescript": "^5"
+    "typescript": "^5",
+    "husky": "^9",
+    "lint-staged": "^15"
   }
 }
