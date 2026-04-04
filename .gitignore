@@ -5,3 +5,7 @@ dist
 *.tsbuildinfo
 coverage
 .DS_Store
+
+# Markdown files (except skills)
+*.md
+!.claude/skills/**/*.md
