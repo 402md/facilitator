@@ -24,9 +24,8 @@ export function calculateFees(
   platformFeeBps: number = 0,
 ): { gasAllowance: string; platformFee: string; netAmount: string } {
   const gasAllowance = getGasAllowance(from, to)
-  const platformFee = platformFeeBps > 0
-    ? (BigInt(grossAmount) * BigInt(platformFeeBps) / 10000n).toString()
-    : '0'
+  const platformFee =
+    platformFeeBps > 0 ? ((BigInt(grossAmount) * BigInt(platformFeeBps)) / 10000n).toString() : '0'
   const netAmount = (BigInt(grossAmount) - BigInt(gasAllowance) - BigInt(platformFee)).toString()
   return { gasAllowance, platformFee, netAmount }
 }

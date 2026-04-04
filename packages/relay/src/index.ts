@@ -15,11 +15,13 @@ import { checkRateLimit } from '@/shared/rate-limit'
 
 export const app = new Elysia()
   .use(cors())
-  .use(swagger({
-    documentation: {
-      info: { title: '402md Facilitator API', version: '0.1.0' },
-    },
-  }))
+  .use(
+    swagger({
+      documentation: {
+        info: { title: '402md Facilitator API', version: '0.1.0' },
+      },
+    }),
+  )
   .onBeforeHandle(async ({ request, set }) => {
     const url = new URL(request.url)
     const ip = request.headers.get('x-forwarded-for') ?? 'unknown'
@@ -27,8 +29,8 @@ export const app = new Elysia()
       await checkRateLimit(url.pathname, ip)
     } catch (err) {
       if (err instanceof Error && 'statusCode' in err) {
-        set.status = (err as any).statusCode
-        return { error: (err as any).code, message: err.message }
+        set.status = (err as { statusCode: number }).statusCode
+        return { error: (err as { code: string }).code, message: err.message }
       }
     }
   })
@@ -45,17 +47,23 @@ export const app = new Elysia()
     try {
       await db.execute(sql`SELECT 1`)
       checks.db = 'ok'
-    } catch { checks.db = 'error' }
+    } catch {
+      checks.db = 'error'
+    }
 
     try {
       await redis.ping()
       checks.redis = 'ok'
-    } catch { checks.redis = 'error' }
+    } catch {
+      checks.redis = 'error'
+    }
 
     try {
       await getTemporalClient()
       checks.temporal = 'ok'
-    } catch { checks.temporal = 'error' }
+    } catch {
+      checks.temporal = 'error'
+    }
 
     const allOk = Object.values(checks).every((v) => v === 'ok')
     return {

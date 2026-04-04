@@ -23,6 +23,6 @@ export async function rebalance(params: RebalanceParams): Promise<RebalanceResul
   setHandler(statusQuery, () => ({ step: 'not_implemented' }))
   throw new Error(
     `Rebalance workflow not implemented (Model B). ` +
-    `Requested: ${params.fromNetwork} -> ${params.toNetwork}, amount: ${params.amount}`
+      `Requested: ${params.fromNetwork} -> ${params.toNetwork}, amount: ${params.amount}`,
   )
 }

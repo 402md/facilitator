@@ -1,13 +1,5 @@
-import {
-  Connection,
-  Keypair,
-  PublicKey,
-  Transaction,
-} from '@solana/web3.js'
-import {
-  getAssociatedTokenAddress,
-  createTransferCheckedInstruction,
-} from '@solana/spl-token'
+import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js'
+import { getAssociatedTokenAddress, createTransferCheckedInstruction } from '@solana/spl-token'
 import type { ChainAdapter } from './types'
 import type {
   PullFromBuyerInput,
@@ -22,7 +14,7 @@ export function createSolanaAdapter(): ChainAdapter {
   const config = getChainConfig('solana:mainnet')
   const connection = new Connection(config.rpcUrl)
   const facilitatorKeypair = Keypair.fromSecretKey(
-    Buffer.from(process.env.FACILITATOR_PRIVATE_KEY_SOLANA!, 'base64')
+    Buffer.from(process.env.FACILITATOR_PRIVATE_KEY_SOLANA!, 'base64'),
   )
   const usdcMint = new PublicKey(config.usdcAddress)
 
@@ -42,7 +34,7 @@ export function createSolanaAdapter(): ChainAdapter {
           buyerPubkey,
           BigInt(input.amount),
           6,
-        )
+        ),
       )
 
       tx.feePayer = facilitatorPubkey
@@ -69,7 +61,7 @@ export function createSolanaAdapter(): ChainAdapter {
           facilitatorPubkey,
           BigInt(input.amount),
           6,
-        )
+        ),
       )
 
       tx.feePayer = facilitatorPubkey
@@ -81,11 +73,11 @@ export function createSolanaAdapter(): ChainAdapter {
       return sig
     },
 
-    async cctpBurn(input: CctpBurnInput): Promise<CctpBurnResult> {
+    async cctpBurn(_input: CctpBurnInput): Promise<CctpBurnResult> {
       throw new Error('Solana CCTP burn: implement with Circle CCTP Solana program')
     },
 
-    async cctpMint(input: CctpMintInput): Promise<string> {
+    async cctpMint(_input: CctpMintInput): Promise<string> {
       throw new Error('Solana CCTP mint: implement with Circle CCTP Solana program')
     },
   }

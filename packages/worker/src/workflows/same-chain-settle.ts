@@ -1,9 +1,14 @@
-import { proxyActivities, defineQuery, setHandler, upsertSearchAttributes } from '@temporalio/workflow'
+import {
+  proxyActivities,
+  defineQuery,
+  setHandler,
+  upsertSearchAttributes,
+} from '@temporalio/workflow'
 import type { SameChainSettleParams, SameChainSettleResult } from '../shared/types'
 
 const { pullFromBuyer, transferToSeller } = proxyActivities<{
-  pullFromBuyer: (input: any) => Promise<string>
-  transferToSeller: (input: any) => Promise<string>
+  pullFromBuyer: (input: Record<string, unknown>) => Promise<string>
+  transferToSeller: (input: Record<string, unknown>) => Promise<string>
 }>({
   startToCloseTimeout: '2m',
   retry: {
@@ -15,7 +20,7 @@ const { pullFromBuyer, transferToSeller } = proxyActivities<{
 })
 
 const { recordPayment } = proxyActivities<{
-  recordPayment: (input: any) => Promise<void>
+  recordPayment: (input: Record<string, unknown>) => Promise<void>
 }>({
   startToCloseTimeout: '30s',
   retry: {
@@ -36,7 +41,7 @@ interface WorkflowStatus {
 export const statusQuery = defineQuery<WorkflowStatus>('status')
 
 export async function sameChainSettle(
-  params: SameChainSettleParams
+  params: SameChainSettleParams,
 ): Promise<SameChainSettleResult> {
   let status: WorkflowStatus = { step: 'pulling' }
   setHandler(statusQuery, () => status)
@@ -58,7 +63,9 @@ export async function sameChainSettle(
   upsertSearchAttributes({ settlementStatus: ['transferring'] })
 
   const sellerAmount = (
-    BigInt(params.amount) - BigInt(params.gasAllowance) - BigInt(params.platformFee)
+    BigInt(params.amount) -
+    BigInt(params.gasAllowance) -
+    BigInt(params.platformFee)
   ).toString()
 
   const transferTxHash = await transferToSeller({

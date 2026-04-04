@@ -1,10 +1,15 @@
 import { proxyActivities, defineQuery, setHandler } from '@temporalio/workflow'
-import type { BatchSessionSettleParams, BatchSessionSettleResult, CctpBurnResult, AttestationResult } from '../shared/types'
+import type {
+  BatchSessionSettleParams,
+  BatchSessionSettleResult,
+  CctpBurnResult,
+  AttestationResult,
+} from '../shared/types'
 
 const { pullFromBuyer, cctpBurn, cctpMint } = proxyActivities<{
-  pullFromBuyer: (input: any) => Promise<string>
-  cctpBurn: (input: any) => Promise<CctpBurnResult>
-  cctpMint: (input: any) => Promise<string>
+  pullFromBuyer: (input: Record<string, unknown>) => Promise<string>
+  cctpBurn: (input: Record<string, unknown>) => Promise<CctpBurnResult>
+  cctpMint: (input: Record<string, unknown>) => Promise<string>
 }>({
   startToCloseTimeout: '2m',
   retry: {
@@ -16,7 +21,7 @@ const { pullFromBuyer, cctpBurn, cctpMint } = proxyActivities<{
 })
 
 const { waitAttestation } = proxyActivities<{
-  waitAttestation: (input: any) => Promise<AttestationResult>
+  waitAttestation: (input: Record<string, unknown>) => Promise<AttestationResult>
 }>({
   startToCloseTimeout: '30m',
   retry: {
@@ -29,7 +34,7 @@ const { waitAttestation } = proxyActivities<{
 })
 
 const { recordPayment } = proxyActivities<{
-  recordPayment: (input: any) => Promise<void>
+  recordPayment: (input: Record<string, unknown>) => Promise<void>
 }>({
   startToCloseTimeout: '30s',
   retry: {
@@ -51,7 +56,7 @@ interface WorkflowStatus {
 export const statusQuery = defineQuery<WorkflowStatus>('status')
 
 export async function batchSessionSettle(
-  params: BatchSessionSettleParams
+  params: BatchSessionSettleParams,
 ): Promise<BatchSessionSettleResult> {
   let status: WorkflowStatus = { step: 'pulling' }
   setHandler(statusQuery, () => status)
@@ -72,7 +77,9 @@ export async function batchSessionSettle(
   const gasAllowance = '500'
   const platformFee = '0'
   const sellerAmount = (
-    BigInt(params.totalAmount) - BigInt(gasAllowance) - BigInt(platformFee)
+    BigInt(params.totalAmount) -
+    BigInt(gasAllowance) -
+    BigInt(platformFee)
   ).toString()
 
   const burnResult = await cctpBurn({

@@ -22,11 +22,13 @@
     ]
   },
   "devDependencies": {
-    "turbo": "^2",
-    "prettier": "^3",
+    "@eslint/js": "^10.0.1",
     "eslint": "^9",
-    "typescript": "^5",
     "husky": "^9",
-    "lint-staged": "^15"
+    "lint-staged": "^15",
+    "prettier": "^3",
+    "turbo": "^2",
+    "typescript": "^5",
+    "typescript-eslint": "^8.58.0"
   }
 }

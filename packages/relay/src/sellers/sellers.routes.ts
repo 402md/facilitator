@@ -2,22 +2,30 @@ import { Elysia, t } from 'elysia'
 import { registerSeller, getDiscovery } from './sellers.service'
 
 export const sellersRoutes = new Elysia()
-  .post('/register', async ({ body, set }) => {
-    set.status = 201
-    return registerSeller(body)
-  }, {
-    body: t.Object({
-      wallet: t.String({ minLength: 10 }),
-      network: t.String({ minLength: 3 }),
-    }),
-  })
-  .get('/discover', async ({ query }) => {
-    return getDiscovery(query.merchantId)
-  }, {
-    query: t.Object({
-      merchantId: t.String(),
-    }),
-  })
+  .post(
+    '/register',
+    async ({ body, set }) => {
+      set.status = 201
+      return registerSeller(body)
+    },
+    {
+      body: t.Object({
+        wallet: t.String({ minLength: 10 }),
+        network: t.String({ minLength: 3 }),
+      }),
+    },
+  )
+  .get(
+    '/discover',
+    async ({ query }) => {
+      return getDiscovery(query.merchantId)
+    },
+    {
+      query: t.Object({
+        merchantId: t.String(),
+      }),
+    },
+  )
   .get('/supported', () => ({
     networks: [
       { network: 'eip155:8453', name: 'Base', asset: 'USDC' },

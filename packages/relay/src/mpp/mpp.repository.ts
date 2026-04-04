@@ -20,13 +20,15 @@ export async function findSession(id: string) {
 }
 
 export async function updateSessionSpent(id: string, spent: string, voucherCount: number) {
-  await db.update(mppSessions)
+  await db
+    .update(mppSessions)
     .set({ spent, voucherCount: voucherCount.toString() })
     .where(eq(mppSessions.id, id))
 }
 
 export async function closeSession(id: string) {
-  await db.update(mppSessions)
+  await db
+    .update(mppSessions)
     .set({ status: 'closed', closedAt: new Date() })
     .where(eq(mppSessions.id, id))
 }

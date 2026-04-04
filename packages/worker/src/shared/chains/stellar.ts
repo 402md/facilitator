@@ -29,12 +29,14 @@ export function createStellarAdapter(): ChainAdapter {
         fee: '100',
         networkPassphrase: Networks.PUBLIC,
       })
-        .addOperation(Operation.payment({
-          destination: facilitatorKeypair.publicKey(),
-          asset: usdc,
-          amount: formatStellarAmount(input.amount),
-          source: input.buyer,
-        }))
+        .addOperation(
+          Operation.payment({
+            destination: facilitatorKeypair.publicKey(),
+            asset: usdc,
+            amount: formatStellarAmount(input.amount),
+            source: input.buyer,
+          }),
+        )
         .setTimeout(30)
         .build()
 
@@ -49,11 +51,13 @@ export function createStellarAdapter(): ChainAdapter {
         fee: '100',
         networkPassphrase: Networks.PUBLIC,
       })
-        .addOperation(Operation.payment({
-          destination: input.seller,
-          asset: usdc,
-          amount: formatStellarAmount(input.amount),
-        }))
+        .addOperation(
+          Operation.payment({
+            destination: input.seller,
+            asset: usdc,
+            amount: formatStellarAmount(input.amount),
+          }),
+        )
         .setTimeout(30)
         .build()
 
@@ -62,11 +66,11 @@ export function createStellarAdapter(): ChainAdapter {
       return result.hash
     },
 
-    async cctpBurn(input: CctpBurnInput): Promise<CctpBurnResult> {
+    async cctpBurn(_input: CctpBurnInput): Promise<CctpBurnResult> {
       throw new Error('Stellar CCTP V2 not yet available — gated on Circle launch')
     },
 
-    async cctpMint(input: CctpMintInput): Promise<string> {
+    async cctpMint(_input: CctpMintInput): Promise<string> {
       throw new Error('Stellar CCTP V2 not yet available — gated on Circle launch')
     },
   }

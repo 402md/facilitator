@@ -4,8 +4,14 @@ import { checkReplay, markProcessed } from '@/shared/replay'
 import { getTemporalClient } from '@/shared/temporal'
 import { calculateFees } from '@/shared/gas-schedule'
 import { redis } from '@/shared/redis'
-import { createSession, updateSessionSpent, closeSession, addVoucher } from './mpp.repository'
-import type { MppVerifyRequest, MppVerifyResponse, MppSettleRequest, MppSettleResponse, MppConfigResponse } from './mpp.types'
+import { createSession } from './mpp.repository'
+import type {
+  MppVerifyRequest,
+  MppVerifyResponse,
+  MppSettleRequest,
+  MppSettleResponse,
+  MppConfigResponse,
+} from './mpp.types'
 
 const FACILITATOR_ADDRESSES = {
   stellar: process.env.FACILITATOR_STELLAR ?? 'GFacilitator',
@@ -76,18 +82,25 @@ export async function settleCharge(
   await temporal.workflow.start(workflowName, {
     taskQueue,
     workflowId,
-    args: [{
-      sellerId: seller.id,
-      sellerAddress: seller.walletAddress,
-      sellerNetwork: seller.network,
-      buyerAddress: 'mpp-buyer',
-      buyerNetwork: req.buyerNetwork,
-      amount: req.amount,
-      authorization: { validAfter: '0', validBefore: '9999999999', nonce: req.txHash, signature: req.txHash },
-      destinationDomain: 6,
-      gasAllowance,
-      platformFee,
-    }],
+    args: [
+      {
+        sellerId: seller.id,
+        sellerAddress: seller.walletAddress,
+        sellerNetwork: seller.network,
+        buyerAddress: 'mpp-buyer',
+        buyerNetwork: req.buyerNetwork,
+        amount: req.amount,
+        authorization: {
+          validAfter: '0',
+          validBefore: '9999999999',
+          nonce: req.txHash,
+          signature: req.txHash,
+        },
+        destinationDomain: 6,
+        gasAllowance,
+        platformFee,
+      },
+    ],
     workflowExecutionTimeout: isSameChain ? '5m' : '30m',
   })
 
@@ -128,7 +141,7 @@ export async function handleSessionAction(
 
     case 'close': {
       const sessionKey = `402md:session:${req.channelAddress}`
-      const totalAmount = await redis.get(sessionKey) ?? req.cumulativeAmount ?? '0'
+      const totalAmount = (await redis.get(sessionKey)) ?? req.cumulativeAmount ?? '0'
 
       const temporal = await getTemporalClient()
       const workflowId = `mpp-batch-${req.channelAddress?.slice(0, 16)}-${Date.now()}`
@@ -136,17 +149,19 @@ export async function handleSessionAction(
       await temporal.workflow.start('batchSessionSettle', {
         taskQueue: 'cross-settlement',
         workflowId,
-        args: [{
-          sessionId: req.channelAddress,
-          sellerId: seller.id,
-          sellerAddress: seller.walletAddress,
-          sellerNetwork: seller.network,
-          buyerAddress: req.channelAddress,
-          buyerNetwork: req.buyerNetwork,
-          totalAmount,
-          voucherCount: 0,
-          destinationDomain: 6,
-        }],
+        args: [
+          {
+            sessionId: req.channelAddress,
+            sellerId: seller.id,
+            sellerAddress: seller.walletAddress,
+            sellerNetwork: seller.network,
+            buyerAddress: req.channelAddress,
+            buyerNetwork: req.buyerNetwork,
+            totalAmount,
+            voucherCount: 0,
+            destinationDomain: 6,
+          },
+        ],
         workflowExecutionTimeout: '30m',
       })
 

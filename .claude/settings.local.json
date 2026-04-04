@@ -33,7 +33,9 @@
       "Bash(chmod +x /Users/henriquebreim/facilitator/docs/naming/check-availability.sh)",
       "Bash(bash /Users/henriquebreim/facilitator/docs/naming/check-availability.sh)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(bun add:*)",
+      "Bash(bun run:*)"
     ]
   }
 }

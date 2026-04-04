@@ -4,7 +4,13 @@ import { SellerNotFoundError, InvalidPaymentError, ReplayError } from '@/shared/
 import { calculateFees } from '@/shared/gas-schedule'
 import { checkCircuitBreakers, recordVolume } from '@/shared/circuit-breaker'
 import { checkReplay, markProcessed } from '@/shared/replay'
-import type { VerifyRequest, VerifyResponse, SettleRequest, SettleResponse, FeeQuote } from './settlements.types'
+import type {
+  VerifyRequest,
+  VerifyResponse,
+  SettleRequest,
+  SettleResponse,
+  FeeQuote,
+} from './settlements.types'
 
 const PLATFORM_FEE_BPS = parseInt(process.env.PLATFORM_FEE_BPS ?? '0', 10)
 

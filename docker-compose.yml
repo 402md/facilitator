@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: fourzerotwomd
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
 
@@ -14,7 +14,7 @@ services:
     image: redis:7
     command: redis-server --appendonly yes
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redisdata:/data
 
@@ -28,7 +28,7 @@ services:
       POSTGRES_SEEDS: postgresql
       DYNAMIC_CONFIG_FILE_PATH: config/dynamicconfig/development.yaml
     ports:
-      - "7233:7233"
+      - '7233:7233'
     depends_on:
       - postgresql
 
@@ -38,7 +38,7 @@ services:
       TEMPORAL_ADDRESS: temporal:7233
       TEMPORAL_CORS_ORIGINS: http://localhost:3000
     ports:
-      - "8233:8080"
+      - '8233:8080'
     depends_on:
       - temporal
 

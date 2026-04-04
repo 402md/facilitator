@@ -1,10 +1,4 @@
-import {
-  createPublicClient,
-  createWalletClient,
-  http,
-  parseAbi,
-  type Hex,
-} from 'viem'
+import { createPublicClient, createWalletClient, http, parseAbi, type Hex } from 'viem'
 import { base, baseSepolia } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'
 import type { ChainAdapter } from './types'
@@ -95,10 +89,7 @@ export function createBaseAdapter(): ChainAdapter {
         address: config.cctpMessageTransmitter as Hex,
         abi: MESSAGE_TRANSMITTER_ABI,
         functionName: 'receiveMessage',
-        args: [
-          input.burnResult.messageHash as Hex,
-          input.attestation.attestation as Hex,
-        ],
+        args: [input.burnResult.messageHash as Hex, input.attestation.attestation as Hex],
       })
       await publicClient.waitForTransactionReceipt({ hash })
       return hash
@@ -120,7 +111,9 @@ function padAddress(address: string): Hex {
   return `0x${clean.padStart(64, '0')}` as Hex
 }
 
-function extractMessageHash(receipt: { logs: readonly { data: string; topics: readonly string[] }[] }): string {
+function extractMessageHash(receipt: {
+  logs: readonly { data: string; topics: readonly string[] }[]
+}): string {
   for (const log of receipt.logs) {
     if (log.topics[0] === '0x8c5261668696ce22758910d05bab8f186d6eb247ceac2af2e82c7dc17669b036') {
       return log.data
