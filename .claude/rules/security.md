@@ -1,4 +1,4 @@
-# Security — 402md Bridge
+# Security — 402md Facilitator
 
 ## Seller Registration
 

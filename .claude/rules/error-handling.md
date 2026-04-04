@@ -1,4 +1,4 @@
-# Error Handling & Retry Policies — 402md Bridge
+# Error Handling & Retry Policies — 402md Facilitator
 
 ## Temporal Activity Retry Policies
 

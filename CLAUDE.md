@@ -1,11 +1,11 @@
-# 402md Bridge — Discovery & Planning Workspace
+# 402md Facilitator — Discovery & Planning Workspace
 
-> **402md Bridge** — Cross-chain USDC settlement provider for agentic payments.
+> **402md Facilitator** — Cross-chain USDC settlement provider for agentic payments.
 > Dual-protocol (x402 + MPP). Buyer pays on any chain, seller receives on their chain. One HTTP request.
 
 ## What This Is
 
-Planning workspace for the 402md Bridge project. No code here — only discovery, technical specification, and implementation plan documents. Code lives in separate repos (`402md-worker`, `402md-relay`). No custom smart contracts — worker calls USDC + CCTP directly via chain SDKs.
+Planning workspace for the 402md Facilitator project. No code here — only discovery, technical specification, and implementation plan documents. Code lives in separate repos (`402md-worker`, `402md-relay`). No custom smart contracts — worker calls USDC + CCTP directly via chain SDKs.
 
 ## Seller DX
 

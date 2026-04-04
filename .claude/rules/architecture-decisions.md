@@ -1,4 +1,4 @@
-# Architecture Decisions — 402md Bridge
+# Architecture Decisions — 402md Facilitator
 
 ## Repos (3 separate, not monorepo)
 

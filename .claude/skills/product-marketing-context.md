@@ -4,7 +4,7 @@
 
 ## Product Overview
 **One-liner:** Cross-chain USDC settlement provider for agentic payments — buyer pays on any chain, seller receives on their chain. One HTTP request.
-**What it does:** 402md Bridge is a dual-protocol (x402 + MPP) cross-chain settlement provider. When an AI agent or developer makes a payment on one blockchain (e.g., Solana) and the seller only accepts on another (e.g., Base), 402md bridges the USDC via Circle CCTP V2 — native burn/mint, zero slippage, zero wrapped tokens. The seller onboards with a single API call, uses standard SDKs, and receives USDC directly on their preferred chain.
+**What it does:** 402md Facilitator is a dual-protocol (x402 + MPP) cross-chain settlement provider. When an AI agent or developer makes a payment on one blockchain (e.g., Solana) and the seller only accepts on another (e.g., Base), 402md bridges the USDC via Circle CCTP V2 — native burn/mint, zero slippage, zero wrapped tokens. The seller onboards with a single API call, uses standard SDKs, and receives USDC directly on their preferred chain.
 **Product category:** Cross-chain payment infrastructure / Agentic payments settlement
 **Product type:** Infrastructure API (B2B, developer-facing)
 **Business model:** Free at launch (0% platform fee, only gas allowance deducted from cross-chain payments). Configurable platform fee (target 0.25%) activated when volume justifies ($100K+/month sustained, or 50+ sellers, or market validation). Revenue = platform fee on settlement volume.

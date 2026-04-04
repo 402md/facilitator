@@ -1,4 +1,4 @@
-# Code Standards — 402md Bridge
+# Code Standards — 402md Facilitator
 
 ## TypeScript
 

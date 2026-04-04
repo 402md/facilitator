@@ -1,4 +1,4 @@
-# Document Standards — 402md Bridge
+# Document Standards — 402md Facilitator
 
 ## Language
 

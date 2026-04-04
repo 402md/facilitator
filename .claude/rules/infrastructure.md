@@ -1,4 +1,4 @@
-# Infrastructure — 402md Bridge
+# Infrastructure — 402md Facilitator
 
 ## Local Development
 

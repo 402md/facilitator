@@ -17,7 +17,7 @@ export const app = new Elysia()
   .use(cors())
   .use(swagger({
     documentation: {
-      info: { title: '402md Bridge API', version: '0.1.0' },
+      info: { title: '402md Facilitator API', version: '0.1.0' },
     },
   }))
   .onBeforeHandle(async ({ request, set }) => {

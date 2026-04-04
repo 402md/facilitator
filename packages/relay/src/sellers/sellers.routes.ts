@@ -29,7 +29,7 @@ export const sellersRoutes = new Elysia()
   .get('/.well-known/x402.json', () => ({
     version: '2',
     facilitator: {
-      name: '402md Bridge',
+      name: '402md Facilitator',
       url: process.env.FACILITATOR_URL ?? 'https://api.402md.com',
       networks: ['eip155:8453', 'solana:mainnet', 'stellar:pubnet'],
       bridgeProvider: 'circle-cctp-v2',

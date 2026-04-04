@@ -1,4 +1,4 @@
-# Testing Strategy — 402md Bridge
+# Testing Strategy — 402md Facilitator
 
 ## Worker (Temporal)
 

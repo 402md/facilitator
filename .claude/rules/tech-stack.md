@@ -1,4 +1,4 @@
-# Tech Stack — 402md Bridge
+# Tech Stack — 402md Facilitator
 
 ## Per Repo
 

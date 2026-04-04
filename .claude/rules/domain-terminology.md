@@ -1,4 +1,4 @@
-# Domain Terminology — 402md Bridge
+# Domain Terminology — 402md Facilitator
 
 Use these terms consistently across all documents.
 
