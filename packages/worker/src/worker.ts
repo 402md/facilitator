@@ -9,16 +9,21 @@ async function main() {
     address: process.env.TEMPORAL_ADDRESS ?? 'localhost:7233',
   })
 
-  const worker = await Worker.create({
-    connection,
-    namespace: process.env.TEMPORAL_NAMESPACE ?? '402md-settlement',
-    taskQueue: 'fast-settlement',
-    workflowsPath: new URL('./workflows', import.meta.url).pathname,
-    activities,
-  })
+  const taskQueues = ['fast-settlement', 'cross-settlement', 'ops']
+  const workers = await Promise.all(
+    taskQueues.map((taskQueue) =>
+      Worker.create({
+        connection,
+        namespace: process.env.TEMPORAL_NAMESPACE ?? '402md-settlement',
+        taskQueue,
+        workflowsPath: new URL('./workflows', import.meta.url).pathname,
+        activities,
+      }),
+    ),
+  )
 
-  console.log('402md worker started, polling fast-settlement + cross-settlement + ops')
-  await worker.run()
+  console.log(`402md worker started, polling ${taskQueues.join(', ')}`)
+  await Promise.all(workers.map((w) => w.run()))
 }
 
 main().catch((err) => {
