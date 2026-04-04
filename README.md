@@ -11,47 +11,62 @@
 
 ## Why
 
-402md Facilitator is a multi-chain [x402](https://x402.org) facilitator. A seller registers once — wallet address + preferred chain — and immediately accepts USDC from buyers on Base, Solana, Stellar, or any future CCTP-supported network. Buyer on a different chain? 402md Facilitator bridges automatically via [Circle CCTP V2](https://www.circle.com/cross-chain-transfer-protocol) (burn/mint native USDC, zero slippage). Same chain? Settles directly. The seller uses the standard [`@x402/express`](https://x402.org) SDK from Coinbase — zero 402md dependencies. Also supports [MPP](https://www.machinepayments.com/) (Stripe + Tempo), including Stellar's native MPP and x402 running under MPP, so agents that only speak MPP can still pay through 402md.
+402md Facilitator lets a seller receive USDC on their chain from buyers on any chain. One wallet, one registration. The seller calls `POST /register` with the wallet address and network where they want to receive, and gets back a `merchantId` plus the facilitator's receiving addresses on every supported chain. In the x402 middleware config, the seller points the facilitator URL to 402md, lists those addresses in `accepts[]` for each network, and passes the `merchantId` in the extra field. That's it. Buyers pay to the facilitator address on their chain with no changes to their workflow or SDK, 402md identifies the seller by `merchantId`, and delivers USDC to the seller's registered wallet. Cross-chain payments are bridged through [Circle CCTP V2](https://www.circle.com/cross-chain-transfer-protocol) (native USDC, no wrapped tokens). Same-chain payments settle directly. Also works as an [MPP](https://www.machinepayments.com/) payment method, including Stellar's native MPP and x402 under MPP.
 
-Free and open source. No platform fee, no commission — sellers only pay actual network gas. MIT licensed, self-hostable, community-driven.
+Free and open source. No platform fee, sellers only pay network gas. Use the hosted instance at [facilitator.402.md](https://facilitator.402.md) or self-host your own. MIT licensed.
 
 ## How It Works
 
-```
-Buyer (any chain)                         Seller (their chain)
-       │                                         ▲
-       │  1. HTTP 402 + payment                  │  4. USDC arrives
-       ▼                                         │
-   ┌────────┐     2. verify      ┌────────┐     │
-   │ Relay  │ ──────────────────▶│ Worker │─────┘
-   │(Elysia)│     3. settle      │(Temporal)
-   └────────┘                    └────────┘
-       │                              │
-       └──────── PostgreSQL ──────────┘
-                   Redis
+Without 402md, this payment fails:
+
+```mermaid
+flowchart LR
+    Buyer["Buyer\n(Solana)"]
+    Seller["Seller\n(Stellar)"]
+
+    Buyer -- "USDC on Solana" --x Seller
+
+    style Buyer fill:#1a1a2e,stroke:#9945FF,color:#fff
+    style Seller fill:#1a1a2e,stroke:#7B68EE,color:#fff
 ```
 
-1. **Buyer** requests a paid resource, gets `402 Payment Required` with accepted chains
-2. **Buyer** signs USDC authorization on their chain, retries with payment header
-3. **Relay** verifies the payment (~ms) and returns the resource immediately
-4. **Worker** settles in background — pulls USDC, bridges via CCTP if cross-chain, delivers to seller
+With 402md:
 
-### x402 Cross-Chain Settlement (via Circle CCTP V2)
+```mermaid
+flowchart LR
+    Buyer["Buyer\n(Solana)"]
+    Facilitator["402md\nFacilitator"]
+    CCTP["Circle\nCCTP V2"]
+    Seller["Seller\n(Stellar)"]
+
+    Buyer -- "pays USDC\non Solana" --> Facilitator
+    Facilitator -- "burns USDC\non Solana" --> CCTP
+    CCTP -- "mints USDC\non Stellar" --> Seller
+
+    style Buyer fill:#1a1a2e,stroke:#9945FF,color:#fff
+    style Facilitator fill:#1a1a2e,stroke:#00D4AA,color:#fff
+    style CCTP fill:#1a1a2e,stroke:#00D4AA,color:#fff
+    style Seller fill:#1a1a2e,stroke:#7B68EE,color:#fff
+```
+
+### x402 Cross-Chain Settlement
+
+Example: an AI agent on Stellar pays for a weather API hosted by a seller on Base. The agent gets the resource in milliseconds. Settlement (pull, CCTP burn, attestation, mint to seller) runs in background via Temporal.
 
 ```mermaid
 sequenceDiagram
-    participant Agent as AI Agent (Solana)
+    participant Agent as AI Agent (Stellar)
     participant Seller as Seller API (Base)
     participant Relay as 402md Relay
     participant Worker as 402md Worker
-    participant Source as Source Chain (Solana)
+    participant Source as Source Chain (Stellar)
     participant CCTP as Circle CCTP V2
     participant Dest as Dest Chain (Base)
 
     Agent->>Seller: GET /weather
-    Seller-->>Agent: 402 Payment Required (accepts: Solana, Base, Stellar)
+    Seller-->>Agent: 402 Payment Required (accepts: Stellar, Base, Solana)
 
-    Note over Agent: Signs USDC authorization<br/>to facilitator address on Solana
+    Note over Agent: Signs USDC authorization<br/>to facilitator address on Stellar
 
     Agent->>Seller: GET /weather + payment header
     Seller->>Relay: POST /verify (paymentPayload + merchantId)
@@ -67,19 +82,21 @@ sequenceDiagram
         Note over Worker,Dest: Temporal Workflow — crossChainSettle
         Worker->>Source: 1. pullFromBuyer — $1.00 USDC
         Source-->>Worker: ✓ pull tx confirmed
-        Note over Worker: 2. Retain gas allowance ($0.0012)
-        Worker->>Source: 3. CCTP burn — $0.9988 (mintRecipient = seller)
+        Note over Worker: 2. Retain gas allowance ($0.0004)
+        Worker->>Source: 3. CCTP burn — $0.9996 (mintRecipient = seller)
         Source-->>Worker: ✓ burn tx confirmed
         Worker->>CCTP: 4. waitAttestation (poll Circle API)
-        Note over CCTP: Source chain reaches finality<br/>~25s Solana · ~5s Stellar · ~15min EVM
+        Note over CCTP: Stellar finality ~5-10s
         CCTP-->>Worker: ✓ attestation received
-        Worker->>Dest: 5. CCTP mint — $0.9988 to seller on Base
+        Worker->>Dest: 5. CCTP mint — $0.9996 to seller on Base
         Dest-->>Worker: ✓ mint tx confirmed
         Worker->>Worker: 6. Record in ledger
     end
 ```
 
 ### x402 Same-Chain Settlement
+
+Both parties on Base. No bridge needed. The worker pulls USDC from the buyer, deducts gas allowance, and transfers the net amount to the seller.
 
 ```mermaid
 sequenceDiagram
@@ -110,6 +127,8 @@ sequenceDiagram
 ```
 
 ### MPP Cross-Chain Settlement
+
+MPP uses push mode: the buyer broadcasts the USDC transaction directly and pays gas. The relay verifies the tx on-chain and starts the same CCTP bridge workflow.
 
 ```mermaid
 sequenceDiagram
