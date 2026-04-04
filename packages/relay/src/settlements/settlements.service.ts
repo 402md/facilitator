@@ -1,7 +1,7 @@
 import { getTemporalClient } from '@/shared/temporal'
 import { findByMerchantId } from '@/sellers/sellers.repository'
 import { SellerNotFoundError, InvalidPaymentError, ReplayError } from '@/shared/errors'
-import { calculateFees } from '@/shared/gas-schedule'
+import { calculateFees, getCctpDomain } from '@/shared/gas-schedule'
 import { checkCircuitBreakers, recordVolume } from '@/shared/circuit-breaker'
 import { checkReplay, markProcessed } from '@/shared/replay'
 import type {
@@ -14,11 +14,44 @@ import type {
 
 const PLATFORM_FEE_BPS = parseInt(process.env.PLATFORM_FEE_BPS ?? '0', 10)
 
+const SUPPORTED_NETWORKS = ['eip155:8453', 'solana:mainnet', 'stellar:pubnet']
+
+const FACILITATOR_ADDRESSES: Record<string, string> = {
+  'eip155:8453': process.env.FACILITATOR_BASE ?? '0xFacilitatorBase',
+  'solana:mainnet': process.env.FACILITATOR_SOLANA ?? 'FacilitatorSolAddr',
+  'stellar:pubnet': process.env.FACILITATOR_STELLAR ?? 'FacilitatorStellarAddr',
+}
+
 export async function verifyPayment(req: VerifyRequest): Promise<VerifyResponse> {
-  const { paymentRequirements } = req
+  const { paymentPayload, paymentRequirements } = req
+
   if (!paymentRequirements.extra?.merchantId) {
     return { isValid: false, reason: 'Missing merchantId in extra' }
   }
+
+  const seller = await findByMerchantId(paymentRequirements.extra.merchantId)
+  if (!seller) {
+    return { isValid: false, reason: 'Unknown merchantId' }
+  }
+
+  if (!SUPPORTED_NETWORKS.includes(paymentRequirements.network)) {
+    return { isValid: false, reason: `Unsupported network: ${paymentRequirements.network}` }
+  }
+
+  const expectedPayTo = FACILITATOR_ADDRESSES[paymentRequirements.network]
+  if (paymentRequirements.payTo !== expectedPayTo) {
+    return { isValid: false, reason: 'payTo does not match facilitator address' }
+  }
+
+  if (!paymentPayload.signature || paymentPayload.signature.length < 10) {
+    return { isValid: false, reason: 'Invalid or missing payment signature' }
+  }
+
+  const amount = BigInt(paymentRequirements.maxAmountRequired)
+  if (amount <= 0n) {
+    return { isValid: false, reason: 'Amount must be greater than zero' }
+  }
+
   return { isValid: true }
 }
 
@@ -82,7 +115,7 @@ export async function dispatchSettlement(req: SettleRequest): Promise<SettleResp
           nonce: '0x0',
           signature: req.paymentPayload.signature,
         },
-        destinationDomain: 6,
+        destinationDomain: getCctpDomain(sellerNetwork),
         gasAllowance,
         platformFee,
       }

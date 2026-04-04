@@ -17,6 +17,18 @@ export function getGasAllowance(from: string, to: string): string {
   return allowance
 }
 
+const CCTP_DOMAINS: Record<string, number> = {
+  'eip155:8453': 6,
+  'solana:mainnet': 5,
+  'stellar:pubnet': 7,
+}
+
+export function getCctpDomain(network: string): number {
+  const domain = CCTP_DOMAINS[network]
+  if (domain === undefined) throw new Error(`No CCTP domain for ${network}`)
+  return domain
+}
+
 export function calculateFees(
   grossAmount: string,
   from: string,

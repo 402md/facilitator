@@ -2,7 +2,7 @@ import { findByMerchantId } from '@/sellers/sellers.repository'
 import { SellerNotFoundError } from '@/shared/errors'
 import { checkReplay, markProcessed } from '@/shared/replay'
 import { getTemporalClient } from '@/shared/temporal'
-import { calculateFees } from '@/shared/gas-schedule'
+import { calculateFees, getCctpDomain } from '@/shared/gas-schedule'
 import { redis } from '@/shared/redis'
 import { createSession } from './mpp.repository'
 import type {
@@ -96,7 +96,7 @@ export async function settleCharge(
           nonce: req.txHash,
           signature: req.txHash,
         },
-        destinationDomain: 6,
+        destinationDomain: getCctpDomain(seller.network),
         gasAllowance,
         platformFee,
       },
@@ -134,7 +134,24 @@ export async function handleSessionAction(
       if (!req.cumulativeAmount || !req.signature) {
         return { valid: false, error: 'Missing cumulative amount or signature' }
       }
+
       const sessionKey = `402md:session:${req.channelAddress}`
+      const currentCumulative = await redis.get(sessionKey)
+      if (currentCumulative && BigInt(req.cumulativeAmount) <= BigInt(currentCumulative)) {
+        return { valid: false, error: 'Cumulative amount must increase' }
+      }
+
+      if (BigInt(req.cumulativeAmount) > BigInt(req.amount)) {
+        return { valid: false, error: 'Cumulative amount exceeds session budget' }
+      }
+
+      const voucherKey = `402md:voucher:${req.channelAddress}:${req.signature}`
+      const isDuplicate = await redis.exists(voucherKey)
+      if (isDuplicate) {
+        return { valid: false, error: 'Duplicate voucher signature' }
+      }
+      await redis.set(voucherKey, '1', 'EX', 86400)
+
       await redis.set(sessionKey, req.cumulativeAmount)
       return { valid: true, acceptedCumulative: req.cumulativeAmount, spent: req.cumulativeAmount }
     }
@@ -144,7 +161,7 @@ export async function handleSessionAction(
       const totalAmount = (await redis.get(sessionKey)) ?? req.cumulativeAmount ?? '0'
 
       const temporal = await getTemporalClient()
-      const workflowId = `mpp-batch-${req.channelAddress?.slice(0, 16)}-${Date.now()}`
+      const workflowId = `mpp-batch-${seller.network}-${req.buyerNetwork}-${req.channelAddress?.slice(0, 16)}`
 
       await temporal.workflow.start('batchSessionSettle', {
         taskQueue: 'cross-settlement',
@@ -159,7 +176,7 @@ export async function handleSessionAction(
             buyerNetwork: req.buyerNetwork,
             totalAmount,
             voucherCount: 0,
-            destinationDomain: 6,
+            destinationDomain: getCctpDomain(seller.network),
           },
         ],
         workflowExecutionTimeout: '30m',
