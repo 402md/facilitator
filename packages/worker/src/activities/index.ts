@@ -1,3 +1,6 @@
 export { pullFromBuyer } from './pull'
 export { transferToSeller } from './transfer'
+export { cctpBurn } from './cctp-burn'
+export { waitAttestation } from './wait-attestation'
+export { cctpMint } from './cctp-mint'
 export { recordPayment } from './ledger'
