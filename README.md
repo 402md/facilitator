@@ -1,7 +1,5 @@
 # 402md Facilitator
 
-> **402md Facilitator is an x402 facilitator that supports multiple blockchain networks in a single integration.** A seller registers once with their wallet and preferred chain, and immediately accepts USDC payments from buyers on any supported network — Base, Solana, Stellar, and any future CCTP-supported chain. When buyer and seller are on different chains, 402md Facilitator automatically bridges the payment via Circle CCTP V2 (burn/mint native USDC, zero slippage). When they're on the same chain, it settles directly. The seller uses the standard `@x402/express` SDK from Coinbase with zero 402md-specific dependencies. No dashboard, no login, no custom contracts. One `POST /register`, one `merchantId`, all chains.
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![x402](https://img.shields.io/badge/x402-v2-green)](https://x402.org)
 [![MPP](https://img.shields.io/badge/MPP-compatible-orange)](https://www.machinepayments.com/)
@@ -13,23 +11,9 @@
 
 ## Why
 
-Without 402md, a seller who wants to accept USDC on multiple chains needs a wallet on each network, separate facilitator integrations per chain, and manual bridging to consolidate funds. If a buyer has USDC on Solana and the seller only set up on Base, the payment fails.
+402md Facilitator is a multi-chain [x402](https://x402.org) facilitator. A seller registers once — wallet address + preferred chain — and immediately accepts USDC from buyers on Base, Solana, Stellar, or any future CCTP-supported network. Buyer on a different chain? 402md Facilitator bridges automatically via [Circle CCTP V2](https://www.circle.com/cross-chain-transfer-protocol) (burn/mint native USDC, zero slippage). Same chain? Settles directly. The seller uses the standard [`@x402/express`](https://x402.org) SDK from Coinbase — zero 402md dependencies. Also supports [MPP](https://www.machinepayments.com/) (Stripe + Tempo), including Stellar's native MPP and x402 running under MPP, so agents that only speak MPP can still pay through 402md.
 
-**402md Facilitator solves this by being a multi-chain x402 facilitator.** One registration gives the seller a presence on every supported network. Buyers pay from whichever chain they're on. 402md handles the rest — same-chain payments settle directly, cross-chain payments bridge automatically via CCTP V2. Also supports [MPP](https://www.machinepayments.com/) (Stripe + Tempo) as a second protocol — including Stellar's native MPP integration and x402 running under MPP, so agents that only speak MPP can still pay through 402md.
-
-**Free and open source.** No platform fee, no commission — sellers only pay actual network gas. MIT licensed, self-hostable, community-driven.
-
-### Key Differences
-
-| Feature                | 402md                           | Stripe Stablecoin       | Tempo         | Other x402 Facilitators |
-| ---------------------- | ------------------------------- | ----------------------- | ------------- | ----------------------- |
-| Cross-chain settlement | Yes (CCTP V2)                   | No                      | No            | No                      |
-| Platform fee           | Free (0%)                       | 1.5%                    | Varies        | Varies                  |
-| Supported chains       | Base, Solana, Stellar           | Base, Polygon, Ethereum | Tempo L1 only | Single chain            |
-| Custom smart contracts | None                            | N/A                     | Yes           | Varies                  |
-| Seller integration     | `POST /register` + standard SDK | Dashboard + API keys    | SDK           | Varies                  |
-| Open source            | Yes (MIT)                       | No                      | No            | Varies                  |
-| Protocols              | x402 + MPP                      | Fiat + crypto           | MPP           | x402 only               |
+Free and open source. No platform fee, no commission — sellers only pay actual network gas. MIT licensed, self-hostable, community-driven.
 
 ## How It Works
 
