@@ -2,6 +2,7 @@ import { Elysia } from 'elysia'
 import { cors } from '@elysiajs/cors'
 import { swagger } from '@elysiajs/swagger'
 import { sellersRoutes } from '@/sellers/sellers.routes'
+import { settlementsRoutes } from '@/settlements/settlements.routes'
 
 export const app = new Elysia()
   .use(cors())
@@ -11,6 +12,7 @@ export const app = new Elysia()
     },
   }))
   .use(sellersRoutes)
+  .use(settlementsRoutes)
   .get('/health', () => ({ status: 'ok', timestamp: new Date().toISOString() }))
   .onError(({ error, set }) => {
     if ('statusCode' in error && typeof error.statusCode === 'number') {
