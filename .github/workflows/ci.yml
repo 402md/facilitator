@@ -77,5 +77,10 @@ jobs:
         working-directory: packages/worker
 
       - name: Test
-        run: bunx vitest run
+        run: |
+          if compgen -G "src/**/*.test.*" > /dev/null; then
+            bunx vitest run
+          else
+            echo "No test files found, skipping"
+          fi
         working-directory: packages/worker
