@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia'
 import { cors } from '@elysiajs/cors'
 import { swagger } from '@elysiajs/swagger'
+import { sellersRoutes } from '@/sellers/sellers.routes'
 
 export const app = new Elysia()
   .use(cors())
@@ -9,6 +10,7 @@ export const app = new Elysia()
       info: { title: '402md Bridge API', version: '0.1.0' },
     },
   }))
+  .use(sellersRoutes)
   .get('/health', () => ({ status: 'ok', timestamp: new Date().toISOString() }))
   .onError(({ error, set }) => {
     if ('statusCode' in error && typeof error.statusCode === 'number') {
