@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid'
 import { createSeller, findByMerchantId, findByWallet } from './sellers.repository'
-import { SellerNotFoundError, InvalidPaymentError } from '@/shared/errors'
+import { SellerNotFoundError, UnsupportedNetworkError } from '@/shared/errors'
 import type { RegisterRequest, RegisterResponse, DiscoveryResponse } from './sellers.types'
 
 const SUPPORTED_NETWORKS = ['eip155:8453', 'solana:mainnet', 'stellar:pubnet']
@@ -43,7 +43,7 @@ ${accepts}
 
 export async function registerSeller(req: RegisterRequest): Promise<RegisterResponse> {
   if (!SUPPORTED_NETWORKS.includes(req.network)) {
-    throw new InvalidPaymentError(`Unsupported network: ${req.network}`)
+    throw new UnsupportedNetworkError(req.network, SUPPORTED_NETWORKS)
   }
 
   const existing = await findByWallet(req.wallet, req.network)

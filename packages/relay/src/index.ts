@@ -75,9 +75,11 @@ export const app = new Elysia()
   .onError(({ error, set }) => {
     if ('statusCode' in error && typeof error.statusCode === 'number') {
       set.status = error.statusCode
+      const details = (error as { details?: Record<string, unknown> }).details
       return {
         error: (error as { code?: string }).code ?? 'ERROR',
         message: error.message,
+        ...(details ?? {}),
       }
     }
     set.status = 500
