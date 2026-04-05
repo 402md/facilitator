@@ -1,22 +1,5 @@
-import type { ChainAdapter, ChainDefinition, ResolvedNetwork } from '../adapter.types'
-
-// Placeholder adapter — replaced in Task 12.
-function stubAdapter(_resolved: ResolvedNetwork): ChainAdapter {
-  return {
-    pullFromBuyer: async () => {
-      throw new Error('Solana adapter not yet wired (Task 12)')
-    },
-    transferToSeller: async () => {
-      throw new Error('Solana adapter not yet wired (Task 12)')
-    },
-    cctpBurn: async () => {
-      throw new Error('Solana adapter not yet wired (Task 12)')
-    },
-    cctpMint: async () => {
-      throw new Error('Solana adapter not yet wired (Task 12)')
-    },
-  }
-}
+import { createSolanaAdapter } from '../solana-adapter'
+import type { ChainDefinition } from '../adapter.types'
 
 export const solana: ChainDefinition = {
   slug: 'solana',
@@ -29,7 +12,7 @@ export const solana: ChainDefinition = {
     rpcUrlEnv: 'SOLANA_RPC_URL',
     rpcUrlDefault: null,
     facilitatorEnv: 'FACILITATOR_SOLANA',
-    createAdapter: stubAdapter,
+    createAdapter: createSolanaAdapter,
   },
   testnet: {
     caip2: 'solana:devnet',
@@ -40,6 +23,6 @@ export const solana: ChainDefinition = {
     rpcUrlEnv: 'SOLANA_DEVNET_RPC_URL',
     rpcUrlDefault: 'https://api.devnet.solana.com',
     facilitatorEnv: 'FACILITATOR_SOLANA',
-    createAdapter: stubAdapter,
+    createAdapter: createSolanaAdapter,
   },
 }
