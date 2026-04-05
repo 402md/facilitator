@@ -55,7 +55,7 @@ describe('POST /register', () => {
 
     expect(res.status).toBe(400)
     const body = await res.json()
-    expect(body.error).toBe('INVALID_PAYMENT')
+    expect(body.error).toBe('UNSUPPORTED_NETWORK')
   })
 
   test('returns 422 for missing wallet field', async () => {

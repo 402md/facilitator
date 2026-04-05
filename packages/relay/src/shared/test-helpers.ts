@@ -1,3 +1,12 @@
+// Env must be set before any code that reads it (e.g. @402md/shared/networks).
+process.env.NETWORK_ENV = 'mainnet'
+process.env.BASE_RPC_URL = 'https://test.base'
+process.env.SOLANA_RPC_URL = 'https://test.solana'
+process.env.STELLAR_RPC_URL = 'https://test.stellar'
+process.env.FACILITATOR_BASE = '0xFacilitatorBase'
+process.env.FACILITATOR_SOLANA = 'FacilitatorSolAddr'
+process.env.FACILITATOR_STELLAR = 'FacilitatorStellarAddr'
+
 import { mock } from 'bun:test'
 
 // --- Redis Mock ---
@@ -120,20 +129,27 @@ export const mockTemporal = {
 }
 
 // --- Module mocks ---
-// Bun's mock.module needs absolute file paths to reliably intercept imports
+// Bun's mock.module intercepts imports by module specifier.
 
 const SRC = import.meta.dir.replace(/\/shared$/, '')
 const SHARED = `${SRC}/shared`
 const SELLERS = `${SRC}/sellers`
 const MPP = `${SRC}/mpp`
 
-// Redis
+// Redis (shared package subpath)
 const redisMock = () => ({ redis: mockRedis })
-mock.module(`${SHARED}/redis.ts`, redisMock)
+mock.module('@402md/shared/cache', redisMock)
 
-// DB
-const dbMock = () => ({ db: mockDb })
-mock.module(`${SHARED}/db.ts`, dbMock)
+// DB (shared package subpath) — services use mocked repositories, this just keeps
+// accidental direct db imports from crashing with real postgres connections.
+const dbMock = () => ({
+  db: mockDb,
+  sellers: {},
+  transactions: {},
+  mppSessions: {},
+  mppVouchers: {},
+})
+mock.module('@402md/shared/db', dbMock)
 
 // Temporal
 const temporalMock = () => ({ getTemporalClient: () => Promise.resolve(mockTemporal) })
@@ -204,6 +220,7 @@ export const TEST_SELLER: SellerRow = {
   createdAt: new Date(),
 }
 
+// Matches the env vars set at the top of this file.
 export const FACILITATOR_ADDRESSES: Record<string, string> = {
   'eip155:8453': '0xFacilitatorBase',
   'solana:mainnet': 'FacilitatorSolAddr',
