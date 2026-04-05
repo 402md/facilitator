@@ -92,3 +92,4 @@ export type {
 } from './adapter.types'
 export { UnsupportedNetworkError } from './errors'
 export { resolveNetworkEnv, validateNetworkEnv } from './env'
+export { getCircleIrisUrl, getCircleAttestationUrl } from './cctp'

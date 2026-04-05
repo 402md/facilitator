@@ -1,8 +1,7 @@
 import { heartbeat } from '@temporalio/activity'
+import { getCircleAttestationUrl } from '@402md/shared/networks'
 import type { WaitAttestationInput } from '@/shared/types'
 import type { AttestationResult } from '@402md/shared/networks'
-
-const CIRCLE_API = 'https://iris-api.circle.com/attestations'
 
 export async function waitAttestation(input: WaitAttestationInput): Promise<AttestationResult> {
   const pollInterval = 5000
@@ -11,7 +10,7 @@ export async function waitAttestation(input: WaitAttestationInput): Promise<Atte
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     heartbeat(`Polling attestation, attempt ${attempt + 1}`)
 
-    const response = await fetch(`${CIRCLE_API}/${input.messageHash}`)
+    const response = await fetch(getCircleAttestationUrl(input.messageHash))
     if (!response.ok) {
       await sleep(pollInterval)
       continue
