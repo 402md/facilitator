@@ -1,7 +1,7 @@
-import { getChainAdapter } from '@/shared/chains'
-import type { TransferToSellerInput } from '@/shared/types'
+import { getAdapter } from '@402md/shared/networks'
+import type { TransferToSellerInput } from '@402md/shared/networks'
 
 export async function transferToSeller(input: TransferToSellerInput): Promise<string> {
-  const adapter = getChainAdapter(input.network)
+  const adapter = getAdapter(input.network)
   return adapter.transferToSeller(input)
 }

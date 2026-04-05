@@ -1,5 +1,4 @@
-import { db } from '@/shared/db'
-import { transactions } from '@402md/relay/src/shared/schema'
+import { db, transactions } from '@402md/shared/db'
 import type { RecordPaymentInput } from '@/shared/types'
 
 export async function recordPayment(input: RecordPaymentInput): Promise<void> {

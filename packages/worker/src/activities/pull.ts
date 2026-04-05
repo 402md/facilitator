@@ -1,7 +1,7 @@
-import { getChainAdapter } from '@/shared/chains'
-import type { PullFromBuyerInput } from '@/shared/types'
+import { getAdapter } from '@402md/shared/networks'
+import type { PullFromBuyerInput } from '@402md/shared/networks'
 
 export async function pullFromBuyer(input: PullFromBuyerInput): Promise<string> {
-  const adapter = getChainAdapter(input.network)
+  const adapter = getAdapter(input.network)
   return adapter.pullFromBuyer(input)
 }

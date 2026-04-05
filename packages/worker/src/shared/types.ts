@@ -79,50 +79,8 @@ export interface BatchSessionSettleResult {
   settledAt: string
 }
 
-export interface PullFromBuyerInput {
-  network: Network
-  buyer: string
-  amount: string
-  authorization: {
-    validAfter: string
-    validBefore: string
-    nonce: string
-    signature: string
-  }
-}
-
-export interface CctpBurnInput {
-  fromNetwork: Network
-  toNetwork: Network
-  amount: string
-  recipient: string
-  destinationDomain: number
-}
-
-export interface CctpBurnResult {
-  txHash: string
-  messageHash: string
-}
-
 export interface WaitAttestationInput {
   messageHash: string
-}
-
-export interface AttestationResult {
-  attestation: string
-  messageBytes: string
-}
-
-export interface CctpMintInput {
-  network: Network
-  attestation: AttestationResult
-  burnResult: CctpBurnResult
-}
-
-export interface TransferToSellerInput {
-  network: Network
-  seller: string
-  amount: string
 }
 
 export interface RecordPaymentInput {

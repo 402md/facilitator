@@ -78,6 +78,17 @@ export function calculateFees(
   )
 }
 
-export type { ResolvedNetwork, ChainAdapter, ChainSlug, NetworkEnv } from './adapter.types'
+export type {
+  ResolvedNetwork,
+  ChainAdapter,
+  ChainSlug,
+  NetworkEnv,
+  PullFromBuyerInput,
+  TransferToSellerInput,
+  CctpBurnInput,
+  CctpBurnResult,
+  CctpMintInput,
+  AttestationResult,
+} from './adapter.types'
 export { UnsupportedNetworkError } from './errors'
 export { resolveNetworkEnv, validateNetworkEnv } from './env'

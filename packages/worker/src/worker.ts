@@ -1,5 +1,15 @@
-import { initTracing } from './shared/tracing'
-if (process.env.OTEL_ENABLED === 'true') initTracing()
+import { initTracing } from '@402md/shared/tracing'
+import { validateNetworkEnv } from '@402md/shared/networks'
+
+if (process.env.OTEL_ENABLED === 'true') {
+  initTracing({ serviceName: '402md-worker', autoInstrument: true })
+}
+
+const envCheck = validateNetworkEnv({ requirePrivateKeys: true })
+if (!envCheck.ok) {
+  console.error(`Missing required environment variables: ${envCheck.missing.join(', ')}`)
+  process.exit(1)
+}
 
 import { NativeConnection, Worker } from '@temporalio/worker'
 import * as activities from './activities'

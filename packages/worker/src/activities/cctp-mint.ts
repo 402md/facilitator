@@ -1,7 +1,7 @@
-import { getChainAdapter } from '@/shared/chains'
-import type { CctpMintInput } from '@/shared/types'
+import { getAdapter } from '@402md/shared/networks'
+import type { CctpMintInput } from '@402md/shared/networks'
 
 export async function cctpMint(input: CctpMintInput): Promise<string> {
-  const adapter = getChainAdapter(input.network)
+  const adapter = getAdapter(input.network)
   return adapter.cctpMint(input)
 }

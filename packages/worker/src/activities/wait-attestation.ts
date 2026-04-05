@@ -1,5 +1,6 @@
 import { heartbeat } from '@temporalio/activity'
-import type { WaitAttestationInput, AttestationResult } from '@/shared/types'
+import type { WaitAttestationInput } from '@/shared/types'
+import type { AttestationResult } from '@402md/shared/networks'
 
 const CIRCLE_API = 'https://iris-api.circle.com/attestations'
 

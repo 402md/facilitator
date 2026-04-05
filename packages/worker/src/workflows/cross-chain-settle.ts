@@ -4,12 +4,8 @@ import {
   setHandler,
   upsertSearchAttributes,
 } from '@temporalio/workflow'
-import type {
-  CrossChainSettleParams,
-  CrossChainSettleResult,
-  CctpBurnResult,
-  AttestationResult,
-} from '../shared/types'
+import type { CrossChainSettleParams, CrossChainSettleResult } from '../shared/types'
+import type { CctpBurnResult, AttestationResult } from '@402md/shared/networks'
 
 const { pullFromBuyer, cctpBurn, cctpMint } = proxyActivities<{
   pullFromBuyer: (input: Record<string, unknown>) => Promise<string>
