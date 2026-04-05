@@ -1,23 +1,6 @@
 import { base as baseMainnet, baseSepolia } from 'viem/chains'
-import type { ChainAdapter, ChainDefinition, ResolvedNetwork } from '../adapter.types'
-
-// Placeholder adapter — replaced in Task 11.
-function stubAdapter(_resolved: ResolvedNetwork): ChainAdapter {
-  return {
-    pullFromBuyer: async () => {
-      throw new Error('EVM adapter not yet wired (Task 11)')
-    },
-    transferToSeller: async () => {
-      throw new Error('EVM adapter not yet wired (Task 11)')
-    },
-    cctpBurn: async () => {
-      throw new Error('EVM adapter not yet wired (Task 11)')
-    },
-    cctpMint: async () => {
-      throw new Error('EVM adapter not yet wired (Task 11)')
-    },
-  }
-}
+import { createEvmAdapter } from '../evm-adapter'
+import type { ChainDefinition } from '../adapter.types'
 
 export const base: ChainDefinition = {
   slug: 'base',
@@ -31,7 +14,7 @@ export const base: ChainDefinition = {
     rpcUrlEnv: 'BASE_RPC_URL',
     rpcUrlDefault: null,
     facilitatorEnv: 'FACILITATOR_BASE',
-    createAdapter: stubAdapter,
+    createAdapter: createEvmAdapter,
   },
   testnet: {
     caip2: 'eip155:84532',
@@ -43,6 +26,6 @@ export const base: ChainDefinition = {
     rpcUrlEnv: 'BASE_SEPOLIA_RPC_URL',
     rpcUrlDefault: 'https://sepolia.base.org',
     facilitatorEnv: 'FACILITATOR_BASE',
-    createAdapter: stubAdapter,
+    createAdapter: createEvmAdapter,
   },
 }
