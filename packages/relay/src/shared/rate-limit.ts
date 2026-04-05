@@ -1,4 +1,4 @@
-import { redis } from './redis'
+import { redis } from '@402md/shared/cache'
 import { RateLimitError } from './errors'
 
 interface RateLimitConfig {

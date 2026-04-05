@@ -1,6 +1,5 @@
 import { eq } from 'drizzle-orm'
-import { db } from '@/shared/db'
-import { sellers } from '@/shared/schema'
+import { db, sellers } from '@402md/shared/db'
 
 export async function createSeller(data: {
   merchantId: string

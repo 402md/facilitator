@@ -1,5 +1,13 @@
-import { initTracing } from '@/shared/tracing'
-if (process.env.OTEL_ENABLED === 'true') initTracing()
+import { initTracing } from '@402md/shared/tracing'
+import { validateNetworkEnv } from '@402md/shared/networks'
+
+if (process.env.OTEL_ENABLED === 'true') initTracing({ serviceName: '402md-relay' })
+
+const envCheck = validateNetworkEnv()
+if (!envCheck.ok) {
+  console.error(`Missing required environment variables: ${envCheck.missing.join(', ')}`)
+  process.exit(1)
+}
 
 import { Elysia } from 'elysia'
 import { cors } from '@elysiajs/cors'
@@ -8,8 +16,8 @@ import { sql } from 'drizzle-orm'
 import { sellersRoutes } from '@/sellers/sellers.routes'
 import { settlementsRoutes } from '@/settlements/settlements.routes'
 import { mppRoutes } from '@/mpp/mpp.routes'
-import { db } from '@/shared/db'
-import { redis } from '@/shared/redis'
+import { db } from '@402md/shared/db'
+import { redis } from '@402md/shared/cache'
 import { getTemporalClient } from '@/shared/temporal'
 import { checkRateLimit } from '@/shared/rate-limit'
 

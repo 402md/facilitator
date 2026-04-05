@@ -1,4 +1,4 @@
-import { redis } from './redis'
+import { redis } from '@402md/shared/cache'
 import { CircuitBreakerError } from './errors'
 
 const MAX_TX_AMOUNT = process.env.MAX_TX_AMOUNT ?? '1000000000'

@@ -2,8 +2,8 @@ import { findByMerchantId } from '@/sellers/sellers.repository'
 import { SellerNotFoundError } from '@/shared/errors'
 import { checkReplay, markProcessed } from '@/shared/replay'
 import { getTemporalClient } from '@/shared/temporal'
-import { calculateFees, getCctpDomain } from '@/shared/gas-schedule'
-import { redis } from '@/shared/redis'
+import { calculateFees, getCctpDomain } from '@402md/shared/networks'
+import { redis } from '@402md/shared/cache'
 import { createSession } from './mpp.repository'
 import type {
   MppVerifyRequest,

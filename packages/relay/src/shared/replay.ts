@@ -1,4 +1,4 @@
-import { redis } from './redis'
+import { redis } from '@402md/shared/cache'
 
 const REPLAY_TTL = 86400
 

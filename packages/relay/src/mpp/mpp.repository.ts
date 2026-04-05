@@ -1,6 +1,5 @@
 import { eq } from 'drizzle-orm'
-import { db } from '@/shared/db'
-import { mppSessions, mppVouchers } from '@/shared/schema'
+import { db, mppSessions, mppVouchers } from '@402md/shared/db'
 
 export async function createSession(data: {
   sellerId: string
