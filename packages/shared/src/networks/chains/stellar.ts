@@ -1,23 +1,6 @@
 import { Networks } from '@stellar/stellar-sdk'
-import type { ChainAdapter, ChainDefinition, ResolvedNetwork } from '../adapter.types'
-
-// Placeholder adapter — replaced in Task 13.
-function stubAdapter(_resolved: ResolvedNetwork): ChainAdapter {
-  return {
-    pullFromBuyer: async () => {
-      throw new Error('Stellar adapter not yet wired (Task 13)')
-    },
-    transferToSeller: async () => {
-      throw new Error('Stellar adapter not yet wired (Task 13)')
-    },
-    cctpBurn: async () => {
-      throw new Error('Stellar adapter not yet wired (Task 13)')
-    },
-    cctpMint: async () => {
-      throw new Error('Stellar adapter not yet wired (Task 13)')
-    },
-  }
-}
+import { createStellarAdapter } from '../stellar-adapter'
+import type { ChainDefinition } from '../adapter.types'
 
 export const stellar: ChainDefinition = {
   slug: 'stellar',
@@ -31,7 +14,7 @@ export const stellar: ChainDefinition = {
     rpcUrlEnv: 'STELLAR_RPC_URL',
     rpcUrlDefault: null,
     facilitatorEnv: 'FACILITATOR_STELLAR',
-    createAdapter: stubAdapter,
+    createAdapter: createStellarAdapter,
   },
   testnet: {
     caip2: 'stellar:testnet',
@@ -43,6 +26,6 @@ export const stellar: ChainDefinition = {
     rpcUrlEnv: 'STELLAR_TESTNET_RPC_URL',
     rpcUrlDefault: 'https://soroban-testnet.stellar.org',
     facilitatorEnv: 'FACILITATOR_STELLAR',
-    createAdapter: stubAdapter,
+    createAdapter: createStellarAdapter,
   },
 }
