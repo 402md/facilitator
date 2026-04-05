@@ -32,6 +32,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "dev": "tsc --watch --preserveWatchOutput",
     "test": "bun test",
     "lint": "eslint src/"
   },
