@@ -34,6 +34,7 @@
       "name": "@402md/relay",
       "version": "0.1.0",
       "dependencies": {
+        "@402md/shared": "workspace:*",
         "@elysiajs/cors": "^1",
         "@elysiajs/swagger": "^1",
         "@opentelemetry/exporter-trace-otlp-http": "^0.214.0",
@@ -48,6 +49,26 @@
       "devDependencies": {
         "@types/bun": "latest",
         "drizzle-kit": "^0.30",
+        "typescript": "^5",
+      },
+    },
+    "packages/shared": {
+      "name": "@402md/shared",
+      "version": "0.1.0",
+      "dependencies": {
+        "@opentelemetry/auto-instrumentations-node": "^0.72.0",
+        "@opentelemetry/exporter-trace-otlp-http": "^0.214.0",
+        "@opentelemetry/sdk-node": "^0.214.0",
+        "@solana/spl-token": "^0.4.14",
+        "@solana/web3.js": "^1",
+        "@stellar/stellar-sdk": "^12",
+        "drizzle-orm": "^0.38",
+        "ioredis": "^5",
+        "postgres": "^3",
+        "viem": "^2",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
         "typescript": "^5",
       },
     },
@@ -82,6 +103,8 @@
     "@402md/mpp": ["@402md/mpp@workspace:packages/mpp"],
 
     "@402md/relay": ["@402md/relay@workspace:packages/relay"],
+
+    "@402md/shared": ["@402md/shared@workspace:packages/shared"],
 
     "@402md/worker": ["@402md/worker@workspace:packages/worker"],
 

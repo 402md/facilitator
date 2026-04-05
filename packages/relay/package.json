@@ -12,6 +12,7 @@
     "lint": "eslint src/"
   },
   "dependencies": {
+    "@402md/shared": "workspace:*",
     "@elysiajs/cors": "^1",
     "@elysiajs/swagger": "^1",
     "@opentelemetry/exporter-trace-otlp-http": "^0.214.0",
