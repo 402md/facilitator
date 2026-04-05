@@ -1,7 +1,12 @@
 import { getTemporalClient } from '@/shared/temporal'
 import { findByMerchantId } from '@/sellers/sellers.repository'
 import { SellerNotFoundError, InvalidPaymentError, ReplayError } from '@/shared/errors'
-import { calculateFees, getCctpDomain } from '@/shared/gas-schedule'
+import {
+  calculateFees,
+  getCctpDomain,
+  supportedCaip2s,
+  getFacilitatorAddress,
+} from '@402md/shared/networks'
 import { checkCircuitBreakers, recordVolume } from '@/shared/circuit-breaker'
 import { checkReplay, markProcessed } from '@/shared/replay'
 import type {
@@ -13,14 +18,6 @@ import type {
 } from './settlements.types'
 
 const PLATFORM_FEE_BPS = parseInt(process.env.PLATFORM_FEE_BPS ?? '0', 10)
-
-const SUPPORTED_NETWORKS = ['eip155:8453', 'solana:mainnet', 'stellar:pubnet']
-
-const FACILITATOR_ADDRESSES: Record<string, string> = {
-  'eip155:8453': process.env.FACILITATOR_BASE ?? '0xFacilitatorBase',
-  'solana:mainnet': process.env.FACILITATOR_SOLANA ?? 'FacilitatorSolAddr',
-  'stellar:pubnet': process.env.FACILITATOR_STELLAR ?? 'FacilitatorStellarAddr',
-}
 
 export async function verifyPayment(req: VerifyRequest): Promise<VerifyResponse> {
   const { paymentPayload, paymentRequirements } = req
@@ -34,11 +31,11 @@ export async function verifyPayment(req: VerifyRequest): Promise<VerifyResponse>
     return { isValid: false, reason: 'Unknown merchantId' }
   }
 
-  if (!SUPPORTED_NETWORKS.includes(paymentRequirements.network)) {
+  if (!supportedCaip2s.includes(paymentRequirements.network)) {
     return { isValid: false, reason: `Unsupported network: ${paymentRequirements.network}` }
   }
 
-  const expectedPayTo = FACILITATOR_ADDRESSES[paymentRequirements.network]
+  const expectedPayTo = getFacilitatorAddress(paymentRequirements.network)
   if (paymentRequirements.payTo !== expectedPayTo) {
     return { isValid: false, reason: 'payTo does not match facilitator address' }
   }
