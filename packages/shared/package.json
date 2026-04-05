@@ -1,0 +1,54 @@
+{
+  "name": "@402md/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "bun": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./networks": {
+      "bun": "./src/networks/index.ts",
+      "types": "./dist/networks/index.d.ts",
+      "import": "./dist/networks/index.js"
+    },
+    "./db": {
+      "bun": "./src/db/index.ts",
+      "types": "./dist/db/index.d.ts",
+      "import": "./dist/db/index.js"
+    },
+    "./cache": {
+      "bun": "./src/cache/index.ts",
+      "types": "./dist/cache/index.d.ts",
+      "import": "./dist/cache/index.js"
+    },
+    "./tracing": {
+      "bun": "./src/tracing/index.ts",
+      "types": "./dist/tracing/index.d.ts",
+      "import": "./dist/tracing/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "bun test",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@opentelemetry/auto-instrumentations-node": "^0.72.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.214.0",
+    "@opentelemetry/sdk-node": "^0.214.0",
+    "@solana/spl-token": "^0.4.14",
+    "@solana/web3.js": "^1",
+    "@stellar/stellar-sdk": "^12",
+    "drizzle-orm": "^0.38",
+    "ioredis": "^5",
+    "postgres": "^3",
+    "viem": "^2"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5"
+  }
+}
