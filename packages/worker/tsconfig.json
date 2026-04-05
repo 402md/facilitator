@@ -8,8 +8,7 @@
     "skipLibCheck": true,
     "outDir": "dist",
     "paths": {
-      "@/*": ["./src/*"],
-      "@402md/relay/*": ["../relay/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src"]
