@@ -16,6 +16,7 @@ import { sql } from 'drizzle-orm'
 import { sellersRoutes } from '@/sellers/sellers.routes'
 import { settlementsRoutes } from '@/settlements/settlements.routes'
 import { onrampRoutes } from '@/onramp/onramp.routes'
+import { stellarMppRoutes } from '@/mpp/stellar-mpp.routes'
 import { db } from '@402md/shared/db'
 import { redis } from '@402md/shared/cache'
 import { getTemporalClient } from '@/shared/temporal'
@@ -45,6 +46,7 @@ export const app = new Elysia()
   .use(sellersRoutes)
   .use(settlementsRoutes)
   .use(onrampRoutes)
+  .use(stellarMppRoutes)
   .get('/health', async () => {
     const checks = {
       db: 'unknown' as string,

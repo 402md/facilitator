@@ -22,6 +22,7 @@
     "drizzle-orm": "^0.38",
     "elysia": "^1",
     "ioredis": "^5",
+    "mppx": "^0.5.7",
     "nanoid": "^5",
     "postgres": "^3"
   },
