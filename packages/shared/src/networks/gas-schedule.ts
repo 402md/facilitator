@@ -15,7 +15,7 @@ const GAS_SCHEDULE: Record<string, string> = {
 const CCTP_DOMAINS: Record<ChainSlug, number> = {
   base: 6,
   solana: 5,
-  stellar: 7,
+  stellar: 27,
 }
 
 export function getGasAllowanceBySlug(from: ChainSlug, to: ChainSlug): string {

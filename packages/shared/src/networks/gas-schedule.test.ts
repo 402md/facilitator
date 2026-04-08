@@ -25,7 +25,7 @@ describe('getCctpDomainBySlug', () => {
   test('returns correct domain per chain', () => {
     expect(getCctpDomainBySlug('base')).toBe(6)
     expect(getCctpDomainBySlug('solana')).toBe(5)
-    expect(getCctpDomainBySlug('stellar')).toBe(7)
+    expect(getCctpDomainBySlug('stellar')).toBe(27)
   })
 })
 

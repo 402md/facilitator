@@ -7,7 +7,7 @@ export const stellar: ChainDefinition = {
   mainnet: {
     caip2: 'stellar:pubnet',
     usdc: 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN',
-    cctpDomain: 7,
+    cctpDomain: 27,
     cctpTokenMessenger: '',
     cctpMessageTransmitter: '',
     networkPassphrase: Networks.PUBLIC,
@@ -19,7 +19,7 @@ export const stellar: ChainDefinition = {
   testnet: {
     caip2: 'stellar:testnet',
     usdc: 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN',
-    cctpDomain: 7,
+    cctpDomain: 27,
     cctpTokenMessenger: '',
     cctpMessageTransmitter: '',
     networkPassphrase: Networks.TESTNET,
