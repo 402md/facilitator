@@ -146,8 +146,6 @@ const dbMock = () => ({
   db: mockDb,
   sellers: {},
   transactions: {},
-  mppSessions: {},
-  mppVouchers: {},
 })
 mock.module('@402md/shared/db', dbMock)
 

@@ -46,36 +46,3 @@ export const transactions = pgTable(
     index('idx_transactions_buyer').on(table.buyerAddress),
   ],
 )
-
-export const mppSessions = pgTable(
-  'mpp_sessions',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    sellerId: uuid('seller_id').references(() => sellers.id),
-    buyerAddress: varchar('buyer_address', { length: 255 }).notNull(),
-    buyerNetwork: varchar('buyer_network', { length: 50 }).notNull(),
-    budget: numeric('budget', { precision: 30, scale: 0 }).notNull(),
-    spent: numeric('spent', { precision: 30, scale: 0 }).default('0'),
-    voucherCount: numeric('voucher_count').default('0'),
-    status: varchar('status', { length: 20 }).default('open'),
-    expiresAt: timestamp('expires_at').notNull(),
-    createdAt: timestamp('created_at').defaultNow(),
-    closedAt: timestamp('closed_at'),
-  },
-  (table) => [
-    index('idx_mpp_sessions_seller').on(table.sellerId),
-    index('idx_mpp_sessions_status').on(table.status),
-  ],
-)
-
-export const mppVouchers = pgTable(
-  'mpp_vouchers',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    sessionId: uuid('session_id').references(() => mppSessions.id, { onDelete: 'cascade' }),
-    cumulativeAmount: numeric('cumulative_amount', { precision: 30, scale: 0 }).notNull(),
-    voucherHash: varchar('voucher_hash', { length: 255 }).unique().notNull(),
-    createdAt: timestamp('created_at').defaultNow(),
-  },
-  (table) => [index('idx_mpp_vouchers_session').on(table.sessionId)],
-)
