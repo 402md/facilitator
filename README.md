@@ -9,7 +9,7 @@
 [![Stellar](https://img.shields.io/badge/Stellar-Soroban-blueviolet)](https://stellar.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6)](https://www.typescriptlang.org)
 
-**[402md](https://402md.com)** is a company specialized in payment infrastructure. The **Facilitator** is a cross-chain USDC settlement service for the x402 and MPP ecosystems.
+**[402md](https://402.md/)** is a company specialized in payment infrastructure. The **Facilitator** is a cross-chain USDC settlement service for the x402 and MPP ecosystems.
 
 ## Why
 
