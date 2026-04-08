@@ -55,36 +55,12 @@ export interface SameChainSettleResult {
   settledAt: string
 }
 
-export interface BatchSessionSettleParams {
-  sessionId: string
-  sellerId: string
-  sellerAddress: string
-  sellerNetwork: Network
-  buyerAddress: string
-  buyerNetwork: Network
-  totalAmount: string
-  voucherCount: number
-  destinationDomain: number
-}
-
-export interface BatchSessionSettleResult {
-  success: boolean
-  pullTxHash: string
-  burnTxHash: string
-  mintTxHash: string
-  sellerAmount: string
-  feeAmount: string
-  gasAllowance: string
-  voucherCount: number
-  settledAt: string
-}
-
 export interface WaitAttestationInput {
   messageHash: string
 }
 
 export interface RecordPaymentInput {
-  type: 'SAME_CHAIN' | 'BRIDGE_SETTLEMENT' | 'MPP_CHARGE' | 'MPP_SESSION_BATCH' | 'REBALANCE'
+  type: 'SAME_CHAIN' | 'BRIDGE_SETTLEMENT'
   protocol: 'x402' | 'mpp' | null
   sellerId: string
   buyerAddress: string
