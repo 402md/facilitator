@@ -27,6 +27,7 @@ export interface CctpBurnInput {
   amount: string
   recipient: string
   destinationDomain: number
+  cctpForwarder?: string
 }
 
 export interface CctpBurnResult {
@@ -58,6 +59,7 @@ export interface EnvConfig {
   cctpDomain: number
   cctpTokenMessenger: string
   cctpMessageTransmitter: string
+  cctpForwarder?: string
   rpcUrlEnv: string
   rpcUrlDefault: string | null
   facilitatorEnv: string
@@ -79,6 +81,7 @@ export interface ResolvedNetwork {
   cctpDomain: number
   cctpTokenMessenger: string
   cctpMessageTransmitter: string
+  cctpForwarder?: string
   rpcUrl: string
   facilitatorAddress: string
   viemChain?: Chain

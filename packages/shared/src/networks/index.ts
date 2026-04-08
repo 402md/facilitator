@@ -18,6 +18,7 @@ function resolveEnvConfig(def: ChainDefinition, envCfg: EnvConfig): ResolvedNetw
     cctpDomain: envCfg.cctpDomain,
     cctpTokenMessenger: envCfg.cctpTokenMessenger,
     cctpMessageTransmitter: envCfg.cctpMessageTransmitter,
+    cctpForwarder: envCfg.cctpForwarder,
     rpcUrl,
     facilitatorAddress,
     viemChain: envCfg.viemChain,
