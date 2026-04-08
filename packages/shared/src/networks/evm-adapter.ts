@@ -17,6 +17,7 @@ const USDC_ABI = parseAbi([
 
 const TOKEN_MESSENGER_ABI = parseAbi([
   'function depositForBurn(uint256 amount, uint32 destinationDomain, bytes32 mintRecipient, address burnToken) returns (uint64 nonce)',
+  'function depositForBurnWithHook(uint256 amount, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, bytes32 destinationCaller, uint256 maxFee, uint32 minFinalityThreshold, bytes hookData) returns (uint64 nonce)',
 ])
 
 const MESSAGE_TRANSMITTER_ABI = parseAbi([
@@ -73,13 +74,42 @@ export function createEvmAdapter(resolved: ResolvedNetwork): ChainAdapter {
     },
 
     async cctpBurn(input: CctpBurnInput): Promise<CctpBurnResult> {
-      const mintRecipient = padAddress(input.recipient)
-      const hash = await walletClient.writeContract({
-        address: resolved.cctpTokenMessenger as Hex,
-        abi: TOKEN_MESSENGER_ABI,
-        functionName: 'depositForBurn',
-        args: [BigInt(input.amount), input.destinationDomain, mintRecipient, resolved.usdc as Hex],
-      })
+      const isStellarDestination = input.destinationDomain === 27
+
+      let hash: Hex
+      if (isStellarDestination && input.cctpForwarder) {
+        const forwarderBytes32 = padAddress(input.cctpForwarder)
+        const hookData = buildCctpForwarderHookData(input.recipient)
+        hash = await walletClient.writeContract({
+          address: resolved.cctpTokenMessenger as Hex,
+          abi: TOKEN_MESSENGER_ABI,
+          functionName: 'depositForBurnWithHook',
+          args: [
+            BigInt(input.amount),
+            input.destinationDomain,
+            forwarderBytes32,
+            resolved.usdc as Hex,
+            forwarderBytes32,
+            0n,
+            0,
+            hookData,
+          ],
+        })
+      } else {
+        const mintRecipient = padAddress(input.recipient)
+        hash = await walletClient.writeContract({
+          address: resolved.cctpTokenMessenger as Hex,
+          abi: TOKEN_MESSENGER_ABI,
+          functionName: 'depositForBurn',
+          args: [
+            BigInt(input.amount),
+            input.destinationDomain,
+            mintRecipient,
+            resolved.usdc as Hex,
+          ],
+        })
+      }
+
       const receipt = await publicClient.waitForTransactionReceipt({ hash })
       const messageHash = extractMessageHash(receipt)
       return { txHash: hash, messageHash }
@@ -110,6 +140,15 @@ function splitSignature(sig: string): { v: number; r: Hex; s: Hex } {
 function padAddress(address: string): Hex {
   const clean = address.startsWith('0x') ? address.slice(2) : address
   return `0x${clean.padStart(64, '0')}` as Hex
+}
+
+function buildCctpForwarderHookData(forwardRecipientStrkey: string): Hex {
+  const recipientBytes = Buffer.from(forwardRecipientStrkey, 'utf8')
+  const hookData = Buffer.alloc(32 + recipientBytes.length)
+  hookData.writeUInt32BE(0, 24) // hook version = 0
+  hookData.writeUInt32BE(recipientBytes.length, 28) // recipient byte length
+  recipientBytes.copy(hookData, 32) // recipient strkey as UTF-8
+  return `0x${hookData.toString('hex')}` as Hex
 }
 
 function extractMessageHash(receipt: {
