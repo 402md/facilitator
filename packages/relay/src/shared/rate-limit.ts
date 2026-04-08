@@ -14,6 +14,7 @@ const RATE_LIMITS: Record<string, RateLimitConfig> = {
   '/onramp': { maxRequests: 30, windowSeconds: 60 },
   '/mpp/config': { maxRequests: 100, windowSeconds: 60 },
   '/mpp/charge': { maxRequests: 500, windowSeconds: 60 },
+  '/bazaar': { maxRequests: 100, windowSeconds: 60 },
 }
 
 export async function checkRateLimit(path: string, ip: string): Promise<void> {
