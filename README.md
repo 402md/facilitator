@@ -9,11 +9,13 @@
 [![Stellar](https://img.shields.io/badge/Stellar-Soroban-blueviolet)](https://stellar.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6)](https://www.typescriptlang.org)
 
+**[402md](https://402md.com)** is an open source organization building infrastructure for agentic payments. The **Facilitator** is its first product — a cross-chain USDC settlement service for the x402 and MPP ecosystems.
+
 ## Why
 
 A seller monetizing an API via x402 can only receive payments from buyers on chains they explicitly support. A seller on Stellar misses every buyer on Base or Solana. Adding chains means managing multiple wallets, multiple SDKs, and bridging logic.
 
-402md eliminates this. The seller registers once — one wallet, one chain — and gets a `merchantId` plus the facilitator's receiving addresses on every supported chain. Buyers pay on whatever chain they're on using standard `@x402/client`, zero changes. 402md identifies the seller, bridges via [Circle CCTP V2](https://www.circle.com/cross-chain-transfer-protocol) (native USDC, no wrapped tokens, no slippage), and delivers USDC to the seller's wallet. Same-chain payments settle directly.
+The 402md Facilitator eliminates this. The seller registers once — one wallet, one chain — and gets a `merchantId` plus the facilitator's receiving addresses on every supported chain. Buyers pay on whatever chain they're on using standard `@x402/client`, zero changes. The Facilitator identifies the seller, bridges via [Circle CCTP V2](https://www.circle.com/cross-chain-transfer-protocol) (native USDC, no wrapped tokens, no slippage), and delivers USDC to the seller's wallet. Same-chain payments settle directly.
 
 Dual-protocol: supports both [x402](https://x402.org) (Coinbase's HTTP 402 protocol) and [MPP](https://www.machinepayments.com/) (Machine Payments Protocol) via the [`@stellar/mpp`](https://github.com/stellar/stellar-mpp-sdk) SDK. Sellers on Stellar get micropayments through Charge Mode with zero custom libraries.
 
@@ -281,16 +283,46 @@ Adding a new CCTP-supported chain (e.g., Polygon, Arbitrum) requires only a new 
 
 ## Fee Model
 
-**Free** — no platform fee, no commission. Sellers only pay actual network costs.
+**No platform fee.** 402md Facilitator charges 0% commission. The only cost is a gas allowance — a fixed amount per route that covers the on-chain transactions the facilitator submits on behalf of the buyer and seller (pull, burn, mint, transfer). This allowance is deducted from the gross payment before delivering to the seller, so the facilitator is never out of pocket.
 
-| Scenario           | Cost                                   | Who Pays                    |
-| ------------------ | -------------------------------------- | --------------------------- |
-| Same-chain (x402)  | Gas allowance (fixed schedule)         | Deducted from seller payout |
-| Cross-chain (x402) | Gas + CCTP allowance (fixed schedule)  | Deducted from seller payout |
-| MPP Charge         | Gas (buyer pays directly in push mode) | Buyer                       |
-| Platform fee       | None (0%)                              | —                           |
+### How it works
 
-> Network costs are negligible: Stellar ~$0.000003, Solana ~$0.0004, Base ~$0.0002
+In x402, the buyer signs an authorization but **does not pay gas** — the facilitator submits all transactions. The gas allowance reimburses the facilitator from the payment itself:
+
+```
+Buyer pays:     $1.000000 USDC
+Gas allowance: -$0.000500 (fixed, covers pull + burn + mint)
+Platform fee:  -$0.000000 (0%)
+                ──────────
+Seller receives: $0.999500 USDC
+```
+
+In MPP Charge Mode, the buyer broadcasts the transaction directly and pays gas themselves. No deduction from the seller.
+
+### Gas allowance per route
+
+| Route             | Gas Allowance | Seller receives (on $1.00) |
+| ----------------- | ------------- | -------------------------- |
+| Base → Stellar    | $0.000500     | $0.999500                  |
+| Stellar → Base    | $0.000500     | $0.999500                  |
+| Base → Solana     | $0.000800     | $0.999200                  |
+| Solana → Base     | $0.001200     | $0.998800                  |
+| Solana → Stellar  | $0.000800     | $0.999200                  |
+| Stellar → Solana  | $0.000800     | $0.999200                  |
+| Base → Base       | $0.000400     | $0.999600                  |
+| Solana → Solana   | $0.000800     | $0.999200                  |
+| Stellar → Stellar | $0.000006     | $0.999994                  |
+
+These are fixed values, not estimates. If actual gas is lower than the allowance, the facilitator retains the difference. If higher, the facilitator absorbs it. CCTP itself charges no fee — burn/mint is 1:1.
+
+### Summary
+
+| Scenario           | Cost                                  | Who Pays                    |
+| ------------------ | ------------------------------------- | --------------------------- |
+| Same-chain (x402)  | Gas allowance (fixed schedule)        | Deducted from seller payout |
+| Cross-chain (x402) | Gas allowance (fixed schedule)        | Deducted from seller payout |
+| MPP Charge         | Gas (buyer broadcasts, pays directly) | Buyer                       |
+| Platform fee       | None (0%)                             | —                           |
 
 ## Security
 
