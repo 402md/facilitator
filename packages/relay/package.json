@@ -17,6 +17,7 @@
     "@elysiajs/swagger": "^1",
     "@opentelemetry/exporter-trace-otlp-http": "^0.214.0",
     "@opentelemetry/sdk-node": "^0.214.0",
+    "@stellar/mpp": "^0.4.0",
     "@temporalio/client": "^1",
     "drizzle-orm": "^0.38",
     "elysia": "^1",
