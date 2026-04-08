@@ -19,7 +19,7 @@ async function main() {
     address: process.env.TEMPORAL_ADDRESS ?? 'localhost:7233',
   })
 
-  const taskQueues = ['fast-settlement', 'cross-settlement', 'ops']
+  const taskQueues = ['fast-settlement', 'cross-settlement']
   const workers = await Promise.all(
     taskQueues.map((taskQueue) =>
       Worker.create({
