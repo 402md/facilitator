@@ -11,6 +11,7 @@ const RATE_LIMITS: Record<string, RateLimitConfig> = {
   '/verify': { maxRequests: 1000, windowSeconds: 60 },
   '/settle': { maxRequests: 500, windowSeconds: 60 },
   '/discover': { maxRequests: 100, windowSeconds: 60 },
+  '/onramp': { maxRequests: 30, windowSeconds: 60 },
 }
 
 export async function checkRateLimit(path: string, ip: string): Promise<void> {
