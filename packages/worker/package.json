@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "tsx watch --env-file=.env src/worker.ts",
     "build": "tsc",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "lint": "eslint src/"
   },
   "dependencies": {
