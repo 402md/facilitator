@@ -11,9 +11,15 @@
 
 ## Why
 
-402md Facilitator lets a seller receive USDC on their chain from buyers on any chain. One wallet, one registration. The seller calls `POST /register` with the wallet address and network where they want to receive, and gets back a `merchantId` plus the facilitator's receiving addresses on every supported chain. In the x402 middleware config, the seller points the facilitator URL to 402md, lists those addresses in `accepts[]` for each network, and passes the `merchantId` in the extra field. That's it. Buyers pay to the facilitator address on their chain with no changes to their workflow or SDK, 402md identifies the seller by `merchantId`, and delivers USDC to the seller's registered wallet. Cross-chain payments are bridged through [Circle CCTP V2](https://www.circle.com/cross-chain-transfer-protocol) (native USDC, no wrapped tokens). Same-chain payments settle directly. Also works as an [MPP](https://www.machinepayments.com/) payment method, including Stellar's native MPP and x402 under MPP.
+A seller monetizing an API via x402 can only receive payments from buyers on chains they explicitly support. A seller on Stellar misses every buyer on Base or Solana. Adding chains means managing multiple wallets, multiple SDKs, and bridging logic.
 
-Free and open source. No platform fee, sellers only pay network gas. Use the hosted instance at [facilitator.402.md](https://facilitator.402.md) or self-host your own. MIT licensed.
+402md eliminates this. The seller registers once — one wallet, one chain — and gets a `merchantId` plus the facilitator's receiving addresses on every supported chain. Buyers pay on whatever chain they're on using standard `@x402/client`, zero changes. 402md identifies the seller, bridges via [Circle CCTP V2](https://www.circle.com/cross-chain-transfer-protocol) (native USDC, no wrapped tokens, no slippage), and delivers USDC to the seller's wallet. Same-chain payments settle directly.
+
+Dual-protocol: supports both [x402](https://x402.org) (Coinbase's HTTP 402 protocol) and [MPP](https://www.machinepayments.com/) (Machine Payments Protocol) via the [`@stellar/mpp`](https://github.com/stellar/stellar-mpp-sdk) SDK. Sellers on Stellar get micropayments through Charge Mode with zero custom libraries.
+
+Includes a **bazaar** — a discovery endpoint where agents can find paywalled services — and an **on-ramp** endpoint listing fiat-to-USDC providers (Bridge.xyz, MoneyGram).
+
+Free and open source. No platform fee, sellers only pay network gas. MIT licensed.
 
 ## How It Works
 
@@ -51,29 +57,31 @@ flowchart LR
 
 ### x402 Cross-Chain Settlement
 
-Example: an AI agent on Stellar pays for a weather API hosted by a seller on Base. The agent gets the resource in milliseconds. Settlement (pull, CCTP burn, attestation, mint to seller) runs in background via Temporal.
+Example: an AI agent on Base pays for a search API hosted by a seller on Stellar. The agent gets the resource in milliseconds. Settlement runs in background via Temporal.
+
+When the destination is Stellar, the EVM adapter uses `depositForBurnWithHook` with `CctpForwarder` — the CCTP V2 contract that atomically mints and forwards USDC to the seller's Stellar address.
 
 ```mermaid
 sequenceDiagram
-    participant Agent as AI Agent (Stellar)
-    participant Seller as Seller API (Base)
+    participant Agent as AI Agent (Base)
+    participant Seller as Seller API (Stellar)
     participant Relay as 402md Relay
     participant Worker as 402md Worker
-    participant Source as Source Chain (Stellar)
+    participant Source as Base
     participant CCTP as Circle CCTP V2
-    participant Dest as Dest Chain (Base)
+    participant Dest as Stellar
 
-    Agent->>Seller: GET /weather
-    Seller-->>Agent: 402 Payment Required (accepts: Stellar, Base, Solana)
+    Agent->>Seller: GET /search?q=stellar
+    Seller-->>Agent: 402 Payment Required (accepts: Base, Solana, Stellar)
 
-    Note over Agent: Signs USDC authorization<br/>to facilitator address on Stellar
+    Note over Agent: Signs USDC authorization<br/>to facilitator address on Base
 
-    Agent->>Seller: GET /weather + payment header
+    Agent->>Seller: GET /search + payment header
     Seller->>Relay: POST /verify (paymentPayload + merchantId)
     Relay-->>Seller: { isValid: true } ~ms
-    Seller-->>Agent: 200 OK + resource
+    Seller-->>Agent: 200 OK + results
 
-    Note over Agent: Agent has resource.<br/>Settlement happens async ↓
+    Note over Agent: Agent has results.<br/>Settlement happens async
 
     Seller->>Relay: POST /settle (paymentPayload + merchantId)
     Relay->>Worker: startWorkflow(crossChainSettle)
@@ -81,22 +89,21 @@ sequenceDiagram
     rect rgb(45, 50, 60)
         Note over Worker,Dest: Temporal Workflow — crossChainSettle
         Worker->>Source: 1. pullFromBuyer — $1.00 USDC
-        Source-->>Worker: ✓ pull tx confirmed
-        Note over Worker: 2. Retain gas allowance ($0.0004)
-        Worker->>Source: 3. CCTP burn — $0.9996 (mintRecipient = seller)
-        Source-->>Worker: ✓ burn tx confirmed
-        Worker->>CCTP: 4. waitAttestation (poll Circle API)
-        Note over CCTP: Stellar finality ~5-10s
-        CCTP-->>Worker: ✓ attestation received
-        Worker->>Dest: 5. CCTP mint — $0.9996 to seller on Base
-        Dest-->>Worker: ✓ mint tx confirmed
+        Source-->>Worker: pull tx confirmed
+        Note over Worker: 2. Retain gas allowance ($0.0005)
+        Worker->>Source: 3. depositForBurnWithHook — $0.9995<br/>(mintRecipient = CctpForwarder,<br/>hookData = seller's Stellar address)
+        Source-->>Worker: burn tx confirmed
+        Worker->>CCTP: 4. waitAttestation (poll Circle Iris API)
+        CCTP-->>Worker: attestation received
+        Worker->>Dest: 5. receive_message on MessageTransmitter<br/>CctpForwarder mints + forwards to seller
+        Dest-->>Worker: mint tx confirmed
         Worker->>Worker: 6. Record in ledger
     end
 ```
 
 ### x402 Same-Chain Settlement
 
-Both parties on Base. No bridge needed. The worker pulls USDC from the buyer, deducts gas allowance, and transfers the net amount to the seller.
+Both parties on the same chain. No bridge needed.
 
 ```mermaid
 sequenceDiagram
@@ -126,41 +133,28 @@ sequenceDiagram
     end
 ```
 
-### MPP Cross-Chain Settlement
+### MPP Charge Mode (Stellar)
 
-MPP uses push mode: the buyer broadcasts the USDC transaction directly and pays gas. The relay verifies the tx on-chain and starts the same CCTP bridge workflow.
+MPP uses push mode via the official `@stellar/mpp` SDK. The buyer signs a Soroban SAC `transfer` invocation. The facilitator verifies and settles on-chain.
 
 ```mermaid
 sequenceDiagram
-    participant Agent as AI Agent
-    participant Service as MPP Service
+    participant Agent as AI Agent (Stellar)
+    participant Seller as Seller API (Stellar)
     participant Relay as 402md Relay
-    participant Worker as 402md Worker
-    participant Source as Source Chain
-    participant CCTP as Circle CCTP V2
-    participant Dest as Seller's Chain
 
-    Agent->>Service: Request resource
-    Service-->>Agent: 402 + MPP payment methods (incl. 402md)
+    Agent->>Seller: GET /search?q=stellar
+    Seller->>Relay: GET /merchants/:id/mpp/charge?amount=1000000
+    Relay-->>Seller: 402 + WWW-Authenticate (MPP challenge)
+    Seller-->>Agent: 402 + MPP challenge
 
-    Agent->>Source: Broadcast USDC tx to facilitator address
-    Note over Agent: MPP = push mode<br/>buyer pays gas directly
+    Note over Agent: Signs Soroban SAC transfer<br/>via @stellar/mpp client
 
-    Agent->>Relay: POST /mpp/settle (txHash + merchantId)
-
-    rect rgb(45, 50, 60)
-        Note over Worker,Dest: Temporal Workflow — crossChainSettle
-        Relay->>Worker: startWorkflow()
-        Worker->>Source: Verify incoming tx
-        Worker->>Source: CCTP burn (net amount)
-        Worker->>CCTP: waitAttestation
-        CCTP-->>Worker: ✓ attestation
-        Worker->>Dest: CCTP mint to seller
-        Worker->>Worker: Record in ledger
-    end
-
-    Relay-->>Service: { settled: true }
-    Service-->>Agent: 200 OK + resource
+    Agent->>Seller: GET /search + Payment credential
+    Seller->>Relay: GET /merchants/:id/mpp/charge + credential
+    Note over Relay: @stellar/mpp SDK verifies<br/>tx on-chain
+    Relay-->>Seller: 200 + Payment-Receipt
+    Seller-->>Agent: 200 OK + results
 ```
 
 ### Settlement Times
@@ -170,7 +164,7 @@ sequenceDiagram
 | Stellar    | Base, Solana    | ~5-10s     |
 | Solana     | Base, Stellar   | ~25-30s    |
 | Base (EVM) | Solana, Stellar | ~15-19 min |
-| EVM        | EVM             | ~15-19 min |
+| Same-chain | Same-chain      | < 5s       |
 
 > Settlement time is dominated by source chain finality. Circle issues the CCTP attestation after hard finality; the destination mint is near-instant.
 
@@ -183,7 +177,7 @@ No dashboard, no login, no SDK. One curl to start receiving cross-chain USDC:
 ```bash
 curl -X POST https://api.402md.com/register \
   -H "Content-Type: application/json" \
-  -d '{ "wallet": "0xABC123...", "network": "eip155:8453" }'
+  -d '{ "wallet": "GSELLER...", "network": "stellar:pubnet" }'
 ```
 
 **Response:**
@@ -191,12 +185,12 @@ curl -X POST https://api.402md.com/register \
 ```json
 {
   "merchantId": "hb-a1b2c3",
-  "wallet": "0xABC123...",
-  "network": "eip155:8453",
+  "wallet": "GSELLER...",
+  "network": "stellar:pubnet",
   "facilitatorAddresses": {
     "eip155:8453": "0xFacilitatorBase",
     "solana:mainnet": "FacilitatorSolAddr",
-    "stellar:pubnet": "FacilitatorStellarAddr"
+    "stellar:pubnet": "GFacilitatorStellarAddr"
   }
 }
 ```
@@ -208,7 +202,7 @@ import { paymentMiddleware } from '@x402/express'
 
 app.use(
   paymentMiddleware({
-    'GET /weather': {
+    'GET /search': {
       accepts: [
         {
           scheme: 'exact',
@@ -219,8 +213,8 @@ app.use(
         },
         {
           scheme: 'exact',
-          network: 'solana:mainnet',
-          payTo: 'FacilitatorSolAddr',
+          network: 'stellar:pubnet',
+          payTo: 'GFacilitatorStellarAddr',
           price: '$0.001',
           extra: { merchantId: 'hb-a1b2c3' },
         },
@@ -230,57 +224,78 @@ app.use(
 )
 ```
 
-That's it. The seller's API now accepts USDC from any supported chain. Buyers on Solana pay on Solana; the seller receives on Base. No bridging logic, no multi-chain wallet management.
+**3. Need USDC? Check available on-ramp providers:**
+
+```bash
+curl https://api.402md.com/onramp?network=stellar:pubnet&walletAddress=GSELLER...
+```
+
+That's it. The seller's API now accepts USDC from any supported chain. Buyers on Base pay on Base; the seller receives on Stellar. No bridging logic, no multi-chain wallet management.
 
 ## API Endpoints
 
-### x402
+### Sellers
 
-| Method | Endpoint                               | Description                                                      |
-| ------ | -------------------------------------- | ---------------------------------------------------------------- |
-| `POST` | `/register`                            | Register seller wallet, get `merchantId` + facilitator addresses |
-| `GET`  | `/discover?merchantId=<id>`            | Accepted networks + fees for a seller (cacheable, 1hr TTL)       |
-| `POST` | `/verify`                              | Verify buyer payment (~ms, synchronous)                          |
-| `POST` | `/settle`                              | Dispatch settlement workflow (async)                             |
-| `GET`  | `/bridge/status/:workflowId`           | Real-time settlement status + tx hashes                          |
-| `GET`  | `/bridge/fees?from=<caip2>&to=<caip2>` | Fee quote for a chain pair                                       |
-| `GET`  | `/.well-known/x402.json`               | x402 V2 service discovery metadata                               |
+| Method | Endpoint                    | Description                                                      |
+| ------ | --------------------------- | ---------------------------------------------------------------- |
+| `POST` | `/register`                 | Register seller wallet, get `merchantId` + facilitator addresses |
+| `GET`  | `/discover?merchantId=<id>` | Accepted networks + fees for a seller (cacheable)                |
+| `GET`  | `/supported`                | List all supported networks                                      |
+| `GET`  | `/.well-known/x402.json`    | x402 V2 service discovery metadata                               |
 
-### MPP
+### Settlements (x402)
 
-| Method | Endpoint                            | Description                               |
-| ------ | ----------------------------------- | ----------------------------------------- |
-| `GET`  | `/merchants/:merchantId/mpp/config` | Payment method config for MPP integration |
-| `POST` | `/merchants/:merchantId/mpp/verify` | Verify MPP payment on-chain               |
-| `POST` | `/merchants/:merchantId/mpp/settle` | Start settlement workflow                 |
+| Method | Endpoint                               | Description                             |
+| ------ | -------------------------------------- | --------------------------------------- |
+| `POST` | `/verify`                              | Verify buyer payment (~ms, synchronous) |
+| `POST` | `/settle`                              | Dispatch settlement workflow (async)    |
+| `GET`  | `/bridge/status/:workflowId`           | Real-time settlement status + tx hashes |
+| `GET`  | `/bridge/fees?from=<caip2>&to=<caip2>` | Fee quote for a chain pair              |
+
+### MPP (Stellar)
+
+| Method     | Endpoint                            | Description                                    |
+| ---------- | ----------------------------------- | ---------------------------------------------- |
+| `GET`      | `/merchants/:merchantId/mpp/config` | MPP method spec (currency, recipient, network) |
+| `GET/POST` | `/merchants/:merchantId/mpp/charge` | Charge Mode — handles 402 challenge + payment  |
+
+### Discovery & On-Ramp
+
+| Method | Endpoint  | Description                                         |
+| ------ | --------- | --------------------------------------------------- |
+| `GET`  | `/bazaar` | List registered sellers (filter by network, search) |
+| `GET`  | `/onramp` | List fiat-to-USDC providers (Bridge.xyz, MoneyGram) |
+| `GET`  | `/health` | Service health check (DB, Redis, Temporal)          |
 
 ## Supported Chains
 
-| Chain          | Pull Mechanism                                   | CCTP Burn                             | SDK                    |
-| -------------- | ------------------------------------------------ | ------------------------------------- | ---------------------- |
-| **Base (EVM)** | EIP-3009 `transferWithAuthorization`             | `depositForBurn` on TokenMessenger    | `viem`                 |
-| **Solana**     | Facilitator as fee payer + SPL `TransferChecked` | CCTP program `depositForBurn`         | `@solana/web3.js`      |
-| **Stellar**    | Facilitator as fee source + payment operation    | `depositForBurn` via Stellar contract | `@stellar/stellar-sdk` |
+| Chain          | Pull Mechanism                                   | CCTP Burn                                                 | SDK                    |
+| -------------- | ------------------------------------------------ | --------------------------------------------------------- | ---------------------- |
+| **Base (EVM)** | EIP-3009 `transferWithAuthorization`             | `depositForBurn` / `depositForBurnWithHook` (for Stellar) | `viem`                 |
+| **Solana**     | Facilitator as fee payer + SPL `TransferChecked` | CCTP program `depositForBurn`                             | `@solana/web3.js`      |
+| **Stellar**    | Facilitator as fee source + payment operation    | Soroban `deposit_for_burn` on TokenMessengerMinter        | `@stellar/stellar-sdk` |
+
+When the destination is Stellar (CCTP domain 27), the EVM adapter uses `depositForBurnWithHook` with the `CctpForwarder` contract. This encodes the seller's Stellar address in `hookData` so the forwarder atomically mints and forwards USDC to the seller.
 
 Adding a new CCTP-supported chain (e.g., Polygon, Arbitrum) requires only a new RPC config — zero contract deployments, zero audits.
 
 ## Fee Model
 
-**Free forever** — no platform fee, no commission. Sellers only pay actual network costs (gas + CCTP).
+**Free** — no platform fee, no commission. Sellers only pay actual network costs.
 
 | Scenario           | Cost                                   | Who Pays                    |
 | ------------------ | -------------------------------------- | --------------------------- |
 | Same-chain (x402)  | Gas allowance (fixed schedule)         | Deducted from seller payout |
 | Cross-chain (x402) | Gas + CCTP allowance (fixed schedule)  | Deducted from seller payout |
-| MPP (any)          | Gas (buyer pays directly in push mode) | Buyer                       |
+| MPP Charge         | Gas (buyer pays directly in push mode) | Buyer                       |
 | Platform fee       | None (0%)                              | —                           |
 
 > Network costs are negligible: Stellar ~$0.000003, Solana ~$0.0004, Base ~$0.0002
 
 ## Security
 
-- **Non-custodial** — CCTP mints directly to seller. Facilitator never custodies seller funds
-- **No custom smart contracts** — calls standard USDC (EIP-3009) + CCTP TokenMessenger via chain SDKs
+- **Non-custodial** — CCTP mints directly to seller via CctpForwarder. Facilitator never custodies seller funds
+- **No custom smart contracts** — calls standard USDC (EIP-3009) + CCTP TokenMessenger/CctpForwarder via chain SDKs
 - **Circuit breakers** — per-tx limit, daily volume limit, global pause (all off-chain via Redis)
 - **Replay protection** — EIP-3009 nonce (EVM) + authorization nonce (Solana/Stellar) + Redis dedup
 - **Gas wallet isolation** — facilitator hot wallet can only submit settlement transactions
@@ -290,20 +305,22 @@ Adding a new CCTP-supported chain (e.g., Polygon, Arbitrum) requires only a new 
 
 ```
 packages/
-├── relay/     @402md/relay   — HTTP API (Elysia/Bun)
-├── worker/    @402md/worker  — Settlement workflows (Temporal/Node.js)
-└── mpp/       @402md/mpp     — MPP payment method plugin
-test/
-└── e2e/       End-to-end tests
-docs/
-└── plans/     Implementation plans
+├── relay/         @402md/relay        — HTTP API (Elysia/Bun)
+├── worker/        @402md/worker       — Settlement workflows (Temporal/Node.js)
+├── shared/        @402md/shared       — Network adapters, DB schema, cache, tracing
+├── demo-seller/   @402md/demo-seller  — Example: paywalled search API on Stellar
+└── demo-agent/    @402md/demo-agent   — Example: agent that discovers + pays services
+scripts/
+└── demo.sh        End-to-end demo orchestrator
 ```
 
-| Package  | Runtime | Framework    | Purpose                                                                |
-| -------- | ------- | ------------ | ---------------------------------------------------------------------- |
-| `relay`  | Bun     | Elysia.js    | HTTP API, seller registration, payment verification, Temporal dispatch |
-| `worker` | Node.js | Temporal SDK | On-chain settlement: pull, CCTP burn/mint, ledger                      |
-| `mpp`    | Node.js | —            | MPP payment method spec for cross-chain USDC                           |
+| Package       | Runtime | Framework             | Purpose                                                                |
+| ------------- | ------- | --------------------- | ---------------------------------------------------------------------- |
+| `relay`       | Bun     | Elysia.js             | HTTP API, seller registration, payment verification, Temporal dispatch |
+| `worker`      | Node.js | Temporal SDK          | On-chain settlement: pull, CCTP burn/mint, ledger                      |
+| `shared`      | —       | —                     | Network adapters (EVM, Solana, Stellar), Drizzle schema, Redis, OTEL   |
+| `demo-seller` | Bun     | Elysia + @stellar/mpp | MPP-paywalled search API on Stellar testnet                            |
+| `demo-agent`  | Bun     | @stellar/mpp          | Agent that discovers sellers via bazaar and pays via MPP               |
 
 > Worker uses Node.js because the Temporal SDK requires native modules incompatible with Bun.
 
@@ -353,9 +370,30 @@ bun run dev
 
 The relay starts at `http://localhost:3000`. Temporal UI is available at `http://localhost:8233`.
 
+### Demo
+
+Run the full end-to-end demo (starts relay, worker, demo-seller, and demo-agent):
+
+```bash
+./scripts/demo.sh
+```
+
+The demo-seller auto-registers with the facilitator, creates a paywalled search API, and the demo-agent discovers it via `/bazaar`, makes paid queries via MPP Charge Mode, and prints results.
+
 ### Environment Variables
 
 Each package requires a `.env` file. See `.env.example` in each package directory for required variables.
+
+Key variables:
+
+| Variable                          | Description                                      |
+| --------------------------------- | ------------------------------------------------ |
+| `NETWORK_ENV`                     | `testnet` or `mainnet` (default: `testnet`)      |
+| `FACILITATOR_STELLAR`             | Your Stellar public key (receiving address)      |
+| `FACILITATOR_PRIVATE_KEY_STELLAR` | Your Stellar secret key (worker only, signs txs) |
+| `FACILITATOR_BASE`                | Your Base address (receiving address)            |
+| `FACILITATOR_PRIVATE_KEY_BASE`    | Your Base private key (worker only, signs txs)   |
+| `MPP_SECRET_KEY`                  | HMAC secret for MPP challenge binding            |
 
 ## Scripts
 
@@ -366,6 +404,7 @@ Each package requires a `.env` file. See `.env.example` in each package director
 | `bun run lint`       | Lint all packages              |
 | `bun run format`     | Check formatting (Prettier)    |
 | `bun run format:fix` | Fix formatting                 |
+| `./scripts/demo.sh`  | Run end-to-end demo            |
 
 ### Relay-specific
 
