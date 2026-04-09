@@ -1,10 +1,8 @@
 import { nanoid } from 'nanoid'
-import { createSeller, findByMerchantId, findByWallet } from './sellers.repository'
+import { createSeller, findByMerchantId } from './sellers.repository'
 import { SellerNotFoundError } from '@/shared/errors'
 import { supportedCaip2s, networks, UnsupportedNetworkError } from '@402md/shared/networks'
 import type { RegisterRequest, RegisterResponse, DiscoveryResponse } from './sellers.types'
-
-const FACILITATOR_URL = process.env.FACILITATOR_URL ?? 'https://api.402md.com'
 
 function buildFacilitatorAddresses(): Record<string, string> {
   return Object.fromEntries(networks.map((n) => [n.caip2, n.facilitatorAddress]))
@@ -18,18 +16,13 @@ function buildCodeSnippet(merchantId: string, addresses: Record<string, string>)
     )
     .join(',\n')
 
-  return `// Standard @x402/express — zero 402md dependencies
-const server = new x402ResourceServer(
-  new HTTPFacilitatorClient({ url: "${FACILITATOR_URL}" })
-)
-
-app.use(paymentMiddleware({
+  return `app.use(paymentMiddleware({
   "GET /your-endpoint": {
     accepts: [
 ${accepts}
     ],
   },
-}, server))`
+}, "https://facilitator.402.md"))`
 }
 
 export async function registerSeller(req: RegisterRequest): Promise<RegisterResponse> {
@@ -38,19 +31,7 @@ export async function registerSeller(req: RegisterRequest): Promise<RegisterResp
   }
 
   const facilitatorAddresses = buildFacilitatorAddresses()
-
-  const existing = await findByWallet(req.wallet, req.network)
-  if (existing) {
-    return {
-      merchantId: existing.merchantId,
-      wallet: existing.walletAddress,
-      network: existing.network,
-      facilitatorAddresses,
-      codeSnippet: buildCodeSnippet(existing.merchantId, facilitatorAddresses),
-    }
-  }
-
-  const merchantId = `${req.wallet.slice(2, 4).toLowerCase()}-${nanoid(6)}`
+  const merchantId = `${req.wallet.slice(2, 4).toLowerCase()}-${nanoid(12)}`
   const seller = await createSeller({
     merchantId,
     walletAddress: req.wallet,

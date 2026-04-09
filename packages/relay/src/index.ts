@@ -49,6 +49,8 @@ export const app = new Elysia()
   .use(onrampRoutes)
   .use(stellarMppRoutes)
   .use(bazaarRoutes)
+  .get('/', () => Bun.file(new URL('../public/index.html', import.meta.url).pathname))
+  .get('/cover.mp4', () => Bun.file(new URL('../public/cover.mp4', import.meta.url).pathname))
   .get('/health', async () => {
     const checks = {
       db: 'unknown' as string,

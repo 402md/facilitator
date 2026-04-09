@@ -8,6 +8,13 @@
       "when": 1775344809017,
       "tag": "0000_blushing_pixie",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1775747242817,
+      "tag": "0001_right_pestilence",
+      "breakpoints": true
     }
   ]
 }
