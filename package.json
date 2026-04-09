@@ -6,7 +6,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "turbo dev",
+    "dev": "turbo dev --filter=@402md/relay --filter=@402md/worker --filter=@402md/shared",
     "build": "turbo build",
     "lint": "turbo lint",
     "test": "turbo test",
