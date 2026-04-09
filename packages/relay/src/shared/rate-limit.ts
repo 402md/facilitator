@@ -7,7 +7,7 @@ interface RateLimitConfig {
 }
 
 const RATE_LIMITS: Record<string, RateLimitConfig> = {
-  '/register': { maxRequests: 100, windowSeconds: 3600 },
+  '/register': { maxRequests: 3, windowSeconds: 3600 },
   '/verify': { maxRequests: 1000, windowSeconds: 60 },
   '/settle': { maxRequests: 500, windowSeconds: 60 },
   '/discover': { maxRequests: 100, windowSeconds: 60 },

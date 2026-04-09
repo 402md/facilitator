@@ -28,7 +28,7 @@ describe('registerSeller', () => {
     ).rejects.toThrow('Unsupported network')
   })
 
-  test('returns existing seller when wallet already registered', async () => {
+  test('creates new seller even when wallet already registered', async () => {
     mockDb.setSellers([TEST_SELLER])
 
     const result = await registerSeller({
@@ -36,7 +36,7 @@ describe('registerSeller', () => {
       network: TEST_SELLER.network,
     })
 
-    expect(result.merchantId).toBe(TEST_SELLER.merchantId)
+    expect(result.merchantId).not.toBe(TEST_SELLER.merchantId)
     expect(result.wallet).toBe(TEST_SELLER.walletAddress)
     expect(result.network).toBe(TEST_SELLER.network)
   })

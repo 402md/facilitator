@@ -20,7 +20,8 @@
       "Bash(gh issue:*)",
       "Bash(python3 -m json.tool)",
       "Bash(bun install:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(bunx turbo:*)"
     ]
   }
 }
