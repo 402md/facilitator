@@ -116,7 +116,12 @@ export function createStellarAdapter(resolved: ResolvedNetwork): ChainAdapter {
     },
 
     async cctpMint(input: CctpMintInput): Promise<string> {
-      const messageTransmitter = new Contract(resolved.cctpMessageTransmitter)
+      if (!resolved.cctpForwarder) {
+        throw new Error(
+          `Stellar cctpMint requires cctpForwarder on resolved network ${resolved.caip2}`,
+        )
+      }
+      const cctpForwarder = new Contract(resolved.cctpForwarder)
 
       const account = await soroban.getAccount(facilitatorKeypair.publicKey())
       const tx = new TransactionBuilder(account, {
@@ -124,8 +129,8 @@ export function createStellarAdapter(resolved: ResolvedNetwork): ChainAdapter {
         networkPassphrase,
       })
         .addOperation(
-          messageTransmitter.call(
-            'receive_message',
+          cctpForwarder.call(
+            'mint_and_forward',
             nativeToScVal(Buffer.from(hexToBytes(input.attestation.messageBytes)), {
               type: 'bytes',
             }),
