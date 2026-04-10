@@ -117,6 +117,9 @@ export async function crossChainSettle(
     pullTx: pullTxHash,
     burnTx: burnResult.txHash,
     bridgeProvider: 'cctp' as const,
+    merchantId: params.merchantId,
+    payTo: params.payTo,
+    scheme: params.scheme,
   }
 
   try {
@@ -131,6 +134,7 @@ export async function crossChainSettle(
       ...paymentData,
       mintTx,
       transferTx: null,
+      resource: params.resource,
     })
 
     status.step = 'settled'

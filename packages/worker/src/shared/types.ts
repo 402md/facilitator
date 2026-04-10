@@ -1,5 +1,10 @@
 export type Network = string // CAIP-2: "eip155:8453", "solana:mainnet", "stellar:pubnet"
 
+export interface PaymentResource {
+  url: string
+  description?: string
+}
+
 export interface CrossChainSettleParams {
   sellerId: string
   sellerAddress: string
@@ -17,6 +22,10 @@ export interface CrossChainSettleParams {
   destinationDomain: number
   gasAllowance: string
   platformFee: string
+  resource?: PaymentResource
+  merchantId: string
+  payTo: string
+  scheme: string
 }
 
 export interface CrossChainSettleResult {
@@ -44,6 +53,10 @@ export interface SameChainSettleParams {
   }
   gasAllowance: string
   platformFee: string
+  resource?: PaymentResource
+  merchantId: string
+  payTo: string
+  scheme: string
 }
 
 export interface SameChainSettleResult {
@@ -79,4 +92,8 @@ export interface RecordPaymentInput {
   mintTx: string | null
   transferTx: string | null
   bridgeProvider: 'cctp' | null
+  resource?: PaymentResource
+  merchantId: string
+  payTo: string
+  scheme: string
 }

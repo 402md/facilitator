@@ -93,6 +93,10 @@ export async function sameChainSettle(
     mintTx: null,
     transferTx: transferTxHash,
     bridgeProvider: null,
+    resource: params.resource,
+    merchantId: params.merchantId,
+    payTo: params.payTo,
+    scheme: params.scheme,
   })
 
   status.step = 'settled'

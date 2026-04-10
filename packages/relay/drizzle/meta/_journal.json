@@ -15,6 +15,13 @@
       "when": 1775747242817,
       "tag": "0001_right_pestilence",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1775793460521,
+      "tag": "0002_plain_sunfire",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,14 @@
-import { pgTable, uuid, varchar, numeric, timestamp, index } from 'drizzle-orm/pg-core'
+import {
+  pgTable,
+  uuid,
+  varchar,
+  numeric,
+  integer,
+  timestamp,
+  index,
+  uniqueIndex,
+  text,
+} from 'drizzle-orm/pg-core'
 
 export const sellers = pgTable(
   'sellers',
@@ -10,6 +20,34 @@ export const sellers = pgTable(
     createdAt: timestamp('created_at').defaultNow(),
   },
   (table) => [index('idx_sellers_merchant').on(table.merchantId)],
+)
+
+export const bazaarResources = pgTable(
+  'bazaar_resources',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    resourceUrl: varchar('resource_url', { length: 2048 }).notNull(),
+    baseUrl: varchar('base_url', { length: 512 }).notNull(),
+    description: text('description'),
+    sellerId: uuid('seller_id')
+      .references(() => sellers.id)
+      .notNull(),
+    merchantId: varchar('merchant_id', { length: 50 }).notNull(),
+    network: varchar('network', { length: 50 }).notNull(),
+    payTo: varchar('pay_to', { length: 255 }).notNull(),
+    amount: varchar('amount', { length: 50 }).notNull(),
+    scheme: varchar('scheme', { length: 20 }).notNull().default('exact'),
+    useCount: integer('use_count').notNull().default(1),
+    totalVolume: numeric('total_volume', { precision: 30, scale: 0 }).notNull().default('0'),
+    firstSeenAt: timestamp('first_seen_at').defaultNow().notNull(),
+    lastUsedAt: timestamp('last_used_at').defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex('uniq_bazaar_resource_network').on(table.resourceUrl, table.network),
+    index('idx_bazaar_resources_seller').on(table.sellerId),
+    index('idx_bazaar_resources_base_url').on(table.baseUrl),
+    index('idx_bazaar_resources_use_count').on(table.useCount),
+  ],
 )
 
 export const transactions = pgTable(
