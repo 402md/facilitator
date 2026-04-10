@@ -96,6 +96,8 @@ export async function crossChainSettle(
 
   const attestation = await waitAttestation({
     messageHash: burnResult.messageHash,
+    txHash: burnResult.txHash,
+    sourceDomain: params.sourceDomain,
   })
   status.step = 'minting'
   upsertSearchAttributes({ settlementStatus: ['minting'] })

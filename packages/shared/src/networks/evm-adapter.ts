@@ -1,5 +1,6 @@
 import { createPublicClient, createWalletClient, http, parseAbi, type Hex } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
+import { StrKey } from '@stellar/stellar-sdk'
 import type {
   ChainAdapter,
   CctpBurnInput,
@@ -16,8 +17,8 @@ const USDC_ABI = parseAbi([
 ])
 
 const TOKEN_MESSENGER_ABI = parseAbi([
-  'function depositForBurn(uint256 amount, uint32 destinationDomain, bytes32 mintRecipient, address burnToken) returns (uint64 nonce)',
-  'function depositForBurnWithHook(uint256 amount, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, bytes32 destinationCaller, uint256 maxFee, uint32 minFinalityThreshold, bytes hookData) returns (uint64 nonce)',
+  'function depositForBurn(uint256 amount, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, bytes32 destinationCaller, uint256 maxFee, uint32 minFinalityThreshold)',
+  'function depositForBurnWithHook(uint256 amount, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, bytes32 destinationCaller, uint256 maxFee, uint32 minFinalityThreshold, bytes hookData)',
 ])
 
 const MESSAGE_TRANSMITTER_ABI = parseAbi([
@@ -78,7 +79,7 @@ export function createEvmAdapter(resolved: ResolvedNetwork): ChainAdapter {
 
       let hash: Hex
       if (isStellarDestination && input.cctpForwarder) {
-        const forwarderBytes32 = padAddress(input.cctpForwarder)
+        const forwarderBytes32 = stellarAddressToBytes32(input.cctpForwarder)
         const hookData = buildCctpForwarderHookData(input.recipient)
         hash = await walletClient.writeContract({
           address: resolved.cctpTokenMessenger as Hex,
@@ -97,6 +98,8 @@ export function createEvmAdapter(resolved: ResolvedNetwork): ChainAdapter {
         })
       } else {
         const mintRecipient = padAddress(input.recipient)
+        const zeroBytes32 =
+          '0x0000000000000000000000000000000000000000000000000000000000000000' as Hex
         hash = await walletClient.writeContract({
           address: resolved.cctpTokenMessenger as Hex,
           abi: TOKEN_MESSENGER_ABI,
@@ -106,6 +109,9 @@ export function createEvmAdapter(resolved: ResolvedNetwork): ChainAdapter {
             input.destinationDomain,
             mintRecipient,
             resolved.usdc as Hex,
+            zeroBytes32,
+            0n,
+            0,
           ],
         })
       }
@@ -140,6 +146,12 @@ function splitSignature(sig: string): { v: number; r: Hex; s: Hex } {
 function padAddress(address: string): Hex {
   const clean = address.startsWith('0x') ? address.slice(2) : address
   return `0x${clean.padStart(64, '0')}` as Hex
+}
+
+function stellarAddressToBytes32(strkey: string): Hex {
+  const isContract = StrKey.isValidContract(strkey)
+  const raw = isContract ? StrKey.decodeContract(strkey) : StrKey.decodeEd25519PublicKey(strkey)
+  return `0x${Buffer.from(raw).toString('hex').padStart(64, '0')}` as Hex
 }
 
 function buildCctpForwarderHookData(forwardRecipientStrkey: string): Hex {

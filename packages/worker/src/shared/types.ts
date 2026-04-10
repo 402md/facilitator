@@ -13,6 +13,7 @@ export interface CrossChainSettleParams {
     nonce: string
     signature: string
   }
+  sourceDomain: number
   destinationDomain: number
   gasAllowance: string
   platformFee: string
@@ -57,6 +58,8 @@ export interface SameChainSettleResult {
 
 export interface WaitAttestationInput {
   messageHash: string
+  txHash: string
+  sourceDomain: number
 }
 
 export interface RecordPaymentInput {
