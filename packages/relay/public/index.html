@@ -1313,33 +1313,48 @@ app.use(paymentMiddleware({
           <tbody>
             <tr>
               <td><span class="chain chain-stellar">Stellar</span> &#8594; <span class="chain chain-stellar">Stellar</span></td>
-              <td>$0.999994</td>
-              <td>$0.000006 <span class="gas-pct">0.0006%</span></td>
+              <td>$0.99999</td>
+              <td>$0.00001 <span class="gas-pct">0.001%</span></td>
             </tr>
             <tr>
-              <td><span class="chain chain-base">Base</span> &#8594; <span class="chain chain-base">Base</span></td>
-              <td>$0.9996</td>
-              <td>$0.0004 <span class="gas-pct">0.04%</span></td>
-            </tr>
-            <tr>
-              <td><span class="chain chain-base">Base</span> &#8594; <span class="chain chain-stellar">Stellar</span></td>
-              <td>$0.9995</td>
-              <td>$0.0005 <span class="gas-pct">0.05%</span></td>
-            </tr>
-            <tr>
-              <td><span class="chain chain-stellar">Stellar</span> &#8594; <span class="chain chain-base">Base</span></td>
-              <td>$0.9992</td>
-              <td>$0.0008 <span class="gas-pct">0.08%</span></td>
-            </tr>
-            <tr>
-              <td><span class="chain chain-solana">Solana</span> &#8594; <span class="chain chain-stellar">Stellar</span></td>
+              <td><span class="chain chain-solana">Solana</span> &#8594; <span class="chain chain-solana">Solana</span></td>
               <td>$0.9990</td>
               <td>$0.0010 <span class="gas-pct">0.10%</span></td>
             </tr>
             <tr>
+              <td><span class="chain chain-base">Base</span> &#8594; <span class="chain chain-base">Base</span></td>
+              <td>$0.9980</td>
+              <td>$0.0020 <span class="gas-pct">0.20%</span></td>
+            </tr>
+            <tr>
+              <td><span class="chain chain-stellar">Stellar</span> &#8594; <span class="chain chain-solana">Solana</span></td>
+              <td>$0.9985</td>
+              <td>$0.0015 <span class="gas-pct">0.15%</span></td>
+            </tr>
+            <tr>
+              <td><span class="chain chain-solana">Solana</span> &#8594; <span class="chain chain-stellar">Stellar</span></td>
+              <td>$0.9975</td>
+              <td>$0.0025 <span class="gas-pct">0.25%</span></td>
+            </tr>
+            <tr>
+              <td><span class="chain chain-stellar">Stellar</span> &#8594; <span class="chain chain-base">Base</span></td>
+              <td>$0.9975</td>
+              <td>$0.0025 <span class="gas-pct">0.25%</span></td>
+            </tr>
+            <tr>
+              <td><span class="chain chain-base">Base</span> &#8594; <span class="chain chain-stellar">Stellar</span></td>
+              <td>$0.9968</td>
+              <td>$0.0032 <span class="gas-pct">0.32%</span></td>
+            </tr>
+            <tr>
+              <td><span class="chain chain-base">Base</span> &#8594; <span class="chain chain-solana">Solana</span></td>
+              <td>$0.9965</td>
+              <td>$0.0035 <span class="gas-pct">0.35%</span></td>
+            </tr>
+            <tr>
               <td><span class="chain chain-solana">Solana</span> &#8594; <span class="chain chain-base">Base</span></td>
-              <td>$0.9988</td>
-              <td>$0.0012 <span class="gas-pct">0.12%</span></td>
+              <td>$0.9965</td>
+              <td>$0.0035 <span class="gas-pct">0.35%</span></td>
             </tr>
           </tbody>
         </table>
@@ -1378,7 +1393,7 @@ app.use(paymentMiddleware({
         <details class="faq-item">
           <summary>How much does it cost?</summary>
           <div class="faq-answer">
-            Zero platform fee. The only deduction is a fixed gas allowance per route — for example, $0.0005 for Base&#8594;Stellar on a $1.00 payment. Same-chain payments cost even less.
+            Zero platform fee. The only deduction is a fixed gas allowance per route — for example, $0.0032 for Base&#8594;Stellar on a $1.00 payment. Same-chain payments cost even less ($0.00001 for Stellar&#8594;Stellar).
           </div>
         </details>
 

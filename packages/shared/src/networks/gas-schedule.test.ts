@@ -2,16 +2,16 @@ import { describe, expect, test } from 'bun:test'
 import { getGasAllowanceBySlug, calculateFeesBySlug, getCctpDomainBySlug } from './gas-schedule'
 
 describe('getGasAllowanceBySlug', () => {
-  test('returns 800 for base -> solana', () => {
-    expect(getGasAllowanceBySlug('base', 'solana')).toBe('800')
+  test('returns 3500 for base -> solana', () => {
+    expect(getGasAllowanceBySlug('base', 'solana')).toBe('3500')
   })
 
-  test('returns 500 for stellar -> base', () => {
-    expect(getGasAllowanceBySlug('stellar', 'base')).toBe('500')
+  test('returns 2500 for stellar -> base', () => {
+    expect(getGasAllowanceBySlug('stellar', 'base')).toBe('2500')
   })
 
-  test('returns 400 for same-chain base -> base', () => {
-    expect(getGasAllowanceBySlug('base', 'base')).toBe('400')
+  test('returns 2000 for same-chain base -> base', () => {
+    expect(getGasAllowanceBySlug('base', 'base')).toBe('2000')
   })
 
   test('throws for unknown pair', () => {
@@ -32,15 +32,15 @@ describe('getCctpDomainBySlug', () => {
 describe('calculateFeesBySlug', () => {
   test('with platformFeeBps=0 returns net = gross - gasAllowance', () => {
     const result = calculateFeesBySlug('10000', 'base', 'solana', 0)
-    expect(result.gasAllowance).toBe('800')
+    expect(result.gasAllowance).toBe('3500')
     expect(result.platformFee).toBe('0')
-    expect(result.netAmount).toBe('9200')
+    expect(result.netAmount).toBe('6500')
   })
 
   test('with platformFeeBps=50 deducts gas + platform fee', () => {
     const result = calculateFeesBySlug('10000', 'base', 'solana', 50)
-    expect(result.gasAllowance).toBe('800')
+    expect(result.gasAllowance).toBe('3500')
     expect(result.platformFee).toBe('50')
-    expect(result.netAmount).toBe('9150')
+    expect(result.netAmount).toBe('6450')
   })
 })

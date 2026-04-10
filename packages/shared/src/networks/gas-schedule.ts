@@ -1,15 +1,18 @@
 import type { ChainSlug } from './adapter.types'
 
+// Gas allowance in USDC atomic units (6 decimals). Covers all on-chain txs:
+// Same-chain: pull + transfer
+// Cross-chain: pull + CCTP burn (source) + CCTP mint (destination)
 const GAS_SCHEDULE: Record<string, string> = {
-  'base->solana': '800',
-  'base->stellar': '500',
-  'solana->base': '1200',
-  'solana->stellar': '800',
-  'stellar->base': '500',
-  'stellar->solana': '800',
-  'base->base': '400',
-  'solana->solana': '800',
-  'stellar->stellar': '6',
+  'base->base': '2000', // 2 Base txs
+  'base->stellar': '3200', // 2 Base txs + 1 Soroban call
+  'base->solana': '3500', // 2 Base txs + 1 Solana tx
+  'stellar->stellar': '10', // 1 Stellar tx
+  'stellar->base': '2500', // 2 Soroban calls + 1 Base tx
+  'stellar->solana': '1500', // 2 Soroban calls + 1 Solana tx
+  'solana->solana': '1000', // 2 Solana txs
+  'solana->base': '3500', // 2 Solana txs + 1 Base tx
+  'solana->stellar': '2500', // 2 Solana txs + 1 Soroban call
 }
 
 const CCTP_DOMAINS: Record<ChainSlug, number> = {
