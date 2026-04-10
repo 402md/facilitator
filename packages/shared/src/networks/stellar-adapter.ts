@@ -84,7 +84,7 @@ export function createStellarAdapter(resolved: ResolvedNetwork): ChainAdapter {
 
       const account = await soroban.getAccount(facilitatorKeypair.publicKey())
       const tx = new TransactionBuilder(account, {
-        fee: '10000000',
+        fee: '100',
         networkPassphrase,
       })
         .addOperation(
@@ -125,7 +125,7 @@ export function createStellarAdapter(resolved: ResolvedNetwork): ChainAdapter {
 
       const account = await soroban.getAccount(facilitatorKeypair.publicKey())
       const tx = new TransactionBuilder(account, {
-        fee: '10000000',
+        fee: '100',
         networkPassphrase,
       })
         .addOperation(
@@ -144,6 +144,10 @@ export function createStellarAdapter(resolved: ResolvedNetwork): ChainAdapter {
 
       const simulated = await soroban.simulateTransaction(tx)
       if (SorobanRpc.Api.isSimulationError(simulated)) {
+        if (simulated.error.includes('#6908')) {
+          console.log('CCTP message already received (nonce used) — treating as success')
+          return 'already-minted'
+        }
         throw new Error(`Soroban simulation failed: ${simulated.error}`)
       }
 
