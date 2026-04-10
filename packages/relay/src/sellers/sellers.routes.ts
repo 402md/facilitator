@@ -1,4 +1,5 @@
 import { Elysia, t } from 'elysia'
+import { networks } from '@402md/shared/networks'
 import { registerSeller, getDiscovery } from './sellers.service'
 
 export const sellersRoutes = new Elysia()
@@ -27,19 +28,20 @@ export const sellersRoutes = new Elysia()
     },
   )
   .get('/supported', () => ({
-    networks: [
-      { network: 'eip155:8453', name: 'Base', asset: 'USDC' },
-      { network: 'solana:mainnet', name: 'Solana', asset: 'USDC' },
-      { network: 'stellar:pubnet', name: 'Stellar', asset: 'USDC' },
-    ],
-    bridgeProvider: 'circle-cctp-v2',
+    kinds: networks.map((n) => ({
+      x402Version: 2,
+      scheme: 'exact',
+      network: n.caip2,
+    })),
+    extensions: [],
+    signers: {},
   }))
   .get('/.well-known/x402.json', () => ({
     version: '2',
     facilitator: {
       name: '402md Facilitator',
       url: process.env.FACILITATOR_URL ?? 'https://api.402md.com',
-      networks: ['eip155:8453', 'solana:mainnet', 'stellar:pubnet'],
+      networks: networks.map((n) => n.caip2),
       bridgeProvider: 'circle-cctp-v2',
       crossChain: true,
     },

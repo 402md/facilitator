@@ -22,12 +22,13 @@ const app = new Elysia()
   .use(settlementsRoutes)
 
 const validRequest = {
-  paymentPayload: { signature: '0xValidSignature1234567890abcdef' },
+  x402Version: 2,
+  paymentPayload: { payload: { signature: '0xValidSignature1234567890abcdef' } },
   paymentRequirements: {
     scheme: 'exact',
     network: 'eip155:8453',
     payTo: '0xFacilitatorBase',
-    maxAmountRequired: '1000000',
+    amount: '1000000',
     extra: { merchantId: 'ab-test01' },
   },
 }
@@ -59,16 +60,29 @@ describe('POST /settle', () => {
     resetAllMocks()
   })
 
-  test('returns 200 with workflowId for a valid settlement', async () => {
+  test('returns 200 with success for a valid settlement', async () => {
     mockDb.setSellers([TEST_SELLER])
 
     const req = {
-      paymentPayload: { signature: '0xSettleRouteSig_aaaa1234567890' },
+      x402Version: 2,
+      paymentPayload: {
+        payload: {
+          authorization: {
+            from: '0xBuyerAddr',
+            to: '0xFacilitatorBase',
+            value: '1000000',
+            validAfter: '0',
+            validBefore: '9999999999',
+            nonce: '0x1',
+          },
+          signature: '0xSettleRouteSig_aaaa1234567890',
+        },
+      },
       paymentRequirements: {
         scheme: 'exact',
         network: 'eip155:8453',
         payTo: FACILITATOR_ADDRESSES['eip155:8453'],
-        maxAmountRequired: '1000000',
+        amount: '1000000',
         extra: { merchantId: 'ab-test01' },
       },
     }
@@ -83,8 +97,9 @@ describe('POST /settle', () => {
 
     expect(res.status).toBe(200)
     const body = await res.json()
-    expect(body.accepted).toBe(true)
-    expect(body.workflowId).toBeString()
+    expect(body.success).toBe(true)
+    expect(body.transaction).toBeString()
+    expect(body.network).toBe('eip155:8453')
   })
 
   test('returns 409 for a replayed transaction', async () => {
@@ -93,12 +108,25 @@ describe('POST /settle', () => {
     mockRedis._store.set(`402md:replay:${sig}`, '1')
 
     const req = {
-      paymentPayload: { signature: sig },
+      x402Version: 2,
+      paymentPayload: {
+        payload: {
+          authorization: {
+            from: '0xBuyerAddr',
+            to: '0xFacilitatorBase',
+            value: '1000000',
+            validAfter: '0',
+            validBefore: '9999999999',
+            nonce: '0x1',
+          },
+          signature: sig,
+        },
+      },
       paymentRequirements: {
         scheme: 'exact',
         network: 'eip155:8453',
         payTo: FACILITATOR_ADDRESSES['eip155:8453'],
-        maxAmountRequired: '1000000',
+        amount: '1000000',
         extra: { merchantId: 'ab-test01' },
       },
     }
@@ -121,12 +149,25 @@ describe('POST /settle', () => {
     mockRedis._store.set('402md:pause', 'true')
 
     const req = {
-      paymentPayload: { signature: '0xPausedRouteSig_cccc1234567890' },
+      x402Version: 2,
+      paymentPayload: {
+        payload: {
+          authorization: {
+            from: '0xBuyerAddr',
+            to: '0xFacilitatorBase',
+            value: '1000000',
+            validAfter: '0',
+            validBefore: '9999999999',
+            nonce: '0x1',
+          },
+          signature: '0xPausedRouteSig_cccc1234567890',
+        },
+      },
       paymentRequirements: {
         scheme: 'exact',
         network: 'eip155:8453',
         payTo: FACILITATOR_ADDRESSES['eip155:8453'],
-        maxAmountRequired: '1000000',
+        amount: '1000000',
         extra: { merchantId: 'ab-test01' },
       },
     }
@@ -173,9 +214,9 @@ describe('GET /bridge/fees', () => {
 
     expect(res.status).toBe(200)
     const body = await res.json()
-    expect(body.gasAllowance).toBe('800')
+    expect(body.gasAllowance).toBe('3500')
     expect(body.platformFee).toBe('0')
-    expect(body.sellerReceives).toBe('999200')
+    expect(body.sellerReceives).toBe('996500')
     expect(body.currency).toBe('USDC')
   })
 })

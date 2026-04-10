@@ -23,38 +23,38 @@ export async function verifyPayment(req: VerifyRequest): Promise<VerifyResponse>
   const { paymentPayload, paymentRequirements } = req
 
   if (!paymentRequirements.extra?.merchantId) {
-    return { isValid: false, reason: 'Missing merchantId in extra' }
+    return { isValid: false, invalidReason: 'Missing merchantId in extra' }
   }
 
   const seller = await findByMerchantId(paymentRequirements.extra.merchantId)
   if (!seller) {
-    return { isValid: false, reason: 'Unknown merchantId' }
+    return { isValid: false, invalidReason: 'Unknown merchantId' }
   }
 
   if (!supportedCaip2s.includes(paymentRequirements.network)) {
-    return { isValid: false, reason: `Unsupported network: ${paymentRequirements.network}` }
+    return { isValid: false, invalidReason: `Unsupported network: ${paymentRequirements.network}` }
   }
 
   const expectedPayTo = getFacilitatorAddress(paymentRequirements.network)
   if (paymentRequirements.payTo !== expectedPayTo) {
-    return { isValid: false, reason: 'payTo does not match facilitator address' }
+    return { isValid: false, invalidReason: 'payTo does not match facilitator address' }
   }
 
-  if (!paymentPayload.signature || paymentPayload.signature.length < 10) {
-    return { isValid: false, reason: 'Invalid or missing payment signature' }
+  if (!paymentPayload.payload.signature || paymentPayload.payload.signature.length < 10) {
+    return { isValid: false, invalidReason: 'Invalid or missing payment signature' }
   }
 
-  const amount = BigInt(paymentRequirements.maxAmountRequired)
+  const amount = BigInt(paymentRequirements.amount)
   if (amount <= 0n) {
-    return { isValid: false, reason: 'Amount must be greater than zero' }
+    return { isValid: false, invalidReason: 'Amount must be greater than zero' }
   }
 
   return { isValid: true }
 }
 
 export async function dispatchSettlement(req: SettleRequest): Promise<SettleResponse> {
-  await checkCircuitBreakers(req.paymentRequirements.maxAmountRequired)
-  const replayKey = req.paymentPayload.signature
+  await checkCircuitBreakers(req.paymentRequirements.amount)
+  const replayKey = req.paymentPayload.payload.signature
   if (await checkReplay(replayKey)) throw new ReplayError()
   await markProcessed(replayKey)
 
@@ -69,13 +69,13 @@ export async function dispatchSettlement(req: SettleRequest): Promise<SettleResp
   const isSameChain = buyerNetwork === sellerNetwork
 
   const { gasAllowance, platformFee } = calculateFees(
-    req.paymentRequirements.maxAmountRequired,
+    req.paymentRequirements.amount,
     buyerNetwork,
     sellerNetwork,
     PLATFORM_FEE_BPS,
   )
 
-  const txRef = req.paymentPayload.signature.slice(0, 16)
+  const txRef = req.paymentPayload.payload.signature.slice(0, 16)
   const workflowType = isSameChain ? 'same' : 'cross'
   const workflowId = `${workflowType}-${sellerNetwork}-${buyerNetwork}-${txRef}`
   const taskQueue = isSameChain ? 'fast-settlement' : 'cross-settlement'
@@ -83,38 +83,51 @@ export async function dispatchSettlement(req: SettleRequest): Promise<SettleResp
 
   const temporal = await getTemporalClient()
 
+  const { authorization, signature } = req.paymentPayload.payload
+  const buyerAddress = authorization.from
+  const resource = req.paymentPayload.resource
+
   const params = isSameChain
     ? {
         sellerId: seller.id,
         sellerAddress: seller.walletAddress,
-        buyerAddress: req.paymentPayload.signature,
+        buyerAddress,
         network: buyerNetwork,
-        amount: req.paymentRequirements.maxAmountRequired,
+        amount: req.paymentRequirements.amount,
         authorization: {
-          validAfter: '0',
-          validBefore: '9999999999',
-          nonce: '0x0',
-          signature: req.paymentPayload.signature,
+          validAfter: authorization.validAfter,
+          validBefore: authorization.validBefore,
+          nonce: authorization.nonce,
+          signature,
         },
         gasAllowance,
         platformFee,
+        resource,
+        merchantId,
+        payTo: req.paymentRequirements.payTo,
+        scheme: req.paymentRequirements.scheme ?? 'exact',
       }
     : {
         sellerId: seller.id,
         sellerAddress: seller.walletAddress,
         sellerNetwork,
-        buyerAddress: req.paymentPayload.signature,
+        buyerAddress,
         buyerNetwork,
-        amount: req.paymentRequirements.maxAmountRequired,
+        amount: req.paymentRequirements.amount,
         authorization: {
-          validAfter: '0',
-          validBefore: '9999999999',
-          nonce: '0x0',
-          signature: req.paymentPayload.signature,
+          validAfter: authorization.validAfter,
+          validBefore: authorization.validBefore,
+          nonce: authorization.nonce,
+          signature,
         },
+        sourceDomain: getCctpDomain(buyerNetwork),
         destinationDomain: getCctpDomain(sellerNetwork),
         gasAllowance,
         platformFee,
+        resource,
+        merchantId,
+        payTo: req.paymentRequirements.payTo,
+        scheme: req.paymentRequirements.scheme ?? 'exact',
       }
 
   await temporal.workflow.start(workflowName, {
@@ -124,12 +137,12 @@ export async function dispatchSettlement(req: SettleRequest): Promise<SettleResp
     workflowExecutionTimeout: isSameChain ? '5m' : '30m',
   })
 
-  await recordVolume(req.paymentRequirements.maxAmountRequired)
+  await recordVolume(req.paymentRequirements.amount)
 
   return {
-    accepted: true,
-    workflowId,
-    type: isSameChain ? 'SAME_CHAIN' : 'CROSS_CHAIN',
+    success: true,
+    transaction: workflowId,
+    network: buyerNetwork,
   }
 }
 

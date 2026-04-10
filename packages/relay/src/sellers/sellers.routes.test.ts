@@ -95,18 +95,24 @@ describe('GET /discover', () => {
 })
 
 describe('GET /supported', () => {
-  test('returns 200 with networks array', async () => {
+  test('returns 200 with x402 supported kinds', async () => {
     const res = await app.handle(jsonGet('/supported'))
 
     expect(res.status).toBe(200)
     const body = await res.json()
-    expect(body.networks).toHaveLength(3)
-    expect(body.bridgeProvider).toBe('circle-cctp-v2')
+    expect(body.kinds).toHaveLength(3)
+    expect(body.extensions).toEqual([])
+    expect(body.signers).toEqual({})
 
-    const networkIds = body.networks.map((n: { network: string }) => n.network)
+    const networkIds = body.kinds.map((k: { network: string }) => k.network)
     expect(networkIds).toContain('eip155:8453')
     expect(networkIds).toContain('solana:mainnet')
     expect(networkIds).toContain('stellar:pubnet')
+
+    for (const kind of body.kinds) {
+      expect(kind.x402Version).toBe(2)
+      expect(kind.scheme).toBe('exact')
+    }
   })
 })
 

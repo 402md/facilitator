@@ -35,6 +35,7 @@ export const app = new Elysia()
   .onBeforeHandle(async ({ request, set }) => {
     const url = new URL(request.url)
     const ip = request.headers.get('x-forwarded-for') ?? 'unknown'
+    console.log(`→ ${request.method} ${url.pathname}`)
     try {
       await checkRateLimit(url.pathname, ip)
     } catch (err) {
@@ -49,7 +50,9 @@ export const app = new Elysia()
   .use(onrampRoutes)
   .use(stellarMppRoutes)
   .use(bazaarRoutes)
-  .get('/', () => Bun.file(new URL('../public/index.html', import.meta.url).pathname))
+  .get('/', () => Bun.file(new URL('../public/index.html', import.meta.url).pathname), {
+    detail: { hide: true },
+  })
   .get('/cover.mp4', () => Bun.file(new URL('../public/cover.mp4', import.meta.url).pathname))
   .get('/health', async () => {
     const checks = {
