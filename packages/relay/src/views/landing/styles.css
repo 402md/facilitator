@@ -141,69 +141,6 @@ section h2 {
 }
 
 /* ══════════════════════════════════════════
-       NAV
-       ══════════════════════════════════════════ */
-.nav {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: oklch(0.98 0.003 250 / 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--border);
-  height: 56px;
-}
-
-.nav-inner {
-  display: flex;
-  align-items: center;
-  height: 100%;
-  gap: var(--space-lg);
-}
-
-.nav-brand {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  font-family: 'JetBrains Mono', monospace;
-  font-weight: 500;
-  font-size: 0.875rem;
-  letter-spacing: -0.02em;
-}
-
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  margin-left: auto;
-  font-size: 0.75rem;
-  color: var(--text-2);
-}
-
-.nav-links a {
-  transition: color 150ms;
-}
-.nav-links a:hover {
-  color: var(--text);
-}
-
-.nav-cta {
-  display: inline-flex;
-  align-items: center;
-  margin-left: auto;
-  padding: var(--space-sm) var(--space-md);
-  background: var(--text);
-  color: var(--bg);
-  border-radius: var(--radius);
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: background-color 150ms;
-}
-.nav-cta:hover {
-  background: oklch(0.25 0.02 250);
-}
-
-/* ══════════════════════════════════════════
        BUTTONS
        ══════════════════════════════════════════ */
 .btn-primary {
@@ -1078,20 +1015,10 @@ footer {
 
 /* Button press feedback */
 .btn-primary:active,
-.nav-cta:active,
 .btn-outline:active,
 .register-btn:active {
   transform: scale(0.97);
   transition: transform 80ms;
-}
-
-/* Nav scroll state */
-.nav {
-  transition: box-shadow 200ms var(--ease-out-quart);
-}
-
-.nav.scrolled {
-  box-shadow: 0 1px 12px oklch(0.15 0.02 250 / 0.06);
 }
 
 /* FAQ smooth open */
@@ -1171,14 +1098,6 @@ footer {
     max-width: 640px;
   }
 
-  .nav-links {
-    gap: var(--space-lg);
-    font-size: 0.875rem;
-  }
-  .nav-cta {
-    margin-left: 0;
-  }
-
   .problem-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: var(--space-xl) var(--space-2xl);
@@ -1202,12 +1121,6 @@ footer {
 }
 
 @media (max-width: 480px) {
-  .nav-links {
-    display: none;
-  }
-  .nav-cta {
-    margin-left: auto;
-  }
   .hero h1 {
     font-size: 2.25rem;
   }

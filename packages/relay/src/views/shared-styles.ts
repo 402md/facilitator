@@ -1,6 +1,8 @@
 // Base CSS tokens + global reset + container + nav styles.
-// Shared across every page served by the relay. Kept as a string so it can be
-// inlined once into <Layout> — no external file fetch, no FOUC.
+// Shared across every page served by the relay. The nav CSS here is the canonical
+// copy — landing and dashboard both inherit it, so the navbar is visually identical.
+// Kept as a string so it can be inlined once into <Layout> — no external file
+// fetch, no FOUC, no drift.
 export const sharedStyles = /* css */ `
   *,
   *::before,
@@ -33,6 +35,7 @@ export const sharedStyles = /* css */ `
     --space-2xl: 48px;
     --radius: 6px;
     --radius-lg: 10px;
+    --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
   }
 
   html {
@@ -62,6 +65,9 @@ export const sharedStyles = /* css */ `
     padding: 0 var(--space-lg);
   }
 
+  /* ══════════════════════════════════════════
+     NAV — canonical source, used by every page
+     ══════════════════════════════════════════ */
   .nav {
     position: sticky;
     top: 0;
@@ -71,13 +77,19 @@ export const sharedStyles = /* css */ `
     -webkit-backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--border);
     height: 56px;
+    transition: box-shadow 200ms var(--ease-out-quart);
   }
+  .nav.scrolled {
+    box-shadow: 0 1px 12px oklch(0.15 0.02 250 / 0.06);
+  }
+
   .nav-inner {
     display: flex;
     align-items: center;
     height: 100%;
     gap: var(--space-lg);
   }
+
   .nav-brand {
     display: flex;
     align-items: center;
@@ -87,6 +99,10 @@ export const sharedStyles = /* css */ `
     font-size: 0.875rem;
     letter-spacing: -0.02em;
   }
+  .nav-brand:hover {
+    text-decoration: none;
+  }
+
   .nav-links {
     display: flex;
     align-items: center;
@@ -100,24 +116,51 @@ export const sharedStyles = /* css */ `
   }
   .nav-links a:hover {
     color: var(--text);
+    text-decoration: none;
   }
   .nav-links a[aria-current='page'] {
     color: var(--text);
     font-weight: 500;
   }
+
   .nav-cta {
     display: inline-flex;
     align-items: center;
+    margin-left: auto;
     padding: var(--space-sm) var(--space-md);
     background: var(--text);
     color: var(--bg);
     border-radius: var(--radius);
     font-size: 0.875rem;
     font-weight: 500;
-    transition: background-color 150ms;
+    transition:
+      background-color 150ms,
+      transform 80ms;
   }
   .nav-cta:hover {
     background: oklch(0.25 0.02 250);
     text-decoration: none;
+  }
+  .nav-cta:active {
+    transform: scale(0.97);
+  }
+
+  @media (min-width: 768px) {
+    .nav-links {
+      gap: var(--space-lg);
+      font-size: 0.875rem;
+    }
+    .nav-cta {
+      margin-left: 0;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .nav-links {
+      display: none;
+    }
+    .nav-cta {
+      margin-left: auto;
+    }
   }
 `
