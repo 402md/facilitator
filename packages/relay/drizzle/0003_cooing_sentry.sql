@@ -1,0 +1,2 @@
+CREATE INDEX "idx_transactions_buyer_network" ON "transactions" USING btree ("buyer_network");--> statement-breakpoint
+CREATE INDEX "idx_transactions_seller_network" ON "transactions" USING btree ("seller_network");

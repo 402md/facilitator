@@ -18,9 +18,8 @@ export async function cached<T>(
 }
 
 export function bazaarCacheKey(endpoint: string, params: Record<string, unknown>): string {
-  const sorted = Object.keys(params)
-    .sort()
-    .map((k) => `${k}=${params[k] ?? ''}`)
-    .join('&')
-  return `402md:bazaar:${endpoint}:${sorted}`
+  const sortedKeys = Object.keys(params).sort()
+  const canonical: Record<string, unknown> = {}
+  for (const k of sortedKeys) canonical[k] = params[k] ?? null
+  return `402md:bazaar:${endpoint}:${JSON.stringify(canonical)}`
 }

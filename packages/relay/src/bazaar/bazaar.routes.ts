@@ -13,10 +13,17 @@ import {
 } from './aggregations'
 
 const CACHE_TTL = 60
+const DEFAULT_LIMIT = 20
+const DEFAULT_OFFSET = 0
+const MAX_LIMIT = 100
 
-function toLimitOffset(limitRaw: string | undefined, offsetRaw: string | undefined) {
-  const limit = Math.min(Math.max(limitRaw ? Number(limitRaw) : 20, 1), 100)
-  const offset = Math.max(offsetRaw ? Number(offsetRaw) : 0, 0)
+export function toLimitOffset(limitRaw: string | undefined, offsetRaw: string | undefined) {
+  const parsedLimit = limitRaw ? Number(limitRaw) : DEFAULT_LIMIT
+  const limit = Number.isFinite(parsedLimit)
+    ? Math.min(Math.max(parsedLimit, 1), MAX_LIMIT)
+    : DEFAULT_LIMIT
+  const parsedOffset = offsetRaw ? Number(offsetRaw) : DEFAULT_OFFSET
+  const offset = Number.isFinite(parsedOffset) ? Math.max(parsedOffset, 0) : DEFAULT_OFFSET
   return { limit, offset }
 }
 
@@ -118,7 +125,9 @@ export const bazaarEnrichedRoutes = new Elysia({ prefix: '/bazaar' })
     '/transactions',
     async ({ query }) => {
       const { limit, offset } = toLimitOffset(query.limit, query.offset)
+      const window = query.window ? parseWindow(query.window) : undefined
       const params = {
+        window,
         merchantId: query.merchantId,
         buyerNetwork: query.buyerNetwork,
         sellerNetwork: query.sellerNetwork,
@@ -135,6 +144,7 @@ export const bazaarEnrichedRoutes = new Elysia({ prefix: '/bazaar' })
     },
     {
       query: t.Object({
+        window: t.Optional(t.String()),
         merchantId: t.Optional(t.String()),
         buyerNetwork: t.Optional(t.String()),
         sellerNetwork: t.Optional(t.String()),

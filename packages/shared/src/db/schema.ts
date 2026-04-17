@@ -82,5 +82,7 @@ export const transactions = pgTable(
     index('idx_transactions_seller_date').on(table.sellerId, table.createdAt),
     index('idx_transactions_workflow').on(table.workflowId),
     index('idx_transactions_buyer').on(table.buyerAddress),
+    index('idx_transactions_buyer_network').on(table.buyerNetwork),
+    index('idx_transactions_seller_network').on(table.sellerNetwork),
   ],
 )

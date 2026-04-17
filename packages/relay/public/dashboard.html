@@ -827,7 +827,7 @@
           getJson(`/bazaar/routes?window=${w}`),
           getJson(`/bazaar/resources?window=${w}&rank=${state.resourceRank}&limit=10`),
           getJson(`/bazaar/sellers?window=${w}&rank=${state.sellerRank}&limit=10`),
-          getJson(`/bazaar/transactions?limit=20`),
+          getJson(`/bazaar/transactions?window=${w}&limit=20`),
         ])
 
         if (results[0].status === 'fulfilled') renderStats(results[0].value)

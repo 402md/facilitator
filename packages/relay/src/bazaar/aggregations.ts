@@ -1,4 +1,4 @@
-import { sql, and, eq, like, desc, asc, inArray, type SQL } from 'drizzle-orm'
+import { sql, and, eq, like, desc, type SQL } from 'drizzle-orm'
 import { db, bazaarResources, sellers, transactions } from '@402md/shared/db'
 import { networks, getGasAllowance, UnsupportedNetworkError } from '@402md/shared/networks'
 
@@ -62,31 +62,36 @@ export async function getStats({ window }: { window: Window }): Promise<StatsRes
     tx_count: string
     total_volume: string | null
     chains_active: string
+    protocol_split: Record<string, number> | null
+    type_split: Record<string, number> | null
   }>(sql`
-    SELECT
-      COUNT(DISTINCT (buyer_network || '|' || seller_network))::text AS unique_routes,
-      COUNT(DISTINCT CASE WHEN buyer_network <> seller_network THEN buyer_network || '|' || seller_network END)::text AS cross_chain_routes,
-      COUNT(DISTINCT CASE WHEN buyer_network = seller_network THEN buyer_network || '|' || seller_network END)::text AS same_chain_routes,
-      COUNT(*)::text AS tx_count,
-      COALESCE(SUM(gross_amount), 0)::text AS total_volume,
-      COUNT(DISTINCT x.net)::text AS chains_active
-    FROM transactions t,
-      LATERAL (VALUES (t.buyer_network), (t.seller_network)) AS x(net)
-    WHERE t.created_at > ${interval} AND t.status = 'settled'
-  `)
-
-  const protocolRows = await db.execute<{ protocol: string; count: string }>(sql`
-    SELECT protocol, COUNT(*)::text AS count
-    FROM transactions
-    WHERE created_at > ${interval} AND status = 'settled'
-    GROUP BY protocol
-  `)
-
-  const typeRows = await db.execute<{ type: string; count: string }>(sql`
-    SELECT type, COUNT(*)::text AS count
-    FROM transactions
-    WHERE created_at > ${interval} AND status = 'settled'
-    GROUP BY type
+    WITH base AS (
+      SELECT * FROM transactions
+      WHERE created_at > ${interval} AND status = 'settled'
+    ),
+    stats AS (
+      SELECT
+        COUNT(DISTINCT (buyer_network || '|' || seller_network))::text AS unique_routes,
+        COUNT(DISTINCT CASE WHEN buyer_network <> seller_network THEN buyer_network || '|' || seller_network END)::text AS cross_chain_routes,
+        COUNT(DISTINCT CASE WHEN buyer_network = seller_network THEN buyer_network || '|' || seller_network END)::text AS same_chain_routes,
+        COUNT(*)::text AS tx_count,
+        COALESCE(SUM(gross_amount), 0)::text AS total_volume
+      FROM base
+    ),
+    chains AS (
+      SELECT COUNT(DISTINCT x.net)::text AS chains_active
+      FROM base t, LATERAL (VALUES (t.buyer_network), (t.seller_network)) AS x(net)
+    ),
+    protocols AS (
+      SELECT COALESCE(jsonb_object_agg(protocol, cnt), '{}'::jsonb) AS protocol_split
+      FROM (SELECT protocol, COUNT(*)::int AS cnt FROM base GROUP BY protocol) p
+    ),
+    types AS (
+      SELECT COALESCE(jsonb_object_agg(type, cnt), '{}'::jsonb) AS type_split
+      FROM (SELECT type, COUNT(*)::int AS cnt FROM base GROUP BY type) t
+    )
+    SELECT stats.*, chains.chains_active, protocols.protocol_split, types.type_split
+    FROM stats, chains, protocols, types
   `)
 
   const head = rows[0] ?? {
@@ -96,13 +101,17 @@ export async function getStats({ window }: { window: Window }): Promise<StatsRes
     tx_count: '0',
     total_volume: '0',
     chains_active: '0',
+    protocol_split: {},
+    type_split: {},
   }
 
-  const protocolSplit: Record<string, number> = {}
-  for (const r of protocolRows) protocolSplit[r.protocol] = Number(r.count)
+  const protocolSplit: Record<string, number> = { ...(head.protocol_split ?? {}) }
 
+  const rawTypeSplit = head.type_split ?? {}
   const typeSplit: Record<string, number> = {}
-  for (const r of typeRows) typeSplit[normalizeType(r.type)] = Number(r.count)
+  for (const [rawType, count] of Object.entries(rawTypeSplit)) {
+    typeSplit[normalizeType(rawType)] = count
+  }
 
   return {
     window,
@@ -429,6 +438,7 @@ export interface TransactionsResponse {
 }
 
 export interface TransactionsParams {
+  window?: Window
   merchantId?: string
   buyerNetwork?: string
   sellerNetwork?: string
@@ -440,9 +450,11 @@ export interface TransactionsParams {
 }
 
 export async function getTransactions(params: TransactionsParams): Promise<TransactionsResponse> {
-  const { merchantId, buyerNetwork, sellerNetwork, status, protocol, type, limit, offset } = params
+  const { window, merchantId, buyerNetwork, sellerNetwork, status, protocol, type, limit, offset } =
+    params
 
   const conditions: SQL[] = []
+  if (window) conditions.push(sql`${transactions.createdAt} > ${windowInterval(window)}`)
   if (merchantId) conditions.push(eq(sellers.merchantId, merchantId))
   if (buyerNetwork) conditions.push(eq(transactions.buyerNetwork, buyerNetwork))
   if (sellerNetwork) conditions.push(eq(transactions.sellerNetwork, sellerNetwork))
@@ -545,7 +557,10 @@ export function getCostComparison(input: {
   try {
     allowance = getGasAllowance(buyerNetwork, sellerNetwork)
   } catch (err) {
-    if (err instanceof UnsupportedNetworkError || err instanceof Error) {
+    if (err instanceof UnsupportedNetworkError) {
+      throw new RouteNotConfiguredError(buyerNetwork, sellerNetwork)
+    }
+    if (err instanceof Error && err.message.startsWith('No gas schedule for')) {
       throw new RouteNotConfiguredError(buyerNetwork, sellerNetwork)
     }
     throw err
@@ -572,6 +587,3 @@ export function getCostComparison(input: {
     },
   }
 }
-
-// Re-export for callers that want to filter by merchantId via sellers join
-export { inArray, asc }

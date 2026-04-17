@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import '@/shared/test-helpers'
 import { parseWindow, getCostComparison, RouteNotConfiguredError } from './aggregations'
+import { toLimitOffset } from './bazaar.routes'
 
 describe('parseWindow', () => {
   test('accepts 1d / 7d / 30d', () => {
@@ -82,5 +83,38 @@ describe('RouteNotConfiguredError', () => {
     expect(err.statusCode).toBe(404)
     expect(err.message).toContain('eip155:8453')
     expect(err.message).toContain('eip155:999999')
+  })
+})
+
+describe('toLimitOffset', () => {
+  test('defaults when both undefined', () => {
+    expect(toLimitOffset(undefined, undefined)).toEqual({ limit: 20, offset: 0 })
+  })
+
+  test('parses valid numeric strings', () => {
+    expect(toLimitOffset('50', '10')).toEqual({ limit: 50, offset: 10 })
+  })
+
+  test('clamps limit to max 100', () => {
+    expect(toLimitOffset('500', '0')).toEqual({ limit: 100, offset: 0 })
+  })
+
+  test('clamps limit to min 1', () => {
+    expect(toLimitOffset('0', '0')).toEqual({ limit: 1, offset: 0 })
+    expect(toLimitOffset('-5', '0')).toEqual({ limit: 1, offset: 0 })
+  })
+
+  test('clamps offset to min 0', () => {
+    expect(toLimitOffset('20', '-10')).toEqual({ limit: 20, offset: 0 })
+  })
+
+  test('falls back to defaults when input is not a finite number', () => {
+    // This is the NaN regression: Number('abc') = NaN, must not reach SQL
+    expect(toLimitOffset('abc', 'xyz')).toEqual({ limit: 20, offset: 0 })
+    expect(toLimitOffset('Infinity', 'NaN')).toEqual({ limit: 20, offset: 0 })
+  })
+
+  test('handles empty string as missing (falls back to defaults)', () => {
+    expect(toLimitOffset('', '')).toEqual({ limit: 20, offset: 0 })
   })
 })
