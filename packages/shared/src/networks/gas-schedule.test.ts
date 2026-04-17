@@ -14,16 +14,44 @@ describe('getGasAllowanceBySlug', () => {
     expect(getGasAllowanceBySlug('base', 'base')).toBe('2000')
   })
 
-  test('throws for unknown pair', () => {
-    expect(() => getGasAllowanceBySlug('arbitrum' as never, 'solana')).toThrow(
-      'No gas schedule for arbitrum->solana',
-    )
+  test('returns 2000 for same-chain EVM newcomers (arbitrum -> arbitrum)', () => {
+    expect(getGasAllowanceBySlug('arbitrum', 'arbitrum')).toBe('2000')
+  })
+
+  test('returns 3000 for cross-EVM pairs', () => {
+    expect(getGasAllowanceBySlug('arbitrum', 'base')).toBe('3000')
+    expect(getGasAllowanceBySlug('ethereum', 'optimism')).toBe('3000')
+    expect(getGasAllowanceBySlug('worldchain', 'linea')).toBe('3000')
+  })
+
+  test('returns 3500 for any EVM -> solana', () => {
+    expect(getGasAllowanceBySlug('ethereum', 'solana')).toBe('3500')
+    expect(getGasAllowanceBySlug('unichain', 'solana')).toBe('3500')
+  })
+
+  test('returns 3200 for any EVM -> stellar', () => {
+    expect(getGasAllowanceBySlug('arbitrum', 'stellar')).toBe('3200')
+    expect(getGasAllowanceBySlug('linea', 'stellar')).toBe('3200')
+  })
+
+  test('returns 3500 for solana -> any EVM', () => {
+    expect(getGasAllowanceBySlug('solana', 'arbitrum')).toBe('3500')
+  })
+
+  test('returns 2500 for stellar -> any EVM', () => {
+    expect(getGasAllowanceBySlug('stellar', 'ethereum')).toBe('2500')
   })
 })
 
 describe('getCctpDomainBySlug', () => {
   test('returns correct domain per chain', () => {
     expect(getCctpDomainBySlug('base')).toBe(6)
+    expect(getCctpDomainBySlug('ethereum')).toBe(0)
+    expect(getCctpDomainBySlug('optimism')).toBe(2)
+    expect(getCctpDomainBySlug('arbitrum')).toBe(3)
+    expect(getCctpDomainBySlug('unichain')).toBe(10)
+    expect(getCctpDomainBySlug('linea')).toBe(11)
+    expect(getCctpDomainBySlug('worldchain')).toBe(14)
     expect(getCctpDomainBySlug('solana')).toBe(5)
     expect(getCctpDomainBySlug('stellar')).toBe(27)
   })

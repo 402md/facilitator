@@ -1,7 +1,16 @@
 import type { Chain } from 'viem'
 
 export type NetworkEnv = 'mainnet' | 'testnet'
-export type ChainSlug = 'base' | 'solana' | 'stellar'
+export type ChainSlug =
+  | 'base'
+  | 'ethereum'
+  | 'optimism'
+  | 'arbitrum'
+  | 'linea'
+  | 'unichain'
+  | 'worldchain'
+  | 'solana'
+  | 'stellar'
 
 export interface PullFromBuyerInput {
   network: string

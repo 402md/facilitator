@@ -25,11 +25,31 @@ const MESSAGE_TRANSMITTER_ABI = parseAbi([
   'function receiveMessage(bytes message, bytes attestation) returns (bool success)',
 ])
 
+let warnedAboutLegacyKey = false
+function readEvmPrivateKey(): Hex {
+  const modern = process.env.FACILITATOR_PRIVATE_KEY_EVM
+  if (modern) return modern as Hex
+  // Migration fallback — accept the old single-chain var for one release so
+  // existing deployments keep working after the rename.
+  const legacy = process.env.FACILITATOR_PRIVATE_KEY_BASE
+  if (legacy) {
+    if (!warnedAboutLegacyKey) {
+      console.warn(
+        '[402md] FACILITATOR_PRIVATE_KEY_BASE is deprecated — rename to FACILITATOR_PRIVATE_KEY_EVM (one key is shared across every EVM chain).',
+      )
+      warnedAboutLegacyKey = true
+    }
+    return legacy as Hex
+  }
+  // Neither set — `privateKeyToAccount(undefined)` throws with a clear message.
+  return modern as Hex
+}
+
 export function createEvmAdapter(resolved: ResolvedNetwork): ChainAdapter {
   if (!resolved.viemChain) {
     throw new Error(`EVM adapter requires viemChain on resolved network ${resolved.caip2}`)
   }
-  const account = privateKeyToAccount(process.env.FACILITATOR_PRIVATE_KEY_BASE as Hex)
+  const account = privateKeyToAccount(readEvmPrivateKey())
   const publicClient = createPublicClient({
     chain: resolved.viemChain,
     transport: http(resolved.rpcUrl),
