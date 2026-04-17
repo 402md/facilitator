@@ -14,7 +14,9 @@
   "dependencies": {
     "@402md/shared": "workspace:*",
     "@elysiajs/cors": "^1",
+    "@elysiajs/html": "^1.4.0",
     "@elysiajs/swagger": "^1",
+    "@kitajs/html": "^4.2.13",
     "@opentelemetry/exporter-trace-otlp-http": "^0.214.0",
     "@opentelemetry/sdk-node": "^0.214.0",
     "@stellar/mpp": "^0.4.0",

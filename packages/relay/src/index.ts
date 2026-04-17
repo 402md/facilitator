@@ -12,7 +12,9 @@ if (!envCheck.ok) {
 import { Elysia } from 'elysia'
 import { cors } from '@elysiajs/cors'
 import { swagger } from '@elysiajs/swagger'
+import { html } from '@elysiajs/html'
 import { sql } from 'drizzle-orm'
+import { DashboardPage } from '@/views/dashboard/page'
 import { sellersRoutes } from '@/sellers/sellers.routes'
 import { settlementsRoutes } from '@/settlements/settlements.routes'
 import { onrampRoutes } from '@/onramp/onramp.routes'
@@ -25,6 +27,7 @@ import { checkRateLimit } from '@/shared/rate-limit'
 
 export const app = new Elysia()
   .use(cors())
+  .use(html())
   .use(
     swagger({
       documentation: {
@@ -54,11 +57,7 @@ export const app = new Elysia()
   .get('/', () => Bun.file(new URL('../public/index.html', import.meta.url).pathname), {
     detail: { hide: true },
   })
-  .get(
-    '/dashboard',
-    () => Bun.file(new URL('../public/dashboard.html', import.meta.url).pathname),
-    { detail: { hide: true } },
-  )
+  .get('/dashboard', () => DashboardPage(), { detail: { hide: true } })
   .get('/cover.mp4', () => Bun.file(new URL('../public/cover.mp4', import.meta.url).pathname))
   .get('/health', async () => {
     const checks = {
