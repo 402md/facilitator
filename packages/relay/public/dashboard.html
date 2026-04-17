@@ -80,28 +80,71 @@
       .container {
         max-width: 1200px;
         margin: 0 auto;
-        padding: var(--space-xl) var(--space-lg);
+        padding: 0 var(--space-lg);
       }
 
-      header.site {
+      /* Nav — must match packages/relay/public/index.html */
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: oklch(0.98 0.003 250 / 0.88);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--border);
+        height: 56px;
+      }
+      .nav-inner {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        margin-bottom: var(--space-2xl);
-      }
-
-      header.site .brand {
-        font-family: 'Bricolage Grotesque', sans-serif;
-        font-weight: 600;
-        font-size: 1.25rem;
-        letter-spacing: -0.01em;
-      }
-
-      header.site nav {
-        display: flex;
+        height: 100%;
         gap: var(--space-lg);
-        font-size: 0.9rem;
+      }
+      .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 500;
+        font-size: 0.875rem;
+        letter-spacing: -0.02em;
+      }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+        margin-left: auto;
+        font-size: 0.75rem;
         color: var(--text-2);
+      }
+      .nav-links a {
+        transition: color 150ms;
+      }
+      .nav-links a:hover {
+        color: var(--text);
+      }
+      .nav-links a[aria-current='page'] {
+        color: var(--text);
+        font-weight: 500;
+      }
+      .nav-cta {
+        display: inline-flex;
+        align-items: center;
+        padding: var(--space-sm) var(--space-md);
+        background: var(--text);
+        color: var(--bg);
+        border-radius: var(--radius);
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: background-color 150ms;
+      }
+      .nav-cta:hover {
+        background: oklch(0.25 0.02 250);
+        text-decoration: none;
+      }
+
+      main.dashboard {
+        padding: var(--space-xl) 0;
       }
 
       h2 {
@@ -370,16 +413,20 @@
     </style>
   </head>
   <body>
-    <div class="container">
-      <header class="site">
-        <div class="brand">402md — bazaar</div>
-        <nav>
-          <a href="/">Home</a>
-          <a href="/swagger">API</a>
-          <a href="/register" title="POST /register">Register</a>
-        </nav>
-      </header>
+    <nav class="nav">
+      <div class="nav-inner container">
+        <a href="/" class="nav-brand">Facilitator</a>
+        <div class="nav-links">
+          <a href="/#how-it-works">How it works</a>
+          <a href="/#pricing">Pricing</a>
+          <a href="/#faq">FAQ</a>
+          <a href="/dashboard" aria-current="page">Dashboard</a>
+        </div>
+        <a href="/#register" class="nav-cta">Register now</a>
+      </div>
+    </nav>
 
+    <main class="dashboard container">
       <section class="intro">
         <h2>Architecture</h2>
         <div class="snapshot">
@@ -468,7 +515,7 @@
         <div>402md facilitator</div>
         <div>Data refreshes every 30s</div>
       </footer>
-    </div>
+    </main>
 
     <script>
       // ------------------------------------------------------------------
