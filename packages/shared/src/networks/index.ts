@@ -1,12 +1,28 @@
 import type { ChainAdapter, ChainDefinition, EnvConfig, ResolvedNetwork } from './adapter.types'
-import { resolveNetworkEnv } from './env'
+import { isChainEnabled, resolveNetworkEnv } from './env'
 import { UnsupportedNetworkError } from './errors'
 import { base } from './chains/base'
+import { ethereum } from './chains/ethereum'
+import { optimism } from './chains/optimism'
+import { arbitrum } from './chains/arbitrum'
+import { linea } from './chains/linea'
+import { unichain } from './chains/unichain'
+import { worldchain } from './chains/worldchain'
 import { solana } from './chains/solana'
 import { stellar } from './chains/stellar'
 import { getGasAllowanceBySlug, getCctpDomainBySlug, calculateFeesBySlug } from './gas-schedule'
 
-const CHAINS: ChainDefinition[] = [base, solana, stellar]
+const CHAINS: ChainDefinition[] = [
+  base,
+  ethereum,
+  optimism,
+  arbitrum,
+  linea,
+  unichain,
+  worldchain,
+  solana,
+  stellar,
+]
 
 function resolveEnvConfig(def: ChainDefinition, envCfg: EnvConfig): ResolvedNetwork {
   const rpcUrl = process.env[envCfg.rpcUrlEnv] ?? envCfg.rpcUrlDefault ?? ''
@@ -28,7 +44,11 @@ function resolveEnvConfig(def: ChainDefinition, envCfg: EnvConfig): ResolvedNetw
 
 const activeEnv = resolveNetworkEnv()
 
-export const networks: ResolvedNetwork[] = CHAINS.map((def) =>
+// Only register chains whose FACILITATOR_* env var is set. Unconfigured chains
+// are silently excluded — callers that try to use them get UnsupportedNetworkError.
+const enabledChains: ChainDefinition[] = CHAINS.filter(isChainEnabled)
+
+export const networks: ResolvedNetwork[] = enabledChains.map((def) =>
   resolveEnvConfig(def, def[activeEnv]),
 )
 
@@ -36,7 +56,7 @@ export const supportedCaip2s: string[] = networks.map((n) => n.caip2)
 
 const byCaip2 = new Map<string, { network: ResolvedNetwork; def: ChainDefinition }>()
 for (let i = 0; i < networks.length; i++) {
-  byCaip2.set(networks[i].caip2, { network: networks[i], def: CHAINS[i] })
+  byCaip2.set(networks[i].caip2, { network: networks[i], def: enabledChains[i] })
 }
 
 export function getNetwork(caip2: string): ResolvedNetwork {
@@ -92,5 +112,5 @@ export type {
   AttestationResult,
 } from './adapter.types'
 export { UnsupportedNetworkError } from './errors'
-export { resolveNetworkEnv, validateNetworkEnv } from './env'
+export { isChainEnabled, resolveNetworkEnv, validateNetworkEnv } from './env'
 export { getCircleIrisUrl, getCircleAttestationUrl } from './cctp'

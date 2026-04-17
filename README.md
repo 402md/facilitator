@@ -4,7 +4,7 @@
 [![x402](https://img.shields.io/badge/x402-v2-green)](https://x402.org)
 [![MPP](https://img.shields.io/badge/MPP-compatible-orange)](https://www.machinepayments.com/)
 [![CCTP V2](https://img.shields.io/badge/Circle_CCTP-V2-00D4AA)](https://www.circle.com/cross-chain-transfer-protocol)
-[![Base](https://img.shields.io/badge/Base-EVM-3245FF)](https://base.org)
+[![EVM](https://img.shields.io/badge/EVM-7_chains-3245FF)](https://ethereum.org)
 [![Solana](https://img.shields.io/badge/Solana-mainnet-9945FF)](https://solana.com)
 [![Stellar](https://img.shields.io/badge/Stellar-Soroban-blueviolet)](https://stellar.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6)](https://www.typescriptlang.org)
@@ -271,15 +271,31 @@ That's it. The seller's API now accepts USDC from any supported chain. Buyers on
 
 ## Supported Chains
 
-| Chain          | Pull Mechanism                                   | CCTP Burn                                                 | SDK                    |
-| -------------- | ------------------------------------------------ | --------------------------------------------------------- | ---------------------- |
-| **Base (EVM)** | EIP-3009 `transferWithAuthorization`             | `depositForBurn` / `depositForBurnWithHook` (for Stellar) | `viem`                 |
-| **Solana**     | Facilitator as fee payer + SPL `TransferChecked` | CCTP program `depositForBurn`                             | `@solana/web3.js`      |
-| **Stellar**    | Facilitator as fee source + payment operation    | Soroban `deposit_for_burn` on TokenMessengerMinter        | `@stellar/stellar-sdk` |
+All EVM chains share the same `createEvmAdapter` — one private key, one `0x...` address across every EIP-155 chain. Non-EVM chains each have their own adapter and key.
+
+| Chain           | CAIP-2           | CCTP Domain | Family  | SDK                    |
+| --------------- | ---------------- | ----------- | ------- | ---------------------- |
+| **Base**        | `eip155:8453`    | 6           | EVM     | `viem`                 |
+| **Ethereum**    | `eip155:1`       | 0           | EVM     | `viem`                 |
+| **Optimism**    | `eip155:10`      | 2           | EVM     | `viem`                 |
+| **Arbitrum**    | `eip155:42161`   | 3           | EVM     | `viem`                 |
+| **Linea**       | `eip155:59144`   | 11          | EVM     | `viem`                 |
+| **Unichain**    | `eip155:130`     | 10          | EVM     | `viem`                 |
+| **World Chain** | `eip155:480`     | 14          | EVM     | `viem`                 |
+| **Solana**      | `solana:mainnet` | 5           | Solana  | `@solana/web3.js`      |
+| **Stellar**     | `stellar:pubnet` | 27          | Stellar | `@stellar/stellar-sdk` |
+
+| Family  | Pull Mechanism                                   | CCTP Burn                                                 |
+| ------- | ------------------------------------------------ | --------------------------------------------------------- |
+| EVM     | EIP-3009 `transferWithAuthorization`             | `depositForBurn` / `depositForBurnWithHook` (for Stellar) |
+| Solana  | Facilitator as fee payer + SPL `TransferChecked` | CCTP program `depositForBurn`                             |
+| Stellar | Facilitator as fee source + payment operation    | Soroban `deposit_for_burn` on TokenMessengerMinter        |
 
 When the destination is Stellar (CCTP domain 27), the EVM adapter uses `depositForBurnWithHook` with the `CctpForwarder` contract. This encodes the seller's Stellar address in `hookData` so the forwarder atomically mints and forwards USDC to the seller.
 
-Adding a new CCTP-supported chain (e.g., Polygon, Arbitrum) requires only a new RPC config — zero contract deployments, zero audits.
+Chains are **opt-in** — set `FACILITATOR_<CHAIN>` + the chain's RPC URL and the chain is registered at boot. Unconfigured chains are silently excluded, so the relay/worker start fine with a subset.
+
+Adding another CCTP V2 chain (e.g., BNB Smart Chain when it gets native USDC, or any new EVM CCTP V2 deployment) requires only a new chain definition — zero contract deployments, zero audits. Chains on CCTP V1 only (Polygon, Avalanche) are out of scope until V1 support lands in the adapter.
 
 ## Fee Model
 
@@ -418,14 +434,14 @@ Each package requires a `.env` file. See `.env.example` in each package director
 
 Key variables:
 
-| Variable                          | Description                                      |
-| --------------------------------- | ------------------------------------------------ |
-| `NETWORK_ENV`                     | `testnet` or `mainnet` (default: `testnet`)      |
-| `FACILITATOR_STELLAR`             | Your Stellar public key (receiving address)      |
-| `FACILITATOR_PRIVATE_KEY_STELLAR` | Your Stellar secret key (worker only, signs txs) |
-| `FACILITATOR_BASE`                | Your Base address (receiving address)            |
-| `FACILITATOR_PRIVATE_KEY_BASE`    | Your Base private key (worker only, signs txs)   |
-| `MPP_SECRET_KEY`                  | HMAC secret for MPP challenge binding            |
+| Variable                                                                                                  | Description                                                        |
+| --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `NETWORK_ENV`                                                                                             | `testnet` or `mainnet` (default: `testnet`)                        |
+| `FACILITATOR_STELLAR`                                                                                     | Your Stellar public key (receiving address)                        |
+| `FACILITATOR_PRIVATE_KEY_STELLAR`                                                                         | Your Stellar secret key (worker only, signs txs)                   |
+| `FACILITATOR_BASE` (and `_ETHEREUM` / `_OPTIMISM` / `_ARBITRUM` / `_LINEA` / `_UNICHAIN` / `_WORLDCHAIN`) | Your EVM address per chain (same `0x...` across all EVM chains)    |
+| `FACILITATOR_PRIVATE_KEY_EVM`                                                                             | Your EVM private key (worker only, shared across all 7 EVM chains) |
+| `MPP_SECRET_KEY`                                                                                          | HMAC secret for MPP challenge binding                              |
 
 ## Scripts
 

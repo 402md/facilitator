@@ -35,26 +35,56 @@ describe('resolveNetworkEnv', () => {
   })
 })
 
+const FACILITATOR_PREFIXES = [
+  'BASE_',
+  'ETHEREUM_',
+  'OPTIMISM_',
+  'ARBITRUM_',
+  'LINEA_',
+  'UNICHAIN_',
+  'WORLDCHAIN_',
+  'SOLANA_',
+  'STELLAR_',
+]
+
+function wipeNetworkEnv() {
+  for (const key of Object.keys(process.env)) {
+    if (
+      key.startsWith('FACILITATOR_') ||
+      FACILITATOR_PREFIXES.some((p) => key.startsWith(p)) ||
+      key === 'NETWORK_ENV'
+    ) {
+      delete process.env[key]
+    }
+  }
+}
+
+function setAllFacilitatorAddresses() {
+  process.env.FACILITATOR_BASE = '0xabc'
+  process.env.FACILITATOR_ETHEREUM = '0xabc'
+  process.env.FACILITATOR_OPTIMISM = '0xabc'
+  process.env.FACILITATOR_ARBITRUM = '0xabc'
+  process.env.FACILITATOR_LINEA = '0xabc'
+  process.env.FACILITATOR_UNICHAIN = '0xabc'
+  process.env.FACILITATOR_WORLDCHAIN = '0xabc'
+  process.env.FACILITATOR_SOLANA = 'SolAddr'
+  process.env.FACILITATOR_STELLAR = 'StellarAddr'
+}
+
 describe('validateNetworkEnv (testnet, defaults)', () => {
   const originalEnv = { ...process.env }
 
   beforeEach(() => {
-    // Wipe all env vars this test touches
-    for (const key of Object.keys(process.env)) {
-      if (
-        key.startsWith('FACILITATOR_') ||
-        key.startsWith('BASE_') ||
-        key.startsWith('SOLANA_') ||
-        key.startsWith('STELLAR_') ||
-        key === 'NETWORK_ENV'
-      ) {
-        delete process.env[key]
-      }
-    }
+    wipeNetworkEnv()
     process.env.NETWORK_ENV = 'testnet'
-    process.env.FACILITATOR_BASE = '0xabc'
-    process.env.FACILITATOR_SOLANA = 'SolAddr'
-    process.env.FACILITATOR_STELLAR = 'StellarAddr'
+    // Testnet requires explicit RPCs for the EVM newcomers (no sensible public defaults)
+    process.env.ETHEREUM_SEPOLIA_RPC_URL = 'https://sepolia.example'
+    process.env.OPTIMISM_SEPOLIA_RPC_URL = 'https://sepolia.example'
+    process.env.ARBITRUM_SEPOLIA_RPC_URL = 'https://sepolia.example'
+    process.env.LINEA_SEPOLIA_RPC_URL = 'https://sepolia.example'
+    process.env.UNICHAIN_SEPOLIA_RPC_URL = 'https://sepolia.example'
+    process.env.WORLDCHAIN_SEPOLIA_RPC_URL = 'https://sepolia.example'
+    setAllFacilitatorAddresses()
   })
 
   afterEach(() => {
@@ -64,25 +94,47 @@ describe('validateNetworkEnv (testnet, defaults)', () => {
     Object.assign(process.env, originalEnv)
   })
 
-  test('returns ok when all facilitator addresses present', () => {
+  test('returns ok when all facilitator addresses and required RPCs present', () => {
     const result = validateNetworkEnv()
     expect(result.ok).toBe(true)
     expect(result.missing).toEqual([])
   })
 
-  test('reports missing facilitator address', () => {
-    delete process.env.FACILITATOR_BASE
+  test('unconfigured chains are skipped, not reported missing (opt-in)', () => {
+    // Wipe everything and configure only Base — the other 8 chains should be silently disabled.
+    wipeNetworkEnv()
+    process.env.NETWORK_ENV = 'testnet'
+    process.env.FACILITATOR_BASE = '0xabc'
     const result = validateNetworkEnv()
-    expect(result.ok).toBe(false)
-    expect(result.missing).toContain('FACILITATOR_BASE')
+    expect(result.ok).toBe(true)
+    expect(result.missing).toEqual([])
   })
 
-  test('requirePrivateKeys reports missing private key vars', () => {
+  test('enabled chain with missing RPC is reported', () => {
+    // Enable Arbitrum but don't set its RPC URL — it MUST be reported.
+    delete process.env.ARBITRUM_SEPOLIA_RPC_URL
+    const result = validateNetworkEnv()
+    expect(result.ok).toBe(false)
+    expect(result.missing).toContain('ARBITRUM_SEPOLIA_RPC_URL')
+  })
+
+  test('requirePrivateKeys reports only one FACILITATOR_PRIVATE_KEY_EVM (shared)', () => {
     const result = validateNetworkEnv({ requirePrivateKeys: true })
     expect(result.ok).toBe(false)
-    expect(result.missing).toContain('FACILITATOR_PRIVATE_KEY_BASE')
+    expect(result.missing).toContain('FACILITATOR_PRIVATE_KEY_EVM')
     expect(result.missing).toContain('FACILITATOR_PRIVATE_KEY_SOLANA')
     expect(result.missing).toContain('FACILITATOR_PRIVATE_KEY_STELLAR')
+    // EVM key should only appear once despite 7 EVM chains
+    const evmOccurrences = result.missing.filter((m) => m === 'FACILITATOR_PRIVATE_KEY_EVM').length
+    expect(evmOccurrences).toBe(1)
+  })
+
+  test('legacy FACILITATOR_PRIVATE_KEY_BASE is accepted as migration fallback for _EVM', () => {
+    process.env.FACILITATOR_PRIVATE_KEY_BASE = '0xlegacy'
+    process.env.FACILITATOR_PRIVATE_KEY_SOLANA = 'sol'
+    process.env.FACILITATOR_PRIVATE_KEY_STELLAR = 'S...'
+    const result = validateNetworkEnv({ requirePrivateKeys: true })
+    expect(result.missing).not.toContain('FACILITATOR_PRIVATE_KEY_EVM')
   })
 })
 
@@ -90,21 +142,9 @@ describe('validateNetworkEnv (mainnet)', () => {
   const originalEnv = { ...process.env }
 
   beforeEach(() => {
-    for (const key of Object.keys(process.env)) {
-      if (
-        key.startsWith('FACILITATOR_') ||
-        key.startsWith('BASE_') ||
-        key.startsWith('SOLANA_') ||
-        key.startsWith('STELLAR_') ||
-        key === 'NETWORK_ENV'
-      ) {
-        delete process.env[key]
-      }
-    }
+    wipeNetworkEnv()
     process.env.NETWORK_ENV = 'mainnet'
-    process.env.FACILITATOR_BASE = '0xabc'
-    process.env.FACILITATOR_SOLANA = 'SolAddr'
-    process.env.FACILITATOR_STELLAR = 'StellarAddr'
+    setAllFacilitatorAddresses()
   })
 
   afterEach(() => {
@@ -118,6 +158,12 @@ describe('validateNetworkEnv (mainnet)', () => {
     const result = validateNetworkEnv()
     expect(result.ok).toBe(false)
     expect(result.missing).toContain('BASE_RPC_URL')
+    expect(result.missing).toContain('ETHEREUM_RPC_URL')
+    expect(result.missing).toContain('OPTIMISM_RPC_URL')
+    expect(result.missing).toContain('ARBITRUM_RPC_URL')
+    expect(result.missing).toContain('LINEA_RPC_URL')
+    expect(result.missing).toContain('UNICHAIN_RPC_URL')
+    expect(result.missing).toContain('WORLDCHAIN_RPC_URL')
     expect(result.missing).toContain('SOLANA_RPC_URL')
     expect(result.missing).toContain('STELLAR_RPC_URL')
   })
