@@ -17,7 +17,7 @@ import { sellersRoutes } from '@/sellers/sellers.routes'
 import { settlementsRoutes } from '@/settlements/settlements.routes'
 import { onrampRoutes } from '@/onramp/onramp.routes'
 import { stellarMppRoutes } from '@/mpp/stellar-mpp.routes'
-import { bazaarRoutes } from '@/bazaar/bazaar.routes'
+import { bazaarRoutes, bazaarEnrichedRoutes } from '@/bazaar/bazaar.routes'
 import { db } from '@402md/shared/db'
 import { redis } from '@402md/shared/cache'
 import { getTemporalClient } from '@/shared/temporal'
@@ -50,9 +50,15 @@ export const app = new Elysia()
   .use(onrampRoutes)
   .use(stellarMppRoutes)
   .use(bazaarRoutes)
+  .use(bazaarEnrichedRoutes)
   .get('/', () => Bun.file(new URL('../public/index.html', import.meta.url).pathname), {
     detail: { hide: true },
   })
+  .get(
+    '/dashboard',
+    () => Bun.file(new URL('../public/dashboard.html', import.meta.url).pathname),
+    { detail: { hide: true } },
+  )
   .get('/cover.mp4', () => Bun.file(new URL('../public/cover.mp4', import.meta.url).pathname))
   .get('/health', async () => {
     const checks = {
