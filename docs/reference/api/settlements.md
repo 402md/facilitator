@@ -134,7 +134,7 @@ Shape depends on the workflow type.
 
 Quote the fee breakdown for a given route and amount. This is the authoritative source for gas allowances — the static schedule in [fees](../fees.md) is for reference only.
 
-**Rate limit:** 200 requests per minute per IP.
+**No rate limit.**
 
 ### Query parameters
 
@@ -162,7 +162,6 @@ Quote the fee breakdown for a given route and amount. This is the authoritative 
 | ------ | ---------------------- | --------------------------------- |
 | `400`  | validation             | Missing `from` / `to` / `amount`. |
 | `404`  | `ROUTE_NOT_CONFIGURED` | No gas schedule for this pair.    |
-| `429`  | `RATE_LIMIT`           |                                   |
 
 ### Example
 
