@@ -1,0 +1,28 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://facilitator.402.md/",
+      "service-desc": [
+        {
+          "href": "https://facilitator.402.md/swagger/json",
+          "type": "application/json",
+          "title": "402md Facilitator OpenAPI spec"
+        }
+      ],
+      "service-doc": [
+        {
+          "href": "https://facilitator.402.md/swagger",
+          "type": "text/html",
+          "title": "402md Facilitator API reference"
+        }
+      ],
+      "status": [
+        {
+          "href": "https://facilitator.402.md/health",
+          "type": "application/json",
+          "title": "Facilitator health check"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+# robots.txt for facilitator.402.md
+# 402md Facilitator is a public HTTP API designed for AI agents.
+# Crawling, indexing, and real-time agent retrieval are welcome.
+# The live dashboard is excluded from indexing because it is already
+# exposed as a structured API under /discovery/*.
+
+User-agent: *
+# Content Signals (https://contentsignals.org/)
+#   ai-train=no : do not use this content for training
+#   search=yes  : index for search, including AI-assisted search
+#   ai-input=yes: agents may read this content at query time
+Content-Signal: search=yes, ai-train=no, ai-input=yes
+Allow: /
+Disallow: /dashboard
+
+# ── AI / LLM crawlers ─────────────────────────────────────────────
+# Training crawlers: disallowed. This site's content is marketing
+# and API reference, not a training corpus.
+# Real-time retrieval agents: allowed. Helping agents use the
+# facilitator is literally the product.
+
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /dashboard
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /dashboard
+
+User-agent: Claude-Web
+Allow: /
+Disallow: /dashboard
+
+User-agent: Claude-User
+Allow: /
+Disallow: /dashboard
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /dashboard
+
+User-agent: Perplexity-User
+Allow: /
+Disallow: /dashboard
+
+Sitemap: https://facilitator.402.md/sitemap.xml
