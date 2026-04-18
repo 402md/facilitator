@@ -65,7 +65,7 @@ bun run index.ts
 
 ## 2. Add the x402 middleware
 
-The `@x402/express` middleware intercepts requests to paywalled routes, issues `402 Payment Required` with the accepted payment methods, validates the payment payload against the facilitator, and only then lets the handler run.
+The `@x402/express` middleware intercepts requests to paywalled routes, issues `402 Payment Required` with the accepted payment methods, validates the payment payload against the Facilitator, and only then lets the handler run.
 
 Replace the contents of `index.ts`:
 
@@ -112,9 +112,9 @@ app.listen(5001)
 
 Three things to notice:
 
-- **`payTo` is the facilitator's address on that chain** — not your wallet. Buyers pay the facilitator, and the facilitator settles to you.
-- **`extra.merchantId` is how the facilitator knows which seller to route the payment to.** Without it, `/verify` returns `INVALID_PAYMENT`.
-- **You declare multiple `accepts` entries** — one per chain you want to receive from. You do not manage those wallets; the facilitator does.
+- **`payTo` is the Facilitator's address on that chain** — not your wallet. Buyers pay the Facilitator, and the Facilitator settles to you.
+- **`extra.merchantId` is how the Facilitator knows which seller to route the payment to.** Without it, `/verify` returns `INVALID_PAYMENT`.
+- **You declare multiple `accepts` entries** — one per chain you want to receive from. You do not manage those wallets; the Facilitator does.
 
 Get the right `payTo` values from your `/register` response, or look them up any time:
 
@@ -187,7 +187,7 @@ The [error codes reference](../reference/error-codes.md) lists every error the r
 
 - How to wire `@x402/express` with the 402md Facilitator.
 - Why `extra.merchantId` is the routing key.
-- How `payTo` points to the facilitator, not your wallet.
+- How `payTo` points to the Facilitator, not your wallet.
 - How to watch settlement in Temporal.
 
 ## Next steps

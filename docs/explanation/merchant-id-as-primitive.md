@@ -1,6 +1,6 @@
 # `merchantId` as a primitive
 
-The single most important design decision in the facilitator's public API is that sellers have **one identity across all chains**. That identity is `merchantId`.
+The single most important design decision in the Facilitator's public API is that sellers have **one identity across all chains**. That identity is `merchantId`.
 
 ## What it is
 
@@ -16,19 +16,19 @@ A seller's buyers come from wherever their agents run: Solana, Base, Stellar, an
 2. Only accept from chains the seller already has. (Loses buyers.)
 3. Add bridge logic to their own stack. (Becomes a bridge operator.)
 
-`merchantId` collapses all three. The seller keeps one wallet. Buyers pay on whichever chain they are on, the facilitator receives on the buyer's chain on the seller's behalf, bridges via CCTP V2, and mints to the seller's one wallet. The seller never sees a chain they don't operate on.
+`merchantId` collapses all three. The seller keeps one wallet. Buyers pay on whichever chain they are on, the Facilitator receives on the buyer's chain on the seller's behalf, bridges via CCTP V2, and mints to the seller's one wallet. The seller never sees a chain they don't operate on.
 
 ## How it flows through the system
 
 1. Seller calls `POST /register` with a wallet and network. Gets back `merchantId` and `facilitatorAddresses` — one facilitator address per enabled chain.
 2. Seller configures `@x402/express` with:
-   - `payTo` = the facilitator's address on each accepted network.
+   - `payTo` = the Facilitator's address on each accepted network.
    - `extra.merchantId` = the seller's `merchantId`.
 3. Buyer hits the paywalled endpoint. Gets 402 with the accepts list. Picks a chain, signs, retries.
 4. Relay's `/verify` and `/settle` read `paymentRequirements.extra.merchantId` to know which seller to route to.
 5. Worker looks up the seller's wallet from PostgreSQL using `merchantId`, and directs the cross-chain mint to that wallet.
 
-Without `merchantId` in the `extra` block, the facilitator has no way to tell whose payment this is — `payTo` is the facilitator, not the seller. `INVALID_PAYMENT` returns.
+Without `merchantId` in the `extra` block, the Facilitator has no way to tell whose payment this is — `payTo` is the Facilitator, not the seller. `INVALID_PAYMENT` returns.
 
 ## Why not use the wallet address directly?
 

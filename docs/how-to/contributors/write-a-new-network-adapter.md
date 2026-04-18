@@ -67,7 +67,7 @@ export function createFooAdapter(config: {
 
 ### `pullFromBuyer`
 
-Accept the buyer's signed authorization and submit the chain's equivalent of EIP-3009 `transferWithAuthorization`. The output is a pulled USDC balance in the facilitator wallet.
+Accept the buyer's signed authorization and submit the chain's equivalent of EIP-3009 `transferWithAuthorization`. The output is a pulled USDC balance in the Facilitator wallet.
 
 Things the worker guarantees:
 
@@ -78,7 +78,7 @@ Your job is to craft and broadcast the tx. Return the tx hash once the chain con
 
 ### `transferToSeller`
 
-Same-chain only. Transfer `amount` USDC from the facilitator wallet to the seller's address. Standard USDC transfer — no authorization, no CCTP.
+Same-chain only. Transfer `amount` USDC from the Facilitator wallet to the seller's address. Standard USDC transfer — no authorization, no CCTP.
 
 ### `cctpBurn`
 

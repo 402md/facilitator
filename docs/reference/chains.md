@@ -42,7 +42,7 @@ Select which set is active with `NETWORK_ENV=mainnet` or `NETWORK_ENV=testnet`.
 | Solana  | Facilitator pays fee + `TransferChecked` authorized by buyer | CCTP program `depositForBurn`                                                                   |
 | Stellar | Facilitator is fee source + buyer-signed payment op          | Soroban `TokenMessengerMinter.deposit_for_burn`                                                 |
 
-The buyer **never pays gas** in the x402 flow — the facilitator submits every transaction. In MPP charge mode, the buyer broadcasts directly and pays their own fee.
+The buyer **never pays gas** in the x402 flow — the Facilitator submits every transaction. In MPP charge mode, the buyer broadcasts directly and pays their own fee.
 
 ## Cross-chain destination: Stellar
 
@@ -61,7 +61,7 @@ Solana and Stellar use separate keys:
 
 ## One-time USDC approval per EVM chain
 
-Before the facilitator can burn on an EVM chain, its wallet must approve `TokenMessengerV2` to spend USDC. Do this once per chain:
+Before the Facilitator can burn on an EVM chain, its wallet must approve `TokenMessengerV2` to spend USDC. Do this once per chain:
 
 ```bash
 cast send <USDC_CONTRACT> \

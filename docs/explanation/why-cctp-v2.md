@@ -1,6 +1,6 @@
 # Why CCTP V2
 
-CCTP V2 is Circle's second-generation Cross-Chain Transfer Protocol. It is the only protocol the facilitator uses to move USDC across chains. This document explains that choice and what you inherit from it.
+CCTP V2 is Circle's second-generation Cross-Chain Transfer Protocol. It is the only protocol the Facilitator uses to move USDC across chains. This document explains that choice and what you inherit from it.
 
 ## What CCTP V2 does
 
@@ -67,7 +67,7 @@ In order of how much the design depends on it:
 
 1. **Native-USDC invariant.** We would have to pick between (a) wrapped tokens, accepting the lower UX bar, or (b) a liquidity-pool bridge, accepting variable cost. Both are worse.
 2. **Cross-chain coverage.** Ethereum ↔ Solana ↔ Stellar via a single protocol is rare. Most rails specialize in one family.
-3. **Zero-capital operation.** No pool, no reserve. Losing this means the facilitator would need to fund every route in advance.
+3. **Zero-capital operation.** No pool, no reserve. Losing this means the Facilitator would need to fund every route in advance.
 
 CCTP V2 is load-bearing. The [architecture](./architecture.md) is shaped around its primitives, not just its endpoints.
 

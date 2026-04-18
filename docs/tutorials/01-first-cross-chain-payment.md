@@ -25,7 +25,7 @@ You need:
 - [Docker](https://www.docker.com) running.
 - [Temporal CLI](https://docs.temporal.io/cli) installed.
 - A Stellar testnet keypair for the seller wallet and another for the agent. Generate both with the [Stellar Lab](https://laboratory.stellar.org/#account-creator?network=test).
-- A Base Sepolia EVM wallet funded with test ETH (for the facilitator's EVM key).
+- A Base Sepolia EVM wallet funded with test ETH (for the Facilitator's EVM key).
 
 This tutorial uses testnets only — no real money moves.
 
@@ -52,7 +52,7 @@ Wait ~10 seconds for Temporal to finish its auto-setup, then create the settleme
 temporal operator namespace create 402md-settlement
 ```
 
-## 2. Configure the facilitator
+## 2. Configure the Facilitator
 
 Copy the example env files:
 
@@ -66,7 +66,7 @@ Open both files and fill in at least these variables for Stellar testnet operati
 ```bash
 NETWORK_ENV=testnet
 
-# Stellar — the facilitator's Stellar wallet
+# Stellar — the Facilitator's Stellar wallet
 FACILITATOR_STELLAR=GFACILITATOR...            # your Stellar public key
 FACILITATOR_PRIVATE_KEY_STELLAR=SFACILITATOR... # worker only
 

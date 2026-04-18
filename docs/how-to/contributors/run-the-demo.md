@@ -1,6 +1,6 @@
 # Run the end-to-end demo
 
-The repo ships with a demo agent and demo seller that exercise the full stack: bazaar discovery, MPP charge mode, and the facilitator's paywall flow. Running the demo is the fastest sanity check that every piece works together.
+The repo ships with a demo agent and demo seller that exercise the full stack: bazaar discovery, MPP charge mode, and the Facilitator's paywall flow. Running the demo is the fastest sanity check that every piece works together.
 
 ## The short version
 
@@ -37,7 +37,7 @@ Before the first run, make sure you have:
   - `GET /` — metadata (name, merchantId, price, facilitator URL).
   - `GET /search?q=...` — paywalled at 1,000,000 stroops (0.001 USDC) via MPP charge mode.
 
-MPP verification is delegated to the facilitator's `/merchants/:id/mpp/charge` endpoint. The seller forwards the challenge/receipt dance to the relay.
+MPP verification is delegated to the Facilitator's `/merchants/:id/mpp/charge` endpoint. The seller forwards the challenge/receipt dance to the relay.
 
 ### demo-agent (`packages/demo-agent`)
 

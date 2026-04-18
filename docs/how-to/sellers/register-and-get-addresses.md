@@ -38,7 +38,7 @@ curl -X POST https://api.402md.com/register \
 
 You need two things from here:
 
-- **`merchantId`** — goes into `extra.merchantId` in every `@x402/express` `accepts` entry. Without it the facilitator cannot route the payment.
+- **`merchantId`** — goes into `extra.merchantId` in every `@x402/express` `accepts` entry. Without it the Facilitator cannot route the payment.
 - **`facilitatorAddresses`** — goes into `payTo` per chain. Do not use your own wallet as `payTo`.
 
 ## 3. Keep the `merchantId` safe but not secret

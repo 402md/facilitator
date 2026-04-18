@@ -213,7 +213,7 @@ Cached for 60 s per query.
 
 ## `GET /bazaar/cost-comparison`
 
-Compares the facilitator's flat gas allowance to a percentage-based pricing model on a given route. Intended for marketing / positioning, not for runtime fee calculation — use `GET /bridge/fees` for that.
+Compares the Facilitator's flat gas allowance to a percentage-based pricing model on a given route. Intended for marketing / positioning, not for runtime fee calculation — use `GET /bridge/fees` for that.
 
 ### Query parameters
 

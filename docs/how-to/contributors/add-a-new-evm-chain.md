@@ -1,6 +1,6 @@
 # Add a new EVM chain
 
-CCTP V2 is deployed on 7 EVM chains today. When Circle deploys V2 on another EVM chain, adding it to the facilitator is a config change — no new adapter, no contract deploy, no audit.
+CCTP V2 is deployed on 7 EVM chains today. When Circle deploys V2 on another EVM chain, adding it to the Facilitator is a config change — no new adapter, no contract deploy, no audit.
 
 This guide walks through adding a hypothetical chain `Foo Chain`, CAIP-2 `eip155:4200`, CCTP domain `42`.
 
@@ -48,7 +48,7 @@ Open `packages/shared/src/networks/gas-schedule.ts`. Add the new chain's allowan
 { from: 'stellar', to: 'fooChain', allowance: '800' },
 ```
 
-Pick allowances based on observed gas costs on the new chain. Start generous — the facilitator absorbs the variance, so being too low hurts the operator. You can tighten numbers later based on production data.
+Pick allowances based on observed gas costs on the new chain. Start generous — the Facilitator absorbs the variance, so being too low hurts the operator. You can tighten numbers later based on production data.
 
 ## 3. Update the documentation
 
@@ -77,7 +77,7 @@ Make a tiny payment end-to-end (source: new chain, destination: Stellar) via the
 
 ## 5. Approve USDC spend on the new chain
 
-One-time: the facilitator wallet must approve `TokenMessengerV2` on the new chain:
+One-time: the Facilitator wallet must approve `TokenMessengerV2` on the new chain:
 
 ```bash
 cast send \

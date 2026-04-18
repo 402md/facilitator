@@ -40,7 +40,7 @@ For failed workflows the last event includes the error. Common recoveries:
 | Error                                     | Action                                                         |
 | ----------------------------------------- | -------------------------------------------------------------- |
 | `pullFromBuyer` — EIP-3009 nonce conflict | None — buyer needs to sign a new authorization.                |
-| `cctpBurn` — insufficient gas             | Top up the facilitator's gas wallet on the source chain.       |
+| `cctpBurn` — insufficient gas             | Top up the Facilitator's gas wallet on the source chain.       |
 | `waitAttestation` — Circle Iris 5xx       | None — activity retries automatically with backoff.            |
 | `cctpMint` — revert                       | Usually an RPC issue. Retry the activity manually from the UI. |
 

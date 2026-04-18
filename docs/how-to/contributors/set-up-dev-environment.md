@@ -1,6 +1,6 @@
 # Set up a development environment
 
-You want to hack on the facilitator itself. This guide gets you from a fresh clone to a running local stack with test wallets.
+You want to hack on the Facilitator itself. This guide gets you from a fresh clone to a running local stack with test wallets.
 
 ## 1. Clone and install
 

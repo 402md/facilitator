@@ -105,7 +105,7 @@ Five activities: `pullFromBuyer`, `cctpBurn`, `waitAttestation`, `cctpMint`, `re
 The code does not have `if error then rollback`. Instead:
 
 - **`pullFromBuyer` fails:** no funds moved. Workflow ends `failed`. Buyer can retry with a new authorization.
-- **`cctpBurn` fails after `pullFromBuyer`:** USDC sits in the facilitator wallet. Workflow ends `failed` with `BURN_PENDING`. Operators investigate (usually a gas or RPC issue) and either retry the burn (common) or refund the buyer off-chain.
+- **`cctpBurn` fails after `pullFromBuyer`:** USDC sits in the Facilitator wallet. Workflow ends `failed` with `BURN_PENDING`. Operators investigate (usually a gas or RPC issue) and either retry the burn (common) or refund the buyer off-chain.
 - **`waitAttestation` times out:** burn is on-chain and final, attestation is valid indefinitely once Circle issues it. Operators retry the workflow manually, which resumes at `waitAttestation`.
 - **`cctpMint` fails:** attestation is still valid. Operators retry. The buyer-side pull is final, so no buyer-side rollback is required.
 

@@ -30,12 +30,12 @@ Keys should come from a secret manager (Fly/GCP/AWS Secret Manager, Vault) — n
 
 **Buyer-side signatures** — EIP-3009 authorizations, Stellar payment signatures, Solana tx signatures — are included in workflow input. They are not sensitive on their own: they are single-use and nonce-bound. An attacker possessing a signature cannot reuse it (Redis replay protection + chain-level nonce).
 
-## What an attacker can do if the facilitator key leaks
+## What an attacker can do if the Facilitator key leaks
 
 Damage is bounded by three things:
 
 1. **Daily volume limit.** The attacker cannot pull or move more than `DAILY_VOLUME_LIMIT` of USDC in a 24-hour window. Default 10,000 USDC (on EVM base-units). Operators set this deliberately low in early access.
-2. **Buyer authorizations are still required.** The facilitator key signs the facilitator's own transactions (pulls, burns, mints). It does not, by itself, let the attacker pull from any buyer wallet. To drain a buyer, the attacker needs a valid buyer-signed authorization — which is single-use and bound to a nonce the buyer controls.
+2. **Buyer authorizations are still required.** The facilitator key signs the Facilitator's own transactions (pulls, burns, mints). It does not, by itself, let the attacker pull from any buyer wallet. To drain a buyer, the attacker needs a valid buyer-signed authorization — which is single-use and bound to a nonce the buyer controls.
 3. **Gas float is the only at-risk facilitator balance.** The facilitator holds ETH/SOL/XLM for gas, plus accrued USDC allowances. Nothing else. Seller funds are not held, ever.
 
 If a key compromise is suspected:
@@ -71,7 +71,7 @@ Three layers sound excessive. They are complementary: Redis is fast (first line)
 
 Rate limit (3/hour per IP) prevents registration floods.
 
-Registering someone else's wallet as yours does not let you steal their payments — `payTo` in the x402 flow is the facilitator's address, not the seller's. Payments to a `merchantId` always settle to the wallet registered with that `merchantId`. The attacker would be paying themselves.
+Registering someone else's wallet as yours does not let you steal their payments — `payTo` in the x402 flow is the Facilitator's address, not the seller's. Payments to a `merchantId` always settle to the wallet registered with that `merchantId`. The attacker would be paying themselves.
 
 ## Per-IP rate limits
 

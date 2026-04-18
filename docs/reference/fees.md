@@ -1,6 +1,6 @@
 # Fees and gas allowance
 
-**Platform fee is 0%.** The facilitator never takes a cut of the payment. The only deduction is a fixed gas allowance that reimburses the on-chain transactions the facilitator submits on behalf of the buyer and seller.
+**Platform fee is 0%.** The facilitator never takes a cut of the payment. The only deduction is a fixed gas allowance that reimburses the on-chain transactions the Facilitator submits on behalf of the buyer and seller.
 
 For runtime quotes, call [`GET /bridge/fees`](./api/settlements.md#get-bridgefees) — that endpoint is authoritative. The table below is the current static schedule and may lag.
 
@@ -40,7 +40,7 @@ Routes not listed inherit the cost of the source chain for same-chain settlement
 
 - **No gas oracle.** Oracles add a dependency and a failure mode.
 - **Predictable math.** The buyer and seller can compute the net amount locally from the schedule.
-- **The facilitator takes the variance.** If actual gas is lower than the allowance, the difference stays in the facilitator wallet. If higher, the facilitator absorbs it. Allowances are chosen to be slightly above median gas so the facilitator is rarely out of pocket at scale.
+- **The facilitator takes the variance.** If actual gas is lower than the allowance, the difference stays in the Facilitator wallet. If higher, the Facilitator absorbs it. Allowances are chosen to be slightly above median gas so the Facilitator is rarely out of pocket at scale.
 
 CCTP itself charges nothing — burn/mint is 1:1 native USDC.
 
@@ -65,4 +65,4 @@ Same allowance for $1 or $100M — ideal for machine-to-machine micropayments an
 ## Next
 
 - [API reference — `GET /bridge/fees`](./api/settlements.md#get-bridgefees) — authoritative quote.
-- [Architecture — why non-custodial](../explanation/non-custodial-model.md) — why the facilitator can charge so little.
+- [Architecture — why non-custodial](../explanation/non-custodial-model.md) — why the Facilitator can charge so little.

@@ -64,7 +64,7 @@ This returns settled transactions with gross/net amounts and every on-chain tx h
 | `step: failed` cause        | What to do                                                                                                                                                 |
 | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `pullFromBuyer` failed      | Buyer's authorization was invalid or funds insufficient. Not your problem — return a refund to them out-of-band only if you already released the resource. |
-| `cctpBurn` failed           | USDC sits in the facilitator wallet. Operators investigate; you are not out of pocket.                                                                     |
+| `cctpBurn` failed           | USDC sits in the Facilitator wallet. Operators investigate; you are not out of pocket.                                                                     |
 | `waitAttestation` timed out | Circle took > 30 min. Operators will retry; Circle attestations never expire once issued.                                                                  |
 | `cctpMint` failed           | Operators retry. No fund loss — the burn is final and the attestation is reusable.                                                                         |
 

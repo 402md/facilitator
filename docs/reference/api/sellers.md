@@ -4,7 +4,7 @@ Endpoints that sellers use to register and advertise their payment acceptance.
 
 ## `POST /register`
 
-Register a seller wallet and receive a `merchantId` plus the facilitator's receiving address on every enabled chain.
+Register a seller wallet and receive a `merchantId` plus the Facilitator's receiving address on every enabled chain.
 
 **Rate limit:** 3 requests per hour per IP.
 
@@ -134,7 +134,7 @@ List every x402 version, scheme, and network the relay currently accepts. Use th
 
 ## `GET /.well-known/x402.json`
 
-Standard x402 capability manifest. Used by x402-aware agents to discover the facilitator.
+Standard x402 capability manifest. Used by x402-aware agents to discover the Facilitator.
 
 **No rate limit.**
 

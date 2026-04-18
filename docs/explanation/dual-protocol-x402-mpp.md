@@ -17,20 +17,20 @@ The facilitator speaks two HTTP payment protocols: [x402](https://x402.org) from
 
 x402 layers on HTTP 402 Payment Required. A seller's endpoint returns 402 with a list of `accepts` entries: scheme, network, `payTo`, amount. The buyer's client picks one, signs an authorization against their own wallet, and retries with the signature in `X-PAYMENT`.
 
-The seller's middleware (e.g. `@x402/express`) forwards the signed payload to the facilitator for `POST /verify`. On success, the seller returns the resource. Settlement runs async via `POST /settle`.
+The seller's middleware (e.g. `@x402/express`) forwards the signed payload to the Facilitator for `POST /verify`. On success, the seller returns the resource. Settlement runs async via `POST /settle`.
 
 **Properties that matter:**
 
-- **Gas-free for the buyer.** The signature is an authorization — the facilitator broadcasts the actual pull transaction and pays the gas. Cost is folded into the gas allowance.
+- **Gas-free for the buyer.** The signature is an authorization — the Facilitator broadcasts the actual pull transaction and pays the gas. Cost is folded into the gas allowance.
 - **Pull model.** The facilitator pulls USDC from the buyer. No prior relationship, no deposit, no account.
 - **Cross-chain.** Any supported chain in, any supported chain out. The buyer doesn't know or care that the seller is on a different chain. This is where CCTP V2 earns its keep.
-- **Standard Coinbase middleware.** Sellers do not install a 402md SDK. They use `@x402/express` with a `payTo` pointing to the facilitator and a `merchantId` in `extra`.
+- **Standard Coinbase middleware.** Sellers do not install a 402md SDK. They use `@x402/express` with a `payTo` pointing to the Facilitator and a `merchantId` in `extra`.
 
 Use x402 whenever you can. It is the primary protocol.
 
 ## MPP — push, same-chain, buyer pays gas
 
-MPP's Charge Mode uses HTTP negotiation similarly, but the buyer broadcasts the payment themselves. The seller (or the facilitator on behalf of the seller) verifies the on-chain transaction matches the challenge.
+MPP's Charge Mode uses HTTP negotiation similarly, but the buyer broadcasts the payment themselves. The seller (or the Facilitator on behalf of the seller) verifies the on-chain transaction matches the challenge.
 
 On Stellar specifically, the `@stellar/mpp` SDK handles the full state machine: issue challenge, sign Soroban SAC transfer on the client, verify on the server. The facilitator's `/merchants/:id/mpp/charge` endpoint is just a hosted `Mppx` server that knows your `merchantId`.
 
@@ -41,7 +41,7 @@ On Stellar specifically, the `@stellar/mpp` SDK handles the full state machine: 
 - **Stellar only, today.** The protocol is specified for Stellar first. The facilitator's implementation is Stellar-only.
 - **No cross-chain.** The payment stays on whatever chain the buyer used. If the seller is elsewhere, MPP doesn't help.
 
-Use MPP when your buyer and seller are both on Stellar and you want to avoid the small gas float on the facilitator side, or when your buyers prefer to pay their own gas (for regulatory/UX reasons).
+Use MPP when your buyer and seller are both on Stellar and you want to avoid the small gas float on the Facilitator side, or when your buyers prefer to pay their own gas (for regulatory/UX reasons).
 
 ## Why not just x402?
 
