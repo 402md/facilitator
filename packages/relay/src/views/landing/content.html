@@ -1,0 +1,624 @@
+<main>
+  <!-- ── Hero ── -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <h1 data-reveal style="--i: 0">
+          Any <span class="hero-any">chain in,</span>
+          <em>your chain out.</em>
+        </h1>
+
+        <p class="hero-sub" data-reveal style="--i: 1">
+          Cross-chain USDC settlement for x402 (Coinbase's HTTP 402 protocol) and MPP (Machine
+          Payments Protocol). Buyer pays on Solana, seller receives on Stellar. No SDK, no
+          dashboard, no code changes.
+        </p>
+
+        <div class="hero-ctas" data-reveal style="--i: 2">
+          <a href="#register" class="btn-primary">Register your wallet</a>
+          <a href="#how-it-works" class="btn-ghost">How it works &#8594;</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Code ── -->
+  <section class="code-section reveal">
+    <div class="container">
+      <div class="section-label">Getting Started</div>
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots" aria-hidden="true">
+            <span class="code-dot-red"></span><span class="code-dot-yellow"></span
+            ><span class="code-dot-green"></span>
+          </div>
+          <span class="code-label">terminal</span>
+        </div>
+        <pre class="code-body"><span class="cm"># 1. Register your wallet (one-time)</span>
+<span class="fn">curl</span> -X POST https://facilitator.402.md/register \
+  -H <span class="st">"Content-Type: application/json"</span> \
+  -d <span class="st">'{"wallet": "GSELLER...", "network": "stellar:pubnet"}'</span>
+
+<span class="cm"># 2. Use standard @x402/express — zero 402md code</span>
+<span class="kw">import</span> { paymentMiddleware } <span class="kw">from</span> <span class="st">"@x402/express"</span>
+
+app.use(paymentMiddleware({
+  <span class="st">"GET /your-endpoint"</span>: {
+    accepts: [
+      { scheme: <span class="st">"exact"</span>, network: <span class="st">"eip155:8453"</span>,    payTo: <span class="st">"0x4C95...c3b9"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Base</span>
+      { scheme: <span class="st">"exact"</span>, network: <span class="st">"eip155:1"</span>,       payTo: <span class="st">"0x8aF2...71d4"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Ethereum</span>
+      { scheme: <span class="st">"exact"</span>, network: <span class="st">"eip155:10"</span>,      payTo: <span class="st">"0x2E19...a0b7"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Optimism</span>
+      { scheme: <span class="st">"exact"</span>, network: <span class="st">"eip155:42161"</span>,   payTo: <span class="st">"0xF1c3...9e82"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Arbitrum</span>
+      { scheme: <span class="st">"exact"</span>, network: <span class="st">"eip155:59144"</span>,   payTo: <span class="st">"0x7b45...d60a"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Linea</span>
+      { scheme: <span class="st">"exact"</span>, network: <span class="st">"eip155:130"</span>,     payTo: <span class="st">"0xD309...4cf1"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Unichain</span>
+      { scheme: <span class="st">"exact"</span>, network: <span class="st">"eip155:480"</span>,     payTo: <span class="st">"0x5a6e...bb28"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// World Chain</span>
+      { scheme: <span class="st">"exact"</span>, network: <span class="st">"solana:mainnet"</span>, payTo: <span class="st">"4r7q...BDP5"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Solana</span>
+      { scheme: <span class="st">"exact"</span>, network: <span class="st">"stellar:pubnet"</span>, payTo: <span class="st">"GAX5...5HZR"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Stellar</span>
+    ],
+  },
+}, <span class="st">"https://facilitator.402.md"</span>))
+
+<span class="cm"># Buyers on any of the 9 supported chains can now pay you.</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Problem ── -->
+  <section class="reveal">
+    <div class="container">
+      <div class="section-label">The Problem</div>
+      <h2>One chain is <em>not enough</em></h2>
+      <p class="section-lead">
+        x402 lets any API charge for access. But every facilitator today locks sellers to a single
+        chain — and leaves money on the table.
+      </p>
+
+      <div class="problem-grid">
+        <div class="problem-item">
+          <h3>Chain lock-in</h3>
+          <p>
+            30 x402 facilitators, all single-chain. Buyer on Solana, seller on Stellar? Payment
+            fails. Revenue lost silently.
+          </p>
+        </div>
+        <div class="problem-item">
+          <h3>Wrong tokens, wrong path</h3>
+          <p>
+            DEX-based bridges mean wrapped USDC, slippage, and risk. Native USDC via CCTP V2 is the
+            only clean path.
+          </p>
+        </div>
+        <div class="problem-item">
+          <h3>Fragmented protocols</h3>
+          <p>x402 and MPP serve different ecosystems. No one speaks both — until now.</p>
+        </div>
+        <div class="problem-item">
+          <h3>Agents don't choose chains</h3>
+          <p>
+            AI agents need to pay, not navigate blockchain infrastructure. The payment layer should
+            be invisible.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── How It Works ── -->
+  <section id="how-it-works" class="reveal">
+    <div class="container">
+      <div class="section-label">How It Works</div>
+      <h2>Three steps. <em>That's it.</em></h2>
+
+      <div class="flow-grid">
+        <div class="flow-col">
+          <div class="flow-label">Seller</div>
+          <p class="flow-intro">One curl to start receiving</p>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <span class="flow-num">01</span>
+              <div>
+                <h3>Register your wallet</h3>
+                <p>
+                  <span class="pill">POST /register</span> with your address and chain. Get
+                  facilitator addresses on all supported chains.
+                </p>
+              </div>
+            </div>
+            <div class="flow-step">
+              <span class="flow-num">02</span>
+              <div>
+                <h3>Use standard x402</h3>
+                <p>
+                  Add <span class="pill">@x402/express</span> middleware. Point
+                  <span class="pill">payTo</span> to your facilitator address. Zero 402md
+                  dependencies.
+                </p>
+              </div>
+            </div>
+            <div class="flow-step">
+              <span class="flow-num">03</span>
+              <div>
+                <h3>Receive USDC on your chain</h3>
+                <p>
+                  Buyer pays on any chain. 402md settles via CCTP V2. Native USDC, directly to your
+                  wallet.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-col flow-col-buyer">
+          <div class="flow-label flow-label-buyer">Buyer / Agent</div>
+          <p class="flow-intro">Pay from any chain</p>
+          <div class="flow-steps">
+            <div class="flow-step">
+              <span class="flow-num">01</span>
+              <div>
+                <h3>Discover the seller</h3>
+                <p>
+                  GET the API. Receive a <span class="pill">402</span> response with facilitator
+                  addresses on your chain.
+                </p>
+              </div>
+            </div>
+            <div class="flow-step">
+              <span class="flow-num">02</span>
+              <div>
+                <h3>Pay with USDC</h3>
+                <p>
+                  Sign a standard x402 payment on <span class="chain chain-base">Base</span>
+                  <span class="chain chain-solana">Solana</span> or
+                  <span class="chain chain-stellar">Stellar</span>. No bridge, no swap.
+                </p>
+              </div>
+            </div>
+            <div class="flow-step">
+              <span class="flow-num">03</span>
+              <div>
+                <h3>Get the resource</h3>
+                <p>
+                  Payment verified in milliseconds. Resource delivered instantly. Settlement runs in
+                  the background.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Features ── -->
+  <section class="reveal">
+    <div class="container">
+      <div class="section-label">By Design</div>
+      <h2>Opinionated choices, <em>for good reasons</em></h2>
+      <p class="section-lead">
+        Every decision optimizes for one thing: the seller should do zero extra work to accept
+        payments from any chain.
+      </p>
+
+      <div class="features-primary">
+        <div class="feature-row">
+          <h3>Non-custodial</h3>
+          <p>CCTP V2 mints USDC directly to the seller's wallet. 402md never holds your funds.</p>
+        </div>
+        <div class="feature-row">
+          <h3>Free</h3>
+          <p>
+            0% platform fee. Only network gas deducted from settlement. Fixed schedule, no
+            surprises.
+          </p>
+        </div>
+        <div class="feature-row">
+          <h3>Zero dependencies</h3>
+          <p>Sellers use standard @x402/express from Coinbase. No 402md SDK, no custom packages.</p>
+        </div>
+      </div>
+
+      <div class="features-secondary">
+        <div class="feature-sm">
+          <h3>Dual protocol</h3>
+          <p>x402 and MPP through one facilitator. Two ecosystems, one registration.</p>
+        </div>
+        <div class="feature-sm">
+          <h3>Native USDC only</h3>
+          <p>Circle CCTP V2 burns and mints real USDC. No wrapped tokens, no slippage.</p>
+        </div>
+        <div class="feature-sm">
+          <h3>Three chains</h3>
+          <p>Base, Solana, Stellar. Adding a new EVM chain is a config change, not a deploy.</p>
+        </div>
+      </div>
+
+      <div class="ecosystem-links">
+        <a href="https://www.x402.org/" class="eco-link" target="_blank" rel="noopener"
+          >x402 Spec &#8599;</a
+        >
+        <a
+          href="https://github.com/AgoraPay-Stellar/mpp-specification"
+          class="eco-link"
+          target="_blank"
+          rel="noopener"
+          >MPP Spec &#8599;</a
+        >
+        <a href="https://www.circle.com/cctp" class="eco-link" target="_blank" rel="noopener"
+          >Circle CCTP V2 &#8599;</a
+        >
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Pricing ── -->
+  <section id="pricing" class="reveal">
+    <div class="container">
+      <div class="section-label">Pricing</div>
+      <h2>Free. <em>Seriously.</em></h2>
+      <p class="section-lead">
+        Zero platform fee. The only cost is a fixed gas allowance per route, deducted from the
+        seller's payout. Here's what that looks like on a $1.00 payment.
+      </p>
+
+      <div class="pricing-wrap">
+        <table class="pricing-table">
+          <thead>
+            <tr>
+              <th scope="col">Route</th>
+              <th scope="col">Seller receives</th>
+              <th scope="col">Gas allowance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <span class="chain chain-stellar">Stellar</span> &#8594;
+                <span class="chain chain-stellar">Stellar</span>
+              </td>
+              <td>$0.99999</td>
+              <td>$0.00001 <span class="gas-pct">0.001%</span></td>
+            </tr>
+            <tr>
+              <td>
+                <span class="chain chain-solana">Solana</span> &#8594;
+                <span class="chain chain-solana">Solana</span>
+              </td>
+              <td>$0.9990</td>
+              <td>$0.0010 <span class="gas-pct">0.10%</span></td>
+            </tr>
+            <tr>
+              <td>
+                <span class="chain chain-base">Base</span> &#8594;
+                <span class="chain chain-base">Base</span>
+              </td>
+              <td>$0.9980</td>
+              <td>$0.0020 <span class="gas-pct">0.20%</span></td>
+            </tr>
+            <tr>
+              <td>
+                <span class="chain chain-stellar">Stellar</span> &#8594;
+                <span class="chain chain-solana">Solana</span>
+              </td>
+              <td>$0.9985</td>
+              <td>$0.0015 <span class="gas-pct">0.15%</span></td>
+            </tr>
+            <tr>
+              <td>
+                <span class="chain chain-solana">Solana</span> &#8594;
+                <span class="chain chain-stellar">Stellar</span>
+              </td>
+              <td>$0.9975</td>
+              <td>$0.0025 <span class="gas-pct">0.25%</span></td>
+            </tr>
+            <tr>
+              <td>
+                <span class="chain chain-stellar">Stellar</span> &#8594;
+                <span class="chain chain-base">Base</span>
+              </td>
+              <td>$0.9975</td>
+              <td>$0.0025 <span class="gas-pct">0.25%</span></td>
+            </tr>
+            <tr>
+              <td>
+                <span class="chain chain-base">Base</span> &#8594;
+                <span class="chain chain-stellar">Stellar</span>
+              </td>
+              <td>$0.9968</td>
+              <td>$0.0032 <span class="gas-pct">0.32%</span></td>
+            </tr>
+            <tr>
+              <td>
+                <span class="chain chain-base">Base</span> &#8594;
+                <span class="chain chain-solana">Solana</span>
+              </td>
+              <td>$0.9965</td>
+              <td>$0.0035 <span class="gas-pct">0.35%</span></td>
+            </tr>
+            <tr>
+              <td>
+                <span class="chain chain-solana">Solana</span> &#8594;
+                <span class="chain chain-base">Base</span>
+              </td>
+              <td>$0.9965</td>
+              <td>$0.0035 <span class="gas-pct">0.35%</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FAQ (moved before CTA for better peak-end) ── -->
+  <section id="faq" class="reveal">
+    <div class="container">
+      <div class="section-label">FAQ</div>
+      <h2>Common questions</h2>
+
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>What is Facilitator by 402md?</summary>
+          <div class="faq-answer">
+            A cross-chain USDC settlement facilitator built by 402md for the x402 and MPP protocols.
+            Sellers register once and receive payments from buyers on any supported chain — Base,
+            Solana, or Stellar.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>How is this different from other x402 facilitators?</summary>
+          <div class="faq-answer">
+            Existing facilitators are single-chain. If a buyer is on Solana and the seller is on
+            Stellar, the payment fails. 402md bridges that gap using Circle CCTP V2 — atomic,
+            non-custodial, native USDC. No wrapped tokens, no slippage.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>What chains are supported?</summary>
+          <div class="faq-answer">
+            Base (EVM), Solana, and Stellar — all connected via Circle CCTP V2. Adding new EVM
+            chains requires only a config update, no contract deployments.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>How much does it cost?</summary>
+          <div class="faq-answer">
+            Zero platform fee. The only deduction is a fixed gas allowance per route — for example,
+            $0.0032 for Base&#8594;Stellar on a $1.00 payment. Same-chain payments cost even less
+            ($0.00001 for Stellar&#8594;Stellar).
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>Is it custodial?</summary>
+          <div class="faq-answer">
+            No. Cross-chain settlements use Circle CCTP V2, which mints USDC directly to the
+            seller's wallet. 402md never holds seller funds. The facilitator only retains the gas
+            allowance needed to execute the settlement.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>How long does settlement take?</summary>
+          <div class="faq-answer">
+            Same-chain: under 5 seconds. Stellar or Solana cross-chain: 5-30 seconds. EVM
+            cross-chain: 15-19 minutes, limited by block finality. The buyer gets the resource
+            instantly — settlement happens in the background.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>Do I need to install any 402md package?</summary>
+          <div class="faq-answer">
+            No. Sellers use the standard @x402/express SDK from Coinbase. The only 402md-specific
+            step is a one-time POST /register call — after that, everything works with standard x402
+            tooling.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>What about same-chain payments?</summary>
+          <div class="faq-answer">
+            If buyer and seller are on the same chain, 402md does a direct USDC transfer — no bridge
+            involved. Faster settlement, lower gas, same API.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>What is MPP?</summary>
+          <div class="faq-answer">
+            Machine Payments Protocol, developed by Stellar and used by services like OpenAI,
+            Anthropic, and Dune. 402md supports MPP alongside x402, enabling AI agents from both
+            ecosystems to transact through one facilitator.
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA / Register ── -->
+  <section id="register" class="cta-section reveal">
+    <div class="container">
+      <div class="section-label">Get Started</div>
+      <h2>One curl. <em>All chains.</em></h2>
+      <p class="section-lead">
+        Register your wallet and start accepting cross-chain USDC in under a minute. No dashboard,
+        no login, no SDK.
+      </p>
+
+      <div class="supported-currencies">
+        <span class="currency-label">USDC</span>
+        <span class="chain chain-base">Base</span>
+        <span class="chain chain-solana">Solana</span>
+        <span class="chain chain-stellar">Stellar</span>
+      </div>
+
+      <div class="register-form">
+        <form id="register-form">
+          <fieldset>
+            <label class="register-label">Environment</label>
+            <div class="network-options" role="radiogroup" aria-label="Environment">
+              <input
+                type="radio"
+                name="env-toggle"
+                id="env-mainnet"
+                value="mainnet"
+                class="network-radio"
+                checked
+              />
+              <label for="env-mainnet" class="network-label">Mainnet</label>
+              <input
+                type="radio"
+                name="env-toggle"
+                id="env-testnet"
+                value="testnet"
+                class="network-radio"
+              />
+              <label for="env-testnet" class="network-label">Testnet</label>
+            </div>
+
+            <label class="register-label" id="network-group-label">Receive USDC on</label>
+            <div class="network-options" role="radiogroup" aria-labelledby="network-group-label">
+              <input
+                type="radio"
+                name="network"
+                id="net-base"
+                value="base"
+                class="network-radio"
+                checked
+              />
+              <label for="net-base" class="network-label">Base</label>
+
+              <input
+                type="radio"
+                name="network"
+                id="net-ethereum"
+                value="ethereum"
+                class="network-radio"
+              />
+              <label for="net-ethereum" class="network-label">Ethereum</label>
+
+              <input
+                type="radio"
+                name="network"
+                id="net-optimism"
+                value="optimism"
+                class="network-radio"
+              />
+              <label for="net-optimism" class="network-label">Optimism</label>
+
+              <input
+                type="radio"
+                name="network"
+                id="net-arbitrum"
+                value="arbitrum"
+                class="network-radio"
+              />
+              <label for="net-arbitrum" class="network-label">Arbitrum</label>
+
+              <input
+                type="radio"
+                name="network"
+                id="net-linea"
+                value="linea"
+                class="network-radio"
+              />
+              <label for="net-linea" class="network-label">Linea</label>
+
+              <input
+                type="radio"
+                name="network"
+                id="net-unichain"
+                value="unichain"
+                class="network-radio"
+              />
+              <label for="net-unichain" class="network-label">Unichain</label>
+
+              <input
+                type="radio"
+                name="network"
+                id="net-worldchain"
+                value="worldchain"
+                class="network-radio"
+              />
+              <label for="net-worldchain" class="network-label">World Chain</label>
+
+              <input
+                type="radio"
+                name="network"
+                id="net-solana"
+                value="solana"
+                class="network-radio"
+              />
+              <label for="net-solana" class="network-label">Solana</label>
+
+              <input
+                type="radio"
+                name="network"
+                id="net-stellar"
+                value="stellar"
+                class="network-radio"
+              />
+              <label for="net-stellar" class="network-label">Stellar</label>
+            </div>
+
+            <label class="register-label" for="wallet-input">Wallet address</label>
+            <input
+              type="text"
+              id="wallet-input"
+              name="wallet"
+              class="wallet-input"
+              placeholder="0xd8dA6BF2...aA96045"
+              required
+              minlength="10"
+              autocomplete="off"
+              spellcheck="false"
+              aria-describedby="wallet-hint"
+            />
+            <p id="wallet-hint" class="wallet-hint">0x followed by 40 hex characters</p>
+
+            <div class="register-actions">
+              <button type="submit" class="register-btn" aria-describedby="register-status">
+                Register
+              </button>
+              <a
+                href="https://facilitator.402.md/swagger"
+                class="register-swagger"
+                target="_blank"
+                rel="noopener"
+                >API docs &#8599;</a
+              >
+            </div>
+          </fieldset>
+        </form>
+
+        <span id="register-status" class="sr-only" aria-live="assertive"></span>
+        <div id="register-result" class="register-result" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ── Footer ── -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-left">
+        Facilitator <span style="color: var(--text-3)">by</span>
+        <a
+          href="https://402.md"
+          target="_blank"
+          rel="noopener"
+          style="color: var(--text-2); transition: color 150ms"
+          >402md</a
+        >
+      </div>
+      <div class="footer-links">
+        <a href="https://facilitator.402.md/swagger" target="_blank" rel="noopener">Docs</a>
+        <a href="https://github.com/402md" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://facilitator.402.md/health" target="_blank" rel="noopener">Status</a>
+      </div>
+    </div>
+  </div>
+</footer>

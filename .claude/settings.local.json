@@ -21,7 +21,29 @@
       "Bash(python3 -m json.tool)",
       "Bash(bun install:*)",
       "Bash(grep:*)",
-      "Bash(bunx turbo:*)"
+      "Bash(bunx turbo:*)",
+      "Bash(find:*)",
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); [print\\(t['path']\\) for t in data.get\\('tree',[]\\)]\")",
+      "Bash(python3 -c \"import sys,json; [print\\(f['name'],f['type']\\) for f in json.load\\(sys.stdin\\)]\")",
+      "Bash(temporal operator:*)",
+      "Read(//private/tmp/**)",
+      "Bash(gh api:*)",
+      "Bash(ls /Users/henriquebreim/facilitator/docker-compose*)",
+      "Bash(ls /Users/henriquebreim/facilitator/docker*)",
+      "WebFetch(domain:www.circle.com)",
+      "Bash(bun test:*)",
+      "Bash(npx tsc:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:www.x402.org)",
+      "WebFetch(domain:docs.x402.org)",
+      "Bash(rm *)",
+      "WebFetch(domain:www.x402scan.com)",
+      "WebFetch(domain:dexter.cash)",
+      "Bash(gh pr *)",
+      "Bash(sed -n '25,1260p' /Users/henriquebreim/facilitator/packages/relay/public/index.html)",
+      "Bash(sed -n '1279,1850p' /Users/henriquebreim/facilitator/packages/relay/public/index.html)",
+      "Bash(sed -n '1853,2142p' /Users/henriquebreim/facilitator/packages/relay/public/index.html)",
+      "WebFetch(domain:agentcard.402.md)"
     ]
   }
 }

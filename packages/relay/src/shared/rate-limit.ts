@@ -15,6 +15,12 @@ const RATE_LIMITS: Record<string, RateLimitConfig> = {
   '/mpp/config': { maxRequests: 100, windowSeconds: 60 },
   '/mpp/charge': { maxRequests: 500, windowSeconds: 60 },
   '/bazaar': { maxRequests: 100, windowSeconds: 60 },
+  '/bazaar/stats': { maxRequests: 200, windowSeconds: 60 },
+  '/bazaar/routes': { maxRequests: 200, windowSeconds: 60 },
+  '/bazaar/resources': { maxRequests: 200, windowSeconds: 60 },
+  '/bazaar/sellers': { maxRequests: 200, windowSeconds: 60 },
+  '/bazaar/transactions': { maxRequests: 200, windowSeconds: 60 },
+  '/bazaar/cost-comparison': { maxRequests: 200, windowSeconds: 60 },
 }
 
 export async function checkRateLimit(path: string, ip: string): Promise<void> {

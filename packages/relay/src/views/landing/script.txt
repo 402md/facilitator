@@ -1,0 +1,331 @@
+      /* ── Helpers ── */
+      const esc = (s) => {
+        const d = document.createElement('span')
+        d.textContent = s
+        return d.innerHTML
+      }
+
+      /* ── Scroll reveals ── */
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              e.target.classList.add('visible')
+              observer.unobserve(e.target)
+            }
+          })
+        },
+        { threshold: 0.08 },
+      )
+
+      document.querySelectorAll('.reveal').forEach((el) => observer.observe(el))
+
+      /* ── Nav scroll shadow (IntersectionObserver — fires only at threshold, not every frame) ── */
+      const nav = document.querySelector('.nav')
+      const scrollSentinel = document.createElement('div')
+      scrollSentinel.style.cssText =
+        'position:absolute;top:0;height:20px;width:1px;pointer-events:none'
+      scrollSentinel.setAttribute('aria-hidden', 'true')
+      document.body.prepend(scrollSentinel)
+      new IntersectionObserver(([e]) => {
+        nav.classList.toggle('scrolled', !e.isIntersecting)
+      }).observe(scrollSentinel)
+
+      /* ── Registration form ── */
+      const registerForm = document.getElementById('register-form')
+      const registerResult = document.getElementById('register-result')
+      const registerBtn = registerForm.querySelector('.register-btn')
+      const walletInput = document.getElementById('wallet-input')
+
+      const ENV_NETWORKS = {
+        mainnet: {
+          base: 'eip155:8453',
+          ethereum: 'eip155:1',
+          optimism: 'eip155:10',
+          arbitrum: 'eip155:42161',
+          linea: 'eip155:59144',
+          unichain: 'eip155:130',
+          worldchain: 'eip155:480',
+          solana: 'solana:mainnet',
+          stellar: 'stellar:pubnet',
+        },
+        testnet: {
+          base: 'eip155:84532',
+          ethereum: 'eip155:11155111',
+          optimism: 'eip155:11155420',
+          arbitrum: 'eip155:421614',
+          linea: 'eip155:59141',
+          unichain: 'eip155:1301',
+          worldchain: 'eip155:4801',
+          solana: 'solana:devnet',
+          stellar: 'stellar:testnet',
+        },
+      }
+
+      const NETWORK_LABELS = {
+        'eip155:8453': 'Base',
+        'eip155:84532': 'Base Sepolia',
+        'eip155:1': 'Ethereum',
+        'eip155:11155111': 'Ethereum Sepolia',
+        'eip155:10': 'Optimism',
+        'eip155:11155420': 'Optimism Sepolia',
+        'eip155:42161': 'Arbitrum',
+        'eip155:421614': 'Arbitrum Sepolia',
+        'eip155:59144': 'Linea',
+        'eip155:59141': 'Linea Sepolia',
+        'eip155:130': 'Unichain',
+        'eip155:1301': 'Unichain Sepolia',
+        'eip155:480': 'World Chain',
+        'eip155:4801': 'World Chain Sepolia',
+        'solana:mainnet': 'Solana',
+        'solana:devnet': 'Solana Devnet',
+        'stellar:pubnet': 'Stellar',
+        'stellar:testnet': 'Stellar Testnet',
+      }
+
+      // All EVM chains share the same address format — one family, one validator.
+      const CHAIN_FAMILY = {
+        base: 'evm',
+        ethereum: 'evm',
+        optimism: 'evm',
+        arbitrum: 'evm',
+        linea: 'evm',
+        unichain: 'evm',
+        worldchain: 'evm',
+        solana: 'solana',
+        stellar: 'stellar',
+      }
+
+      const NETWORK_FORMATS = {
+        evm: {
+          placeholder: '0xd8dA6BF2...aA96045',
+          hint: '0x followed by 40 hex characters',
+          pattern: /^0x[0-9a-fA-F]{40}$/,
+          example: '0x...',
+        },
+        solana: {
+          placeholder: '7EcDhSYG...rBDP5',
+          hint: 'Base58 address, 32-44 characters',
+          pattern: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
+          example: 'base58 address',
+        },
+        stellar: {
+          placeholder: 'GABCDE...WXYZ',
+          hint: 'G followed by 55 uppercase characters',
+          pattern: /^G[A-Z2-7]{55}$/,
+          example: 'G...',
+        },
+      }
+
+      function getFormat(chain) {
+        return NETWORK_FORMATS[CHAIN_FAMILY[chain]]
+      }
+
+      function getEnv() {
+        return registerForm.querySelector('[name="env-toggle"]:checked').value
+      }
+
+      function getChain() {
+        return registerForm.querySelector('[name="network"]:checked').value
+      }
+
+      function getNetworkId() {
+        return ENV_NETWORKS[getEnv()][getChain()]
+      }
+
+      function getChainLabel() {
+        const chain = getChain()
+        return NETWORK_LABELS[getNetworkId()] || chain
+      }
+
+      const walletHint = document.getElementById('wallet-hint')
+      const registerStatus = document.getElementById('register-status')
+
+      function updateWalletUI() {
+        const fmt = getFormat(getChain())
+        if (!fmt) return
+        walletInput.placeholder = fmt.placeholder
+        walletHint.textContent = fmt.hint
+        walletHint.classList.remove('error')
+        walletInput.classList.remove('invalid')
+      }
+
+      document.querySelectorAll('[name="network"]').forEach((radio) => {
+        radio.addEventListener('change', updateWalletUI)
+      })
+
+      walletInput.addEventListener('input', () => {
+        walletInput.classList.remove('invalid')
+        walletHint.classList.remove('error')
+        walletHint.textContent = getFormat(getChain()).hint
+      })
+
+      /* ── Copy to clipboard ── */
+      registerResult.addEventListener('click', (e) => {
+        const btn = e.target.closest('.copy-btn')
+        if (!btn) return
+        const text =
+          btn.dataset.copy ||
+          btn.closest('.result-step')?.querySelector('.result-code')?.textContent ||
+          ''
+        navigator.clipboard.writeText(text).then(() => {
+          const prev = btn.textContent
+          btn.textContent = 'copied'
+          setTimeout(() => {
+            btn.textContent = prev
+          }, 1500)
+        })
+      })
+
+      registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault()
+
+        const chain = getChain()
+        const network = getNetworkId()
+        const wallet = walletInput.value.trim()
+        const fmt = getFormat(chain)
+        const label = NETWORK_LABELS[network]
+
+        /* ── Per-chain validation ── */
+        if (!wallet) {
+          walletHint.textContent = 'Enter your ' + label + ' wallet address (' + fmt.example + ')'
+          walletHint.classList.add('error')
+          walletInput.classList.add('invalid')
+          walletInput.focus()
+          return
+        }
+
+        if (!fmt.pattern.test(wallet)) {
+          walletHint.textContent =
+            'Doesn\u2019t look like a ' + label + ' address. Expected: ' + fmt.hint
+          walletHint.classList.add('error')
+          walletInput.classList.add('invalid')
+          walletInput.focus()
+          return
+        }
+
+        walletHint.classList.remove('error')
+        walletInput.classList.remove('invalid')
+
+        registerBtn.classList.add('loading')
+        registerBtn.disabled = true
+        registerForm.setAttribute('aria-busy', 'true')
+        registerStatus.textContent = 'Registering\u2026'
+        registerResult.classList.remove('visible')
+
+        try {
+          const res = await fetch('/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ wallet, network }),
+          })
+
+          const text = await res.text()
+          let data
+          try {
+            data = JSON.parse(text)
+          } catch {
+            throw new Error(text || 'Unexpected response')
+          }
+
+          if (!res.ok) {
+            if (res.status === 429) {
+              throw new Error('Registration limit reached. Try again in a few minutes.')
+            }
+            if (res.status >= 500) {
+              throw new Error(
+                'Something went wrong on our end. Try again, or use the API directly: POST /register',
+              )
+            }
+            throw new Error(data.message || 'Registration failed (' + String(res.status) + ')')
+          }
+
+          let html = '<div class="success">\u2713 Registered on ' + esc(label) + '</div>'
+
+          if (data.facilitatorAddresses) {
+            html +=
+              '<p class="register-hint" style="margin:12px 0 8px">Your facilitator addresses:</p>'
+            for (const [net, addr] of Object.entries(data.facilitatorAddresses)) {
+              html += '<div class="addr-row">'
+              html += '<span class="addr-label">' + esc(NETWORK_LABELS[net] || net) + '</span>'
+              html += '<span class="addr-value">' + esc(addr) + '</span>'
+              html += '<button class="copy-btn" data-copy="' + esc(addr) + '">copy</button>'
+              html += '</div>'
+            }
+          }
+
+          if (data.merchantId) {
+            html += '<div class="addr-row" style="margin-top:8px">'
+            html += '<span class="addr-label">Merchant ID</span>'
+            html += '<span class="addr-value"><strong>' + esc(data.merchantId) + '</strong></span>'
+            html +=
+              '<button class="copy-btn" data-copy="' + esc(data.merchantId) + '">copy</button>'
+            html += '</div>'
+          }
+
+          if (data.codeSnippet) {
+            html += '<div class="result-step">'
+            html += '<span class="register-label">Next step \u2014 add to your app</span>'
+            html += '<pre class="result-code">' + esc(data.codeSnippet) + '</pre>'
+            html +=
+              '<button class="copy-btn" data-copy="' +
+              esc(data.codeSnippet) +
+              '">copy snippet</button>'
+            html += '</div>'
+          }
+
+          registerResult.innerHTML = html
+          registerResult.classList.add('visible')
+        } catch (err) {
+          registerResult.innerHTML = '<span class="error">\u2717 ' + esc(err.message) + '</span>'
+          registerResult.classList.add('visible')
+        } finally {
+          registerBtn.classList.remove('loading')
+          registerBtn.disabled = false
+          registerForm.removeAttribute('aria-busy')
+          registerStatus.textContent = ''
+        }
+      })
+
+      /* ── Code typewriter ── */
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const codeBody = document.querySelector('.code-section .code-body')
+        if (codeBody) {
+          const fullHTML = codeBody.innerHTML
+          const lines = fullHTML.split('\n')
+          const h = codeBody.offsetHeight
+          codeBody.style.minHeight = h + 'px'
+          codeBody.innerHTML = ''
+
+          const codeObs = new IntersectionObserver(
+            ([e]) => {
+              if (e.isIntersecting) {
+                codeObs.unobserve(e.target)
+                let i = 0
+
+                function typeLine() {
+                  if (i >= lines.length) {
+                    codeBody.insertAdjacentHTML('beforeend', '<span class="code-cursor"></span>')
+                    setTimeout(() => {
+                      const c = codeBody.querySelector('.code-cursor')
+                      if (c) c.remove()
+                    }, 2500)
+                    return
+                  }
+
+                  codeBody.innerHTML = lines.slice(0, i + 1).join('\n')
+                  i++
+
+                  const nextIsBlank = i < lines.length && lines[i].trim() === ''
+                  setTimeout(typeLine, nextIsBlank ? 50 : 100)
+                }
+
+                typeLine()
+              }
+            },
+            { threshold: 0.3 },
+          )
+
+          codeObs.observe(codeBody)
+        }
+      }
