@@ -6,7 +6,7 @@ interface NavProps {
 
 export const Nav = ({ current }: NavProps) => (
   <nav class="nav">
-    <div class="nav-inner container">
+    <div class="nav-inner">
       <a href="/" class="nav-brand">
         Facilitator
       </a>

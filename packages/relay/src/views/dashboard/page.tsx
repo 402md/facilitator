@@ -18,13 +18,14 @@ export const DashboardPage = () => (
     <Nav current="dashboard" />
 
     <main class="dashboard container">
+      <h1 class="sr-only">Facilitator activity</h1>
       <Section title="Architecture">
         <div class="snapshot">
           <StatCard
             label="Chains supported"
             value={CHAINS.length}
             valueId="stat-chains-supported"
-            sub="EVM + Solana + Stellar"
+            sub="7 EVM + Solana + Stellar"
           />
           <StatCard
             label="Routes active"

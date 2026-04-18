@@ -11,7 +11,7 @@ interface LayoutProps {
 export const Layout = ({
   title,
   description,
-  themeColor = '#2a5cdb',
+  themeColor = '#1d35cf',
   extraStyles,
   children,
 }: LayoutProps) => (

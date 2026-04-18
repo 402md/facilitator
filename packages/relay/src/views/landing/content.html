@@ -4,7 +4,7 @@
     <div class="container">
       <div class="hero-content">
         <h1 data-reveal style="--i: 0">
-          Any chain in,
+          Any <span class="hero-any">chain in,</span>
           <em>your chain out.</em>
         </h1>
 
@@ -28,7 +28,7 @@
       <div class="section-label">Getting Started</div>
       <div class="code-block">
         <div class="code-header">
-          <div class="code-dots">
+          <div class="code-dots" aria-hidden="true">
             <span class="code-dot-red"></span><span class="code-dot-yellow"></span
             ><span class="code-dot-green"></span>
           </div>
@@ -258,9 +258,9 @@ app.use(paymentMiddleware({
         <table class="pricing-table">
           <thead>
             <tr>
-              <th>Route</th>
-              <th>Seller receives</th>
-              <th>Gas allowance</th>
+              <th scope="col">Route</th>
+              <th scope="col">Seller receives</th>
+              <th scope="col">Gas allowance</th>
             </tr>
           </thead>
           <tbody>

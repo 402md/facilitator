@@ -51,7 +51,7 @@ export const dashboardClientScript = /* js */ `
       const ratio = Math.min(1, Number((volume * 10000n) / max) / 10000)
       const lerp = Math.log10(1 + ratio * 9)
       const lightness = 0.96 - lerp * 0.2
-      return 'oklch(' + lightness.toFixed(3) + ' 0.08 250)'
+      return 'oklch(' + lightness.toFixed(3) + ' 0.08 265)'
     }
     function escapeHtml(s) {
       if (s == null) return ''
@@ -72,7 +72,7 @@ export const dashboardClientScript = /* js */ `
     // ---- renderers ----
     function renderStats(stats) {
       if (!stats) return
-      document.getElementById('stat-chains-supported').textContent = stats.chainsSupported
+      // stat-chains-supported is static (CHAINS.length) — server-rendered, not overwritten.
       document.getElementById('stat-routes-active').textContent = stats.uniqueRoutes
       document.getElementById('stat-cross-chain-routes').textContent = stats.crossChainRoutes
     }
@@ -123,12 +123,12 @@ export const dashboardClientScript = /* js */ `
         if (v > max) max = v
       }
 
-      let html = '<table class="matrix"><thead><tr><th class="corner"></th>'
-      for (const c of CHAINS) html += '<th>' + c.label + '</th>'
+      let html = '<table class="matrix"><thead><tr><th class="corner" scope="col"></th>'
+      for (const c of CHAINS) html += '<th scope="col">' + c.label + '</th>'
       html += '</tr></thead><tbody>'
 
       for (const row of CHAINS) {
-        html += '<tr><th>' + row.label + '</th>'
+        html += '<tr><th scope="row">' + row.label + '</th>'
         for (const col of CHAINS) {
           const r = lookup.get(row.caip2 + '|' + col.caip2)
           const sameChain = row.caip2 === col.caip2
@@ -156,10 +156,10 @@ export const dashboardClientScript = /* js */ `
       }
       let html =
         '<table class="list"><thead><tr>' +
-        '<th>Resource</th><th>Merchant</th>' +
-        '<th style="text-align:right">Uses (' + data.window + ')</th>' +
-        '<th style="text-align:right">Volume (' + data.window + ')</th>' +
-        '<th>Last used</th></tr></thead><tbody>'
+        '<th scope="col">Resource</th><th scope="col">Merchant</th>' +
+        '<th scope="col" style="text-align:right">Uses (' + data.window + ')</th>' +
+        '<th scope="col" style="text-align:right">Volume (' + data.window + ')</th>' +
+        '<th scope="col">Last used</th></tr></thead><tbody>'
       for (const it of data.items.slice(0, 10)) {
         html +=
           '<tr>' +
@@ -182,10 +182,10 @@ export const dashboardClientScript = /* js */ `
       }
       let html =
         '<table class="list"><thead><tr>' +
-        '<th>Merchant</th><th>Primary network</th>' +
-        '<th style="text-align:right">Tx (' + data.window + ')</th>' +
-        '<th style="text-align:right">Volume (' + data.window + ')</th>' +
-        '<th style="text-align:right">Resources</th></tr></thead><tbody>'
+        '<th scope="col">Merchant</th><th scope="col">Primary network</th>' +
+        '<th scope="col" style="text-align:right">Tx (' + data.window + ')</th>' +
+        '<th scope="col" style="text-align:right">Volume (' + data.window + ')</th>' +
+        '<th scope="col" style="text-align:right">Resources</th></tr></thead><tbody>'
       for (const it of data.items.slice(0, 10)) {
         html +=
           '<tr>' +
@@ -208,9 +208,9 @@ export const dashboardClientScript = /* js */ `
       }
       let html =
         '<table class="list"><thead><tr>' +
-        '<th>When</th><th>Type</th><th>Protocol</th><th>Route</th>' +
-        '<th style="text-align:right">Amount</th>' +
-        '<th>Status</th><th>Hash</th></tr></thead><tbody>'
+        '<th scope="col">When</th><th scope="col">Type</th><th scope="col">Protocol</th><th scope="col">Route</th>' +
+        '<th scope="col" style="text-align:right">Amount</th>' +
+        '<th scope="col">Status</th><th scope="col">Hash</th></tr></thead><tbody>'
       for (const tx of data.items) {
         const settleLink =
           explorerLink(tx.sellerNetwork, tx.mintTxHash) ||
@@ -243,15 +243,15 @@ export const dashboardClientScript = /* js */ `
       const routeLabel = chainLabel(cost.buyerNetwork) + ' → ' + chainLabel(cost.sellerNetwork)
       let html =
         '<div class="panel">' +
-        '<div class="section-head" style="margin-bottom:var(--space-md)">' +
+        '<div class="panel-head">' +
         '<strong>' + routeLabel + '</strong>' +
-        '<span class="loading">' + (routePair ? 'top active route in window' : '') + '</span>' +
+        '<span class="panel-caption">' + (routePair ? 'top active route in window' : '') + '</span>' +
         '</div>' +
         '<table class="list"><thead><tr>' +
-        '<th>Payment amount</th>' +
-        '<th style="text-align:right">CCTP allowance</th>' +
-        '<th style="text-align:right">% bridge baseline</th>' +
-        '<th style="text-align:right">Savings</th>' +
+        '<th scope="col">Payment amount</th>' +
+        '<th scope="col" style="text-align:right">CCTP allowance</th>' +
+        '<th scope="col" style="text-align:right">% bridge baseline</th>' +
+        '<th scope="col" style="text-align:right">Savings</th>' +
         '</tr></thead><tbody>'
       for (const t of cost.tiers) {
         html +=
