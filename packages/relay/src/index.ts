@@ -21,6 +21,13 @@ import { settlementsRoutes } from '@/settlements/settlements.routes'
 import { onrampRoutes } from '@/onramp/onramp.routes'
 import { stellarMppRoutes } from '@/mpp/stellar-mpp.routes'
 import { bazaarRoutes, bazaarEnrichedRoutes } from '@/bazaar/bazaar.routes'
+import {
+  agentMetaRoutes,
+  HOMEPAGE_LINK_HEADER,
+  landingMarkdown,
+  dashboardMarkdown,
+  wantsMarkdown,
+} from '@/agent-meta/routes'
 import { db } from '@402md/shared/db'
 import { redis } from '@402md/shared/cache'
 import { getTemporalClient } from '@/shared/temporal'
@@ -55,8 +62,33 @@ export const app = new Elysia()
   .use(stellarMppRoutes)
   .use(bazaarRoutes)
   .use(bazaarEnrichedRoutes)
-  .get('/', () => LandingPage(), { detail: { hide: true } })
-  .get('/dashboard', () => DashboardPage(), { detail: { hide: true } })
+  .use(agentMetaRoutes)
+  .get(
+    '/',
+    ({ request, set }) => {
+      set.headers['link'] = HOMEPAGE_LINK_HEADER
+      set.headers['vary'] = 'Accept'
+      if (wantsMarkdown(request.headers.get('accept'))) {
+        set.headers['content-type'] = 'text/markdown; charset=utf-8'
+        return landingMarkdown
+      }
+      return LandingPage()
+    },
+    { detail: { hide: true } },
+  )
+  .get(
+    '/dashboard',
+    ({ request, set }) => {
+      set.headers['link'] = HOMEPAGE_LINK_HEADER
+      set.headers['vary'] = 'Accept'
+      if (wantsMarkdown(request.headers.get('accept'))) {
+        set.headers['content-type'] = 'text/markdown; charset=utf-8'
+        return dashboardMarkdown
+      }
+      return DashboardPage()
+    },
+    { detail: { hide: true } },
+  )
   .get('/cover.mp4', () => Bun.file(new URL('../public/cover.mp4', import.meta.url).pathname))
   .get('/health', async () => {
     const checks = {
