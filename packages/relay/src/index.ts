@@ -23,7 +23,7 @@ import { stellarMppRoutes } from '@/mpp/stellar-mpp.routes'
 import { bazaarRoutes, bazaarEnrichedRoutes } from '@/bazaar/bazaar.routes'
 import {
   agentMetaRoutes,
-  HOMEPAGE_LINK_HEADER,
+  AGENT_DISCOVERY_LINK_HEADER,
   landingMarkdown,
   dashboardMarkdown,
   wantsMarkdown,
@@ -66,7 +66,7 @@ export const app = new Elysia()
   .get(
     '/',
     ({ request, set }) => {
-      set.headers['link'] = HOMEPAGE_LINK_HEADER
+      set.headers['link'] = AGENT_DISCOVERY_LINK_HEADER
       set.headers['vary'] = 'Accept'
       if (wantsMarkdown(request.headers.get('accept'))) {
         set.headers['content-type'] = 'text/markdown; charset=utf-8'
@@ -79,7 +79,7 @@ export const app = new Elysia()
   .get(
     '/dashboard',
     ({ request, set }) => {
-      set.headers['link'] = HOMEPAGE_LINK_HEADER
+      set.headers['link'] = AGENT_DISCOVERY_LINK_HEADER
       set.headers['vary'] = 'Accept'
       if (wantsMarkdown(request.headers.get('accept'))) {
         set.headers['content-type'] = 'text/markdown; charset=utf-8'

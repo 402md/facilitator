@@ -22,12 +22,6 @@
           "type": "application/json",
           "title": "Facilitator health check"
         }
-      ],
-      "terms-of-service": [
-        {
-          "href": "https://facilitator.402.md/",
-          "type": "text/html"
-        }
       ]
     }
   ]

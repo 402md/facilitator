@@ -1,7 +1,7 @@
 ---
 name: how-to-use-facilitator
 description: How an AI agent or an x402 seller integrates with the 402md Facilitator to send or receive cross-chain USDC payments.
-type: reference
+type: skill-md
 ---
 
 # How to use the 402md Facilitator

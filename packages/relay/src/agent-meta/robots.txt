@@ -5,6 +5,11 @@
 # exposed as a structured API under /discovery/*.
 
 User-agent: *
+# Content Signals (https://contentsignals.org/)
+#   ai-train=no : do not use this content for training
+#   search=yes  : index for search, including AI-assisted search
+#   ai-input=yes: agents may read this content at query time
+Content-Signal: search=yes, ai-train=no, ai-input=yes
 Allow: /
 Disallow: /dashboard
 
@@ -58,11 +63,5 @@ Disallow: /dashboard
 User-agent: Perplexity-User
 Allow: /
 Disallow: /dashboard
-
-# ── Content Signals (https://contentsignals.org/) ─────────────────
-# ai-train=no : do not use this content for training
-# search=yes  : index for search, including AI-assisted search
-# ai-input=yes: agents may read this content at query time
-Content-Signal: ai-train=no, search=yes, ai-input=yes
 
 Sitemap: https://facilitator.402.md/sitemap.xml

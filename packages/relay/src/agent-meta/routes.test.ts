@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'bun:test'
 import '@/shared/test-helpers'
 import { Elysia } from 'elysia'
-import { agentMetaRoutes, wantsMarkdown, HOMEPAGE_LINK_HEADER } from './routes'
+import { agentMetaRoutes, wantsMarkdown, AGENT_DISCOVERY_LINK_HEADER } from './routes'
 
 const app = new Elysia().use(agentMetaRoutes)
 
@@ -28,18 +28,18 @@ describe('wantsMarkdown', () => {
   })
 })
 
-describe('HOMEPAGE_LINK_HEADER', () => {
+describe('AGENT_DISCOVERY_LINK_HEADER', () => {
   test('advertises the required agent-discovery relations', () => {
-    expect(HOMEPAGE_LINK_HEADER).toContain('rel="api-catalog"')
-    expect(HOMEPAGE_LINK_HEADER).toContain('rel="service-desc"')
-    expect(HOMEPAGE_LINK_HEADER).toContain('rel="service-doc"')
-    expect(HOMEPAGE_LINK_HEADER).toContain('rel="status"')
-    expect(HOMEPAGE_LINK_HEADER).toContain('rel="sitemap"')
+    expect(AGENT_DISCOVERY_LINK_HEADER).toContain('rel="api-catalog"')
+    expect(AGENT_DISCOVERY_LINK_HEADER).toContain('rel="service-desc"')
+    expect(AGENT_DISCOVERY_LINK_HEADER).toContain('rel="service-doc"')
+    expect(AGENT_DISCOVERY_LINK_HEADER).toContain('rel="status"')
+    expect(AGENT_DISCOVERY_LINK_HEADER).toContain('rel="sitemap"')
   })
 })
 
 describe('GET /robots.txt', () => {
-  test('returns 200 as plain text with AI rules, content-signals, and sitemap', async () => {
+  test('returns 200 as plain text with AI rules, content-signal, and sitemap', async () => {
     const res = await app.handle(get('/robots.txt'))
     expect(res.status).toBe(200)
     expect(res.headers.get('content-type')).toContain('text/plain')
@@ -48,8 +48,18 @@ describe('GET /robots.txt', () => {
     expect(body).toContain('User-agent: GPTBot')
     expect(body).toContain('User-agent: Claude-Web')
     expect(body).toContain('User-agent: Google-Extended')
-    expect(body).toContain('Content-Signal:')
     expect(body).toContain('Sitemap: https://facilitator.402.md/sitemap.xml')
+  })
+
+  test('places Content-Signal inside the User-agent: * block', async () => {
+    const res = await app.handle(get('/robots.txt'))
+    const body = await res.text()
+    const starIdx = body.indexOf('User-agent: *')
+    const signalIdx = body.indexOf('Content-Signal:')
+    const nextGroupIdx = body.indexOf('User-agent: GPTBot')
+    expect(starIdx).toBeGreaterThanOrEqual(0)
+    expect(signalIdx).toBeGreaterThan(starIdx)
+    expect(signalIdx).toBeLessThan(nextGroupIdx)
   })
 })
 
@@ -62,8 +72,13 @@ describe('GET /sitemap.xml', () => {
     expect(body).toContain('<?xml')
     expect(body).toContain('<urlset')
     expect(body).toContain('https://facilitator.402.md/')
-    expect(body).toContain('https://facilitator.402.md/dashboard')
     expect(body).toContain('https://facilitator.402.md/swagger')
+  })
+
+  test('does not list /dashboard (it is Disallow-ed in robots.txt)', async () => {
+    const res = await app.handle(get('/sitemap.xml'))
+    const body = await res.text()
+    expect(body).not.toContain('/dashboard')
   })
 })
 
@@ -89,26 +104,33 @@ describe('GET /.well-known/api-catalog', () => {
 })
 
 describe('GET /.well-known/agent-skills/index.json', () => {
-  test('returns a skills index with sha256 digests', async () => {
+  test('conforms to the agent-skills-discovery v0.2.0 schema', async () => {
     const res = await app.handle(get('/.well-known/agent-skills/index.json'))
     expect(res.status).toBe(200)
     expect(res.headers.get('content-type')).toContain('application/json')
     const body = (await res.json()) as {
       $schema: string
-      skills: Array<{ name: string; type: string; url: string; sha256: string }>
+      skills: Array<{
+        name: string
+        type: string
+        description: string
+        url: string
+        digest: string
+      }>
     }
-    expect(body.$schema).toContain('agentskills.io')
+    expect(body.$schema).toBe('https://schemas.agentskills.io/discovery/0.2.0/schema.json')
     expect(body.skills.length).toBeGreaterThan(0)
     const howTo = body.skills.find((s) => s.name === 'how-to-use-facilitator')
     expect(howTo).toBeDefined()
+    expect(howTo!.type).toBe('skill-md')
     expect(howTo!.url).toContain('/.well-known/agent-skills/how-to-use-facilitator/SKILL.md')
-    expect(howTo!.sha256).toMatch(/^[a-f0-9]{64}$/)
+    expect(howTo!.digest).toMatch(/^sha256:[a-f0-9]{64}$/)
   })
 
-  test('sha256 matches the actual SKILL.md body', async () => {
+  test('digest matches the actual SKILL.md body', async () => {
     const indexRes = await app.handle(get('/.well-known/agent-skills/index.json'))
     const index = (await indexRes.json()) as {
-      skills: Array<{ name: string; sha256: string }>
+      skills: Array<{ name: string; digest: string }>
     }
     const skillRes = await app.handle(
       get('/.well-known/agent-skills/how-to-use-facilitator/SKILL.md'),
@@ -116,9 +138,9 @@ describe('GET /.well-known/agent-skills/index.json', () => {
     const skillBody = await skillRes.text()
     const hasher = new Bun.CryptoHasher('sha256')
     hasher.update(skillBody)
-    const actual = hasher.digest('hex')
+    const expected = `sha256:${hasher.digest('hex')}`
     const howTo = index.skills.find((s) => s.name === 'how-to-use-facilitator')!
-    expect(howTo.sha256).toBe(actual)
+    expect(howTo.digest).toBe(expected)
   })
 })
 
@@ -129,6 +151,7 @@ describe('GET /.well-known/agent-skills/how-to-use-facilitator/SKILL.md', () => 
     expect(res.headers.get('content-type')).toContain('text/markdown')
     const body = await res.text()
     expect(body).toContain('name: how-to-use-facilitator')
+    expect(body).toContain('type: skill-md')
     expect(body).toContain('POST https://facilitator.402.md/register')
     expect(body).toContain('CCTP V2')
   })

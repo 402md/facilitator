@@ -11,6 +11,9 @@ export const PUBLIC_BASE_URL = 'https://facilitator.402.md'
 export const landingMarkdown = landingMd
 export const dashboardMarkdown = dashboardMd
 
+// Narrow Accept-header parser: returns true only when the client explicitly
+// prefers text/markdown over text/html. Does not handle wildcards (`text/*`)
+// or media-range parameters beyond `q=` — sufficient for our two-type menu.
 export function wantsMarkdown(acceptHeader: string | null | undefined): boolean {
   if (!acceptHeader) return false
   const entries = acceptHeader.split(',').map((part) => {
@@ -26,7 +29,7 @@ export function wantsMarkdown(acceptHeader: string | null | undefined): boolean 
   return md.q > html.q
 }
 
-export const HOMEPAGE_LINK_HEADER = [
+export const AGENT_DISCOVERY_LINK_HEADER = [
   `</.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"`,
   `</swagger/json>; rel="service-desc"; type="application/json"`,
   `</swagger>; rel="service-doc"; type="text/html"`,
@@ -44,15 +47,15 @@ function sha256Hex(input: string): string {
 const SKILL_HOW_TO_USE_URL = `${PUBLIC_BASE_URL}/.well-known/agent-skills/how-to-use-facilitator/SKILL.md`
 
 const agentSkillsIndex = {
-  $schema: 'https://agentskills.io/schemas/index/v0.2.0.json',
+  $schema: 'https://schemas.agentskills.io/discovery/0.2.0/schema.json',
   skills: [
     {
       name: 'how-to-use-facilitator',
-      type: 'reference',
+      type: 'skill-md',
       description:
         'How an AI agent or an x402 seller integrates with the 402md Facilitator to send or receive cross-chain USDC payments.',
       url: SKILL_HOW_TO_USE_URL,
-      sha256: sha256Hex(howToUseSkillMd),
+      digest: `sha256:${sha256Hex(howToUseSkillMd)}`,
     },
   ],
 }
