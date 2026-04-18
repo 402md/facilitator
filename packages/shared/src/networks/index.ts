@@ -54,6 +54,19 @@ export const networks: ResolvedNetwork[] = enabledChains.map((def) =>
 
 export const supportedCaip2s: string[] = networks.map((n) => n.caip2)
 
+// Static caip2 → slug lookup over ALL known chains (mainnet + testnet),
+// independent of FACILITATOR_* env gating. Use for env-free concerns like
+// cost comparison where we only need the gas-schedule slug.
+const caip2ToSlug = new Map<string, ChainDefinition['slug']>()
+for (const def of CHAINS) {
+  caip2ToSlug.set(def.mainnet.caip2, def.slug)
+  caip2ToSlug.set(def.testnet.caip2, def.slug)
+}
+
+export function resolveSlugByCaip2(caip2: string): ChainDefinition['slug'] | undefined {
+  return caip2ToSlug.get(caip2)
+}
+
 const byCaip2 = new Map<string, { network: ResolvedNetwork; def: ChainDefinition }>()
 for (let i = 0; i < networks.length; i++) {
   byCaip2.set(networks[i].caip2, { network: networks[i], def: enabledChains[i] })
@@ -114,3 +127,4 @@ export type {
 export { UnsupportedNetworkError } from './errors'
 export { isChainEnabled, resolveNetworkEnv, validateNetworkEnv } from './env'
 export { getCircleIrisUrl, getCircleAttestationUrl } from './cctp'
+export { getGasAllowanceBySlug, calculateFeesBySlug } from './gas-schedule'

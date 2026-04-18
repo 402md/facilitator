@@ -1,6 +1,6 @@
 import { sql, and, eq, like, desc, type SQL } from 'drizzle-orm'
 import { db, bazaarResources, sellers, transactions } from '@402md/shared/db'
-import { networks, getGasAllowance, UnsupportedNetworkError } from '@402md/shared/networks'
+import { networks, resolveSlugByCaip2, getGasAllowanceBySlug } from '@402md/shared/networks'
 
 export type Window = '1d' | '7d' | '30d'
 
@@ -370,7 +370,7 @@ export async function getRankedSellers(
   const rows = await db.execute<{
     merchant_id: string
     primary_network: string
-    first_seen_at: Date | null
+    first_seen_at: Date | string | null
     tx_count: string
     volume: string | null
     resource_count: string
@@ -402,7 +402,7 @@ export async function getRankedSellers(
     txCount: Number(r.tx_count),
     volume: r.volume ?? '0',
     resourceCount: Number(r.resource_count),
-    firstSeenAt: r.first_seen_at?.toISOString() ?? null,
+    firstSeenAt: r.first_seen_at ? new Date(r.first_seen_at).toISOString() : null,
   }))
 
   return { window, items, total: Number(totalRows[0]?.total ?? 0) }
@@ -553,13 +553,16 @@ export function getCostComparison(input: {
 }): CostComparisonResponse {
   const { buyerNetwork, sellerNetwork } = input
 
+  const fromSlug = resolveSlugByCaip2(buyerNetwork)
+  const toSlug = resolveSlugByCaip2(sellerNetwork)
+  if (!fromSlug || !toSlug) {
+    throw new RouteNotConfiguredError(buyerNetwork, sellerNetwork)
+  }
+
   let allowance: string
   try {
-    allowance = getGasAllowance(buyerNetwork, sellerNetwork)
+    allowance = getGasAllowanceBySlug(fromSlug, toSlug)
   } catch (err) {
-    if (err instanceof UnsupportedNetworkError) {
-      throw new RouteNotConfiguredError(buyerNetwork, sellerNetwork)
-    }
     if (err instanceof Error && err.message.startsWith('No gas schedule for')) {
       throw new RouteNotConfiguredError(buyerNetwork, sellerNetwork)
     }
