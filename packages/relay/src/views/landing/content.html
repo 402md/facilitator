@@ -45,14 +45,20 @@
 app.use(paymentMiddleware({
   <span class="st">"GET /your-endpoint"</span>: {
     accepts: [
-      { scheme: <span class="st">"exact"</span>, network: <span class="st">"eip155:8453"</span>, payTo: <span class="st">"0x4C95...c3b9"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } },
-      { scheme: <span class="st">"exact"</span>, network: <span class="st">"solana:mainnet"</span>, payTo: <span class="st">"4r7q...BDP5"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } },
-      { scheme: <span class="st">"exact"</span>, network: <span class="st">"stellar:pubnet"</span>, payTo: <span class="st">"GAX5...5HZR"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } },
+      { scheme: <span class="st">"exact"</span>, network: <span class="st">"eip155:8453"</span>,    payTo: <span class="st">"0x4C95...c3b9"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Base</span>
+      { scheme: <span class="st">"exact"</span>, network: <span class="st">"eip155:1"</span>,       payTo: <span class="st">"0x8aF2...71d4"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Ethereum</span>
+      { scheme: <span class="st">"exact"</span>, network: <span class="st">"eip155:10"</span>,      payTo: <span class="st">"0x2E19...a0b7"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Optimism</span>
+      { scheme: <span class="st">"exact"</span>, network: <span class="st">"eip155:42161"</span>,   payTo: <span class="st">"0xF1c3...9e82"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Arbitrum</span>
+      { scheme: <span class="st">"exact"</span>, network: <span class="st">"eip155:59144"</span>,   payTo: <span class="st">"0x7b45...d60a"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Linea</span>
+      { scheme: <span class="st">"exact"</span>, network: <span class="st">"eip155:130"</span>,     payTo: <span class="st">"0xD309...4cf1"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Unichain</span>
+      { scheme: <span class="st">"exact"</span>, network: <span class="st">"eip155:480"</span>,     payTo: <span class="st">"0x5a6e...bb28"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// World Chain</span>
+      { scheme: <span class="st">"exact"</span>, network: <span class="st">"solana:mainnet"</span>, payTo: <span class="st">"4r7q...BDP5"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Solana</span>
+      { scheme: <span class="st">"exact"</span>, network: <span class="st">"stellar:pubnet"</span>, payTo: <span class="st">"GAX5...5HZR"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Stellar</span>
     ],
   },
 }, <span class="st">"https://facilitator.402.md"</span>))
 
-<span class="cm"># Buyers on Base, Solana, or Stellar can now pay you.</span></pre>
+<span class="cm"># Buyers on any of the 9 supported chains can now pay you.</span></pre>
       </div>
     </div>
   </section>
@@ -483,6 +489,60 @@ app.use(paymentMiddleware({
                 checked
               />
               <label for="net-base" class="network-label">Base</label>
+
+              <input
+                type="radio"
+                name="network"
+                id="net-ethereum"
+                value="ethereum"
+                class="network-radio"
+              />
+              <label for="net-ethereum" class="network-label">Ethereum</label>
+
+              <input
+                type="radio"
+                name="network"
+                id="net-optimism"
+                value="optimism"
+                class="network-radio"
+              />
+              <label for="net-optimism" class="network-label">Optimism</label>
+
+              <input
+                type="radio"
+                name="network"
+                id="net-arbitrum"
+                value="arbitrum"
+                class="network-radio"
+              />
+              <label for="net-arbitrum" class="network-label">Arbitrum</label>
+
+              <input
+                type="radio"
+                name="network"
+                id="net-linea"
+                value="linea"
+                class="network-radio"
+              />
+              <label for="net-linea" class="network-label">Linea</label>
+
+              <input
+                type="radio"
+                name="network"
+                id="net-unichain"
+                value="unichain"
+                class="network-radio"
+              />
+              <label for="net-unichain" class="network-label">Unichain</label>
+
+              <input
+                type="radio"
+                name="network"
+                id="net-worldchain"
+                value="worldchain"
+                class="network-radio"
+              />
+              <label for="net-worldchain" class="network-label">World Chain</label>
 
               <input
                 type="radio"
