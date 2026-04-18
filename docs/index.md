@@ -2,8 +2,6 @@
 
 Cross-chain USDC settlement for agentic payments. Buyer pays on any supported chain, seller receives on theirs.
 
-This documentation is organized around the [Diátaxis](https://diataxis.fr) framework. Pick the quadrant that matches what you need right now.
-
 | I want to…                                                  | Go to                         |
 | ----------------------------------------------------------- | ----------------------------- |
 | **Learn** by following a guided, end-to-end example         | [Tutorials](./tutorials/)     |
