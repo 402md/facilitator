@@ -10,10 +10,23 @@ By the end, you will have an API that responds with `402 Payment Required`, nego
 
 ## What you will build
 
-```
-Buyer (Base Sepolia) ──► Your API ──► Relay /verify ──► 200 OK + resource
-                           │
-                           └──► Relay /settle ──► Worker ──► CCTP V2 ──► Seller wallet (Stellar)
+```mermaid
+flowchart LR
+    A[Buyer — Base Sepolia] --> B[Your API]
+    B -->|POST /verify| R[Relay]
+    R -->|isValid| B
+    B -->|200 OK + resource| A
+    B -.->|POST /settle| R
+    R --> W[Worker]
+    W --> CCTP[CCTP V2]
+    CCTP --> S[Seller wallet — Stellar]
+
+    style A fill:#1a1a2e,stroke:#3245FF,color:#fff
+    style B fill:#1a1a2e,stroke:#F59E0B,color:#fff
+    style R fill:#1a1a2e,stroke:#00D4AA,color:#fff
+    style W fill:#1a1a2e,stroke:#00D4AA,color:#fff
+    style CCTP fill:#1a1a2e,stroke:#00D4AA,color:#fff
+    style S fill:#1a1a2e,stroke:#7B68EE,color:#fff
 ```
 
 A single Express app with one paywalled route. Payments from Base, Ethereum, and Stellar all land in your Stellar wallet.

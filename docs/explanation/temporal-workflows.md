@@ -62,22 +62,40 @@ These are first-class in Temporal's UI and CLI. "Show me all stuck attestations 
 
 Buyer and seller on the same chain.
 
-```
-pulling → transferring → recording → settled
-          │
-          └── on failure ──→ failed (ledger entry: BURN_PENDING / MINT_PENDING is not applicable here)
+```mermaid
+stateDiagram-v2
+    [*] --> pulling
+    pulling --> transferring: pull tx confirmed
+    transferring --> recording: transfer tx confirmed
+    recording --> settled: ledger written
+    settled --> [*]
+
+    pulling --> failed: pull activity fails
+    transferring --> failed: transfer fails
+    recording --> failed: ledger write fails
+    failed --> [*]
 ```
 
 Three activities: `pullFromBuyer`, `transferToSeller`, `recordPayment`. Terminal in seconds.
 
 ### `crossChainSettle`
 
-```
-pulling → burning → attesting → minting → recording → settled
-           │          │           │
-           │          │           └── on mint failure ──→ failed (MINT_PENDING; attestation is still valid)
-           │          └── on timeout ──→ failed (BURN_PENDING; operators retry)
-           └── on failure ──→ failed (PULL_FAILED; no funds moved)
+```mermaid
+stateDiagram-v2
+    [*] --> pulling
+    pulling --> burning: pull tx confirmed
+    burning --> attesting: burn tx confirmed
+    attesting --> minting: Circle attestation received
+    minting --> recording: mint tx confirmed
+    recording --> settled: ledger written
+    settled --> [*]
+
+    pulling --> failed: PULL_FAILED (no funds moved)
+    burning --> failed: BURN_PENDING (operators retry)
+    attesting --> failed: timeout (burn final, attestation reusable)
+    minting --> failed: MINT_PENDING (attestation still valid)
+    recording --> failed: ledger write fails
+    failed --> [*]
 ```
 
 Five activities: `pullFromBuyer`, `cctpBurn`, `waitAttestation`, `cctpMint`, `recordPayment`. Terminal in seconds to ~20 min depending on source chain.

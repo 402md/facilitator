@@ -1,6 +1,6 @@
 # API reference — MPP (Stellar)
 
-MPP (Machine Payments Protocol) is Stripe and Tempo's push-mode payment protocol. On Stellar, the buyer broadcasts a Soroban SAC `transfer` directly — the facilitator verifies and acknowledges. No CCTP bridge, no workflow — the facilitator acts as a payment verifier only.
+MPP (Machine Payments Protocol) is Stripe and Tempo's push-mode payment protocol. On Stellar, the buyer broadcasts a Soroban SAC `transfer` directly — the Facilitator verifies and acknowledges. No CCTP bridge, no workflow — the Facilitator acts as a payment verifier only.
 
 Both endpoints are scoped to a single seller via the `:merchantId` path parameter. The seller must be registered on `stellar:pubnet` or `stellar:testnet`.
 
@@ -102,23 +102,24 @@ Headers include `Payment-Receipt` with proof of the on-chain transfer.
 
 ### Flow diagram
 
-```
-Agent                  Seller API              Relay (/mpp/charge)           Stellar
-  │                        │                          │                         │
-  │──GET /search──────────►│                          │                         │
-  │                        │──GET …/mpp/charge───────►│                         │
-  │                        │◄────402 + challenge──────│                         │
-  │◄──402 + challenge──────│                          │                         │
-  │                                                                              │
-  │── sign Soroban SAC transfer via @stellar/mpp client ─────────────────────────►│
-  │                                                                   (tx on chain)
-  │                                                                              │
-  │──GET /search + credential──►│                     │                         │
-  │                        │──GET …/mpp/charge + cred►│                         │
-  │                        │                          │── verify tx ────────────►│
-  │                        │                          │◄── tx OK ────────────────│
-  │                        │◄──200 + receipt──────────│                         │
-  │◄──200 + results────────│                          │                         │
+```mermaid
+sequenceDiagram
+    participant Agent as AI Agent (Stellar)
+    participant Seller as Seller API (Stellar)
+    participant Relay as Relay
+
+    Agent->>Seller: GET /search?q=stellar
+    Seller->>Relay: GET /merchants/:id/mpp/charge?amount=1000000
+    Relay-->>Seller: 402 + WWW-Authenticate (MPP challenge)
+    Seller-->>Agent: 402 + MPP challenge
+
+    Note over Agent: Signs Soroban SAC transfer<br/>via @stellar/mpp client
+
+    Agent->>Seller: GET /search + Payment credential
+    Seller->>Relay: GET /merchants/:id/mpp/charge + credential
+    Note over Relay: @stellar/mpp SDK verifies<br/>tx on-chain
+    Relay-->>Seller: 200 + Payment-Receipt
+    Seller-->>Agent: 200 OK + results
 ```
 
 ### When to use MPP vs x402
@@ -127,7 +128,7 @@ Agent                  Seller API              Relay (/mpp/charge)           Ste
 | --------------------------------------------------------------------- | ----------------------------------------------------------- |
 | Buyer and seller both on Stellar and you want the simplest push model | MPP                                                         |
 | Buyer on any chain, need cross-chain settlement                       | x402 (CCTP)                                                 |
-| Buyer wants to delegate gas to the facilitator                        | x402 (buyer signs an authorization; facilitator broadcasts) |
+| Buyer wants to delegate gas to the Facilitator                        | x402 (buyer signs an authorization; Facilitator broadcasts) |
 | Seller wants an existing Stellar wallet and push-mode tx              | MPP                                                         |
 
 See the [dual-protocol explanation](../../explanation/dual-protocol-x402-mpp.md) for the full trade-off.
