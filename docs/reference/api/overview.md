@@ -66,16 +66,19 @@ See the [error codes reference](../error-codes.md) for the canonical list.
 
 Rate limits are applied per IP address (read from `X-Forwarded-For` if present, else the connection IP). Limits are enforced by Redis keys with a rolling window.
 
-| Endpoint                            | Limit           |
-| ----------------------------------- | --------------- |
-| `POST /register`                    | 3 per hour      |
-| `POST /verify`                      | 1000 per minute |
-| `POST /settle`                      | 500 per minute  |
-| `GET /discover`                     | 100 per minute  |
-| `GET /onramp`                       | 30 per minute   |
-| `GET /merchants/:id/mpp/config`     | 100 per minute  |
-| `* /merchants/:id/mpp/charge`       | 500 per minute  |
-| `/bazaar/*`, `/discovery/resources` | 200 per minute  |
+| Endpoint                                                                                           | Limit           |
+| -------------------------------------------------------------------------------------------------- | --------------- |
+| `POST /register`                                                                                   | 3 per hour      |
+| `POST /verify`                                                                                     | 1000 per minute |
+| `POST /settle`                                                                                     | 500 per minute  |
+| `GET /discover`                                                                                    | 100 per minute  |
+| `GET /onramp`                                                                                      | 30 per minute   |
+| `GET /merchants/:id/mpp/config`                                                                    | 100 per minute  |
+| `* /merchants/:id/mpp/charge`                                                                      | 500 per minute  |
+| `GET /bazaar`                                                                                      | 100 per minute  |
+| `GET /bazaar/stats` · `/routes` · `/resources` · `/sellers` · `/transactions` · `/cost-comparison` | 200 per minute  |
+
+Every other endpoint — including `GET /supported`, `GET /.well-known/x402.json`, `GET /bridge/fees`, `GET /bridge/status/:id`, `GET /discovery/resources`, `GET /health`, and the `/.well-known/agent-skills/*` tree — is currently unrate-limited.
 
 When you exceed a limit you receive `429 Too Many Requests` with `error: "RATE_LIMIT"`.
 

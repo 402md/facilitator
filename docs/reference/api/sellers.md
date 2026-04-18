@@ -27,11 +27,11 @@ Register a seller wallet and receive a `merchantId` plus the Facilitator's recei
 
 ### Errors
 
-| Status | `error`                   | Cause                                    |
-| ------ | ------------------------- | ---------------------------------------- |
-| `400`  | validation                | Missing or invalid `wallet` / `network`. |
-| `404`  | `UnsupportedNetworkError` | `network` is not enabled on this relay.  |
-| `429`  | `RATE_LIMIT`              | Too many registrations from this IP.     |
+| Status | `error`               | Cause                                                                                                                     |
+| ------ | --------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `400`  | validation            | Missing or invalid `wallet` / `network`.                                                                                  |
+| `400`  | `UNSUPPORTED_NETWORK` | `network` is not enabled on this relay. Response `details` include `supportedNetworks` and an `example` payload to retry. |
+| `429`  | `RATE_LIMIT`          | Too many registrations from this IP.                                                                                      |
 
 ### Example
 

@@ -1,8 +1,8 @@
 # API reference — discovery and bazaar
 
-The bazaar is the public directory of sellers registered with this facilitator. Agents use it to find paywalled resources; humans use the analytics endpoints to understand traffic.
+The bazaar is the public directory of sellers registered with this Facilitator. Agents use it to find paywalled resources; humans use the analytics endpoints to understand traffic.
 
-All endpoints under this group share a rate limit of **200 requests per minute per IP**.
+Rate limits vary by endpoint: `GET /bazaar` (100/min), the `/bazaar/*` analytics endpoints (200/min each), `GET /discovery/resources` (no limit). See the [rate limits table](./overview.md#rate-limits).
 
 ## `GET /discovery/resources`
 
