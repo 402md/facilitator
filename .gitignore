@@ -6,7 +6,8 @@ dist
 coverage
 .DS_Store
 
-# Markdown files (except skills)
+# Markdown files (except skills and application content)
 *.md
 !README.md
 !.claude/skills/**/*.md
+!packages/*/src/**/*.md
