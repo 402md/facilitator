@@ -19,26 +19,31 @@ Run from the repo root.
 
 Run from `packages/relay`.
 
-| Command               | Purpose                                                                |
-| --------------------- | ---------------------------------------------------------------------- |
-| `bun run dev`         | Start the HTTP server with hot reload.                                 |
-| `bun run start`       | Start without watch (production-style).                                |
-| `bun run build`       | Type-check and compile.                                                |
-| `bun run db:generate` | Generate a new Drizzle migration from schema changes.                  |
-| `bun run db:push`     | Push the current schema to the database without migrations (dev only). |
-| `bun run db:migrate`  | Apply pending migrations.                                              |
-| `bun run test`        | Run the relay test suite.                                              |
+| Command                     | Purpose                                                                |
+| --------------------------- | ---------------------------------------------------------------------- |
+| `bun run dev`               | Start the HTTP server with hot reload.                                 |
+| `bun run build`             | Bundle for production (`bun build` → `dist/`).                         |
+| `bun run test`              | Run the relay test suite.                                              |
+| `bun run lint`              | ESLint on `src/`.                                                      |
+| `bun run db:generate`       | Generate a new Drizzle migration from schema changes.                  |
+| `bun run db:push`           | Push the current schema to the database without migrations (dev only). |
+| `bun run db:migrate`        | Apply pending migrations.                                              |
+| `bun run db:seed-dashboard` | Seed demo data for the bazaar dashboard.                               |
+
+To run the relay in production without watch, execute the built bundle directly: `bun dist/index.js` after `bun run build`.
 
 ## Worker scripts
 
 Run from `packages/worker`.
 
-| Command         | Purpose                                                                         |
-| --------------- | ------------------------------------------------------------------------------- |
-| `bun run dev`   | Start the worker, polling both `fast-settlement` and `cross-settlement` queues. |
-| `bun run start` | Start without watch.                                                            |
-| `bun run build` | Type-check and compile.                                                         |
-| `bun run test`  | Run the worker test suite (uses Temporal's test environment).                   |
+| Command         | Purpose                                                         |
+| --------------- | --------------------------------------------------------------- |
+| `bun run dev`   | Start the worker via `tsx watch --env-file=.env src/worker.ts`. |
+| `bun run build` | Compile TypeScript with `tsc`.                                  |
+| `bun run test`  | Run the worker test suite (uses Temporal's test environment).   |
+| `bun run lint`  | ESLint on `src/`.                                               |
+
+To run the worker in production, execute the compiled output directly: `node dist/worker.js` after `bun run build`.
 
 ## Shared scripts
 
