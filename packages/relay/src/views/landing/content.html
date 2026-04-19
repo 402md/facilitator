@@ -22,47 +22,6 @@
     </div>
   </section>
 
-  <!-- ── Code ── -->
-  <section class="code-section reveal">
-    <div class="container">
-      <div class="section-label">Getting Started</div>
-      <div class="code-block">
-        <div class="code-header">
-          <div class="code-dots" aria-hidden="true">
-            <span class="code-dot-red"></span><span class="code-dot-yellow"></span
-            ><span class="code-dot-green"></span>
-          </div>
-          <span class="code-label">terminal</span>
-        </div>
-        <pre class="code-body"><span class="cm"># 1. Register your wallet (one-time)</span>
-<span class="fn">curl</span> -X POST https://facilitator.402.md/register \
-  -H <span class="st">"Content-Type: application/json"</span> \
-  -d <span class="st">'{"wallet": "GSELLER...", "network": "stellar:pubnet"}'</span>
-
-<span class="cm"># 2. Use standard @x402/express — zero 402md code</span>
-<span class="kw">import</span> { paymentMiddleware } <span class="kw">from</span> <span class="st">"@x402/express"</span>
-
-app.use(paymentMiddleware({
-  <span class="st">"GET /your-endpoint"</span>: {
-    accepts: [
-      { scheme: <span class="st">"exact"</span>, network: <span class="st">"eip155:8453"</span>,    payTo: <span class="st">"0x4C95...c3b9"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Base</span>
-      { scheme: <span class="st">"exact"</span>, network: <span class="st">"eip155:1"</span>,       payTo: <span class="st">"0x8aF2...71d4"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Ethereum</span>
-      { scheme: <span class="st">"exact"</span>, network: <span class="st">"eip155:10"</span>,      payTo: <span class="st">"0x2E19...a0b7"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Optimism</span>
-      { scheme: <span class="st">"exact"</span>, network: <span class="st">"eip155:42161"</span>,   payTo: <span class="st">"0xF1c3...9e82"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Arbitrum</span>
-      { scheme: <span class="st">"exact"</span>, network: <span class="st">"eip155:59144"</span>,   payTo: <span class="st">"0x7b45...d60a"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Linea</span>
-      { scheme: <span class="st">"exact"</span>, network: <span class="st">"eip155:130"</span>,     payTo: <span class="st">"0xD309...4cf1"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Unichain</span>
-      { scheme: <span class="st">"exact"</span>, network: <span class="st">"eip155:480"</span>,     payTo: <span class="st">"0x5a6e...bb28"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// World Chain</span>
-      { scheme: <span class="st">"exact"</span>, network: <span class="st">"solana:mainnet"</span>, payTo: <span class="st">"4r7q...BDP5"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Solana</span>
-      { scheme: <span class="st">"exact"</span>, network: <span class="st">"stellar:pubnet"</span>, payTo: <span class="st">"GAX5...5HZR"</span>, price: <span class="st">"$0.001"</span>, extra: { merchantId: <span class="st">"7c-vQZHANEd5ICp"</span> } }, <span class="cm">// Stellar</span>
-    ],
-  },
-}, <span class="st">"https://facilitator.402.md"</span>))
-
-<span class="cm"># Buyers on any of the 9 supported chains can now pay you.</span></pre>
-      </div>
-    </div>
-  </section>
-
   <!-- ── Problem ── -->
   <section class="reveal">
     <div class="container">
@@ -119,19 +78,21 @@ app.use(paymentMiddleware({
               <div>
                 <h3>Register your wallet</h3>
                 <p>
-                  <span class="pill">POST /register</span> with your address and chain. Get
-                  facilitator addresses on all supported chains.
+                  <span class="pill">POST /register</span> with your destination wallet. Get back
+                  a facilitator address on every supported chain, plus a
+                  <span class="pill">merchantId</span> that ties them all back to you.
                 </p>
               </div>
             </div>
             <div class="flow-step">
               <span class="flow-num">02</span>
               <div>
-                <h3>Use standard x402</h3>
+                <h3>Paste into your x402 config</h3>
                 <p>
-                  Add <span class="pill">@x402/express</span> middleware. Point
-                  <span class="pill">payTo</span> to your facilitator address. Zero 402md
-                  dependencies.
+                  Add one <span class="pill">accepts</span> entry per chain — each with its
+                  facilitator <span class="pill">payTo</span> and your
+                  <span class="pill">merchantId</span>. Works with any x402 server library; no
+                  402md SDK.
                 </p>
               </div>
             </div>
@@ -140,8 +101,8 @@ app.use(paymentMiddleware({
               <div>
                 <h3>Receive USDC on your chain</h3>
                 <p>
-                  Buyer pays on any chain. 402md settles via CCTP V2. Native USDC, directly to your
-                  wallet.
+                  Buyer pays on whichever chain they hold USDC on. 402md settles via CCTP V2 —
+                  native USDC, minted directly into your registered wallet.
                 </p>
               </div>
             </div>
@@ -185,6 +146,161 @@ app.use(paymentMiddleware({
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA / Register ── -->
+  <section id="register" class="cta-section reveal">
+    <div class="container">
+      <div class="section-label">Get Started</div>
+      <h2>One curl. <em>All chains.</em></h2>
+      <p class="section-lead">
+        Register your wallet and start accepting cross-chain USDC in under a minute. No dashboard,
+        no login, no SDK.
+      </p>
+
+      <div class="register-form">
+        <form id="register-form">
+          <fieldset>
+            <label class="register-label">Environment</label>
+            <div class="network-options" role="radiogroup" aria-label="Environment">
+              <input
+                type="radio"
+                name="env-toggle"
+                id="env-mainnet"
+                value="mainnet"
+                class="network-radio"
+                checked
+              />
+              <label for="env-mainnet" class="network-label">Mainnet</label>
+              <input
+                type="radio"
+                name="env-toggle"
+                id="env-testnet"
+                value="testnet"
+                class="network-radio"
+              />
+              <label for="env-testnet" class="network-label">Testnet</label>
+            </div>
+
+            <label class="register-label" id="network-group-label">Receive USDC on</label>
+            <div class="network-options" role="radiogroup" aria-labelledby="network-group-label">
+              <input
+                type="radio"
+                name="network"
+                id="net-base"
+                value="base"
+                class="network-radio"
+                checked
+              />
+              <label for="net-base" class="network-label">Base</label>
+
+              <input
+                type="radio"
+                name="network"
+                id="net-ethereum"
+                value="ethereum"
+                class="network-radio"
+              />
+              <label for="net-ethereum" class="network-label">Ethereum</label>
+
+              <input
+                type="radio"
+                name="network"
+                id="net-optimism"
+                value="optimism"
+                class="network-radio"
+              />
+              <label for="net-optimism" class="network-label">Optimism</label>
+
+              <input
+                type="radio"
+                name="network"
+                id="net-arbitrum"
+                value="arbitrum"
+                class="network-radio"
+              />
+              <label for="net-arbitrum" class="network-label">Arbitrum</label>
+
+              <input
+                type="radio"
+                name="network"
+                id="net-linea"
+                value="linea"
+                class="network-radio"
+              />
+              <label for="net-linea" class="network-label">Linea</label>
+
+              <input
+                type="radio"
+                name="network"
+                id="net-unichain"
+                value="unichain"
+                class="network-radio"
+              />
+              <label for="net-unichain" class="network-label">Unichain</label>
+
+              <input
+                type="radio"
+                name="network"
+                id="net-worldchain"
+                value="worldchain"
+                class="network-radio"
+              />
+              <label for="net-worldchain" class="network-label">World Chain</label>
+
+              <input
+                type="radio"
+                name="network"
+                id="net-solana"
+                value="solana"
+                class="network-radio"
+              />
+              <label for="net-solana" class="network-label">Solana</label>
+
+              <input
+                type="radio"
+                name="network"
+                id="net-stellar"
+                value="stellar"
+                class="network-radio"
+              />
+              <label for="net-stellar" class="network-label">Stellar</label>
+            </div>
+
+            <label class="register-label" for="wallet-input">Wallet address</label>
+            <input
+              type="text"
+              id="wallet-input"
+              name="wallet"
+              class="wallet-input"
+              placeholder="0xd8dA6BF2...aA96045"
+              required
+              minlength="10"
+              autocomplete="off"
+              spellcheck="false"
+              aria-describedby="wallet-hint"
+            />
+            <p id="wallet-hint" class="wallet-hint">0x followed by 40 hex characters</p>
+
+            <div class="register-actions">
+              <button type="submit" class="register-btn" aria-describedby="register-status">
+                Register
+              </button>
+              <a
+                href="https://facilitator.402.md/swagger"
+                class="register-swagger"
+                target="_blank"
+                rel="noopener"
+                >API docs &#8599;</a
+              >
+            </div>
+          </fieldset>
+        </form>
+
+        <span id="register-status" class="sr-only" aria-live="assertive"></span>
+        <div id="register-result" class="register-result" aria-live="polite"></div>
       </div>
     </div>
   </section>
@@ -348,7 +464,7 @@ app.use(paymentMiddleware({
     </div>
   </section>
 
-  <!-- ── FAQ (moved before CTA for better peak-end) ── -->
+  <!-- ── FAQ ── -->
   <section id="faq" class="reveal">
     <div class="container">
       <div class="section-label">FAQ</div>
@@ -433,168 +549,6 @@ app.use(paymentMiddleware({
             ecosystems to transact through one facilitator.
           </div>
         </details>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── CTA / Register ── -->
-  <section id="register" class="cta-section reveal">
-    <div class="container">
-      <div class="section-label">Get Started</div>
-      <h2>One curl. <em>All chains.</em></h2>
-      <p class="section-lead">
-        Register your wallet and start accepting cross-chain USDC in under a minute. No dashboard,
-        no login, no SDK.
-      </p>
-
-      <div class="supported-currencies">
-        <span class="currency-label">USDC</span>
-        <span class="chain chain-base">Base</span>
-        <span class="chain chain-solana">Solana</span>
-        <span class="chain chain-stellar">Stellar</span>
-      </div>
-
-      <div class="register-form">
-        <form id="register-form">
-          <fieldset>
-            <label class="register-label">Environment</label>
-            <div class="network-options" role="radiogroup" aria-label="Environment">
-              <input
-                type="radio"
-                name="env-toggle"
-                id="env-mainnet"
-                value="mainnet"
-                class="network-radio"
-                checked
-              />
-              <label for="env-mainnet" class="network-label">Mainnet</label>
-              <input
-                type="radio"
-                name="env-toggle"
-                id="env-testnet"
-                value="testnet"
-                class="network-radio"
-              />
-              <label for="env-testnet" class="network-label">Testnet</label>
-            </div>
-
-            <label class="register-label" id="network-group-label">Receive USDC on</label>
-            <div class="network-options" role="radiogroup" aria-labelledby="network-group-label">
-              <input
-                type="radio"
-                name="network"
-                id="net-base"
-                value="base"
-                class="network-radio"
-                checked
-              />
-              <label for="net-base" class="network-label">Base</label>
-
-              <input
-                type="radio"
-                name="network"
-                id="net-ethereum"
-                value="ethereum"
-                class="network-radio"
-              />
-              <label for="net-ethereum" class="network-label">Ethereum</label>
-
-              <input
-                type="radio"
-                name="network"
-                id="net-optimism"
-                value="optimism"
-                class="network-radio"
-              />
-              <label for="net-optimism" class="network-label">Optimism</label>
-
-              <input
-                type="radio"
-                name="network"
-                id="net-arbitrum"
-                value="arbitrum"
-                class="network-radio"
-              />
-              <label for="net-arbitrum" class="network-label">Arbitrum</label>
-
-              <input
-                type="radio"
-                name="network"
-                id="net-linea"
-                value="linea"
-                class="network-radio"
-              />
-              <label for="net-linea" class="network-label">Linea</label>
-
-              <input
-                type="radio"
-                name="network"
-                id="net-unichain"
-                value="unichain"
-                class="network-radio"
-              />
-              <label for="net-unichain" class="network-label">Unichain</label>
-
-              <input
-                type="radio"
-                name="network"
-                id="net-worldchain"
-                value="worldchain"
-                class="network-radio"
-              />
-              <label for="net-worldchain" class="network-label">World Chain</label>
-
-              <input
-                type="radio"
-                name="network"
-                id="net-solana"
-                value="solana"
-                class="network-radio"
-              />
-              <label for="net-solana" class="network-label">Solana</label>
-
-              <input
-                type="radio"
-                name="network"
-                id="net-stellar"
-                value="stellar"
-                class="network-radio"
-              />
-              <label for="net-stellar" class="network-label">Stellar</label>
-            </div>
-
-            <label class="register-label" for="wallet-input">Wallet address</label>
-            <input
-              type="text"
-              id="wallet-input"
-              name="wallet"
-              class="wallet-input"
-              placeholder="0xd8dA6BF2...aA96045"
-              required
-              minlength="10"
-              autocomplete="off"
-              spellcheck="false"
-              aria-describedby="wallet-hint"
-            />
-            <p id="wallet-hint" class="wallet-hint">0x followed by 40 hex characters</p>
-
-            <div class="register-actions">
-              <button type="submit" class="register-btn" aria-describedby="register-status">
-                Register
-              </button>
-              <a
-                href="https://facilitator.402.md/swagger"
-                class="register-swagger"
-                target="_blank"
-                rel="noopener"
-                >API docs &#8599;</a
-              >
-            </div>
-          </fieldset>
-        </form>
-
-        <span id="register-status" class="sr-only" aria-live="assertive"></span>
-        <div id="register-result" class="register-result" aria-live="polite"></div>
       </div>
     </div>
   </section>
