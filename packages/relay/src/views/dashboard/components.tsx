@@ -87,7 +87,7 @@ interface LoadingSlotProps {
 
 // Reserved container that the client script hydrates on first poll.
 export const LoadingSlot = ({ id, message = 'Loading…' }: LoadingSlotProps) => (
-  <div id={id}>
+  <div id={id} class="slot">
     <p class="loading">{message}</p>
   </div>
 )

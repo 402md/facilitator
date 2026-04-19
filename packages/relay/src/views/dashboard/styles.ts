@@ -2,6 +2,16 @@ export const dashboardStyles = /* css */ `
   main.dashboard {
     padding-top: var(--space-xl);
     padding-bottom: var(--space-2xl);
+    min-width: 0;
+  }
+
+  /* Reserved slots hydrated by the client script. Wrap their content so tables
+     or panels that exceed the viewport scroll inside the slot instead of pushing
+     the whole page. */
+  .slot {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
   }
 
   /* ── Section rhythm ──
@@ -428,7 +438,8 @@ export const dashboardStyles = /* css */ `
     .snapshot {
       grid-template-columns: 1fr;
     }
-    .stat {
+    .stat,
+    .stat + .stat {
       padding: var(--space-md) 0;
       border-right: 0;
       border-bottom: 1px solid var(--border);
