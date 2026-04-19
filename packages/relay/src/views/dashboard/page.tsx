@@ -1,5 +1,6 @@
 import { Layout } from '../layout'
 import { Nav } from '../nav'
+import { TestnetBanner } from '../testnet-banner'
 import { dashboardStyles } from './styles'
 import { dashboardClientScript } from './client-script'
 import { CHAINS, EXPLORERS } from './config'
@@ -15,6 +16,7 @@ export const DashboardPage = () => (
     description="Live activity for the 402md facilitator: chains, cross-chain routes, resources, sellers, transactions."
     extraStyles={dashboardStyles}
   >
+    <TestnetBanner />
     <Nav current="dashboard" />
 
     <main class="dashboard container">

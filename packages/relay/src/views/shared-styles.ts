@@ -99,6 +99,33 @@ export const sharedStyles = /* css */ `
   }
 
   /* ══════════════════════════════════════════
+     TESTNET BANNER — solid amber strip pinned above the nav
+     ══════════════════════════════════════════ */
+  .testnet-banner {
+    background: var(--warn);
+    color: #000;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-align: center;
+    padding: 8px 16px;
+  }
+  .testnet-banner-cta {
+    color: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    white-space: nowrap;
+  }
+  .testnet-banner-cta:hover {
+    text-decoration: none;
+  }
+  @media (min-width: 640px) {
+    .testnet-banner {
+      font-size: 0.875rem;
+    }
+  }
+
+  /* ══════════════════════════════════════════
      NAV — canonical source, used by every page
      ══════════════════════════════════════════ */
   .nav {
