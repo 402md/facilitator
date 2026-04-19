@@ -90,6 +90,15 @@ export const app = new Elysia()
     { detail: { hide: true } },
   )
   .get('/cover.mp4', () => Bun.file(new URL('../public/cover.mp4', import.meta.url).pathname))
+  .get('/og-image.png', ({ set }) => {
+    set.headers['cache-control'] = 'public, max-age=86400'
+    return Bun.file(new URL('../public/og-image.png', import.meta.url).pathname)
+  })
+  .get('/og-image.svg', ({ set }) => {
+    set.headers['cache-control'] = 'public, max-age=86400'
+    set.headers['content-type'] = 'image/svg+xml'
+    return Bun.file(new URL('../public/og-image.svg', import.meta.url).pathname)
+  })
   .get('/health', async () => {
     const checks = {
       db: 'unknown' as string,

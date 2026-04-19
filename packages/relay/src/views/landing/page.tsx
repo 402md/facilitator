@@ -23,6 +23,7 @@ export const LandingPage = () => (
   <Layout
     title="402md Facilitator — Cross-chain USDC settlement for x402 and MPP"
     description="Accept USDC payments from any chain. Buyer pays on Solana, seller receives on Stellar. One HTTP request, zero custom code, 0% fee."
+    path="/"
     extraStyles={landingStyles}
   >
     <TestnetBanner />

@@ -14,6 +14,7 @@ export const DashboardPage = () => (
   <Layout
     title="402md Bazaar — Facilitator activity"
     description="Live activity for the 402md facilitator: chains, cross-chain routes, resources, sellers, transactions."
+    path="/dashboard"
     extraStyles={dashboardStyles}
   >
     <TestnetBanner />
