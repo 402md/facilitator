@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test'
+import { afterAll, describe, expect, test } from 'bun:test'
 import '@/shared/test-helpers'
 import { LandingPage } from './page'
 
@@ -26,5 +26,30 @@ describe('LandingPage', () => {
   test('includes landing-specific styles and scripts', () => {
     expect(html).toContain('Scroll reveals')
     expect(html).toContain('register-form')
+  })
+})
+
+describe('LandingPage env toggle', () => {
+  const originalEnv = process.env.NETWORK_ENV
+
+  afterAll(() => {
+    if (originalEnv === undefined) delete process.env.NETWORK_ENV
+    else process.env.NETWORK_ENV = originalEnv
+  })
+
+  test('on testnet: Mainnet radio is disabled, Testnet is checked', () => {
+    process.env.NETWORK_ENV = 'testnet'
+    const html = LandingPage()
+    expect(html).toMatch(/id="env-mainnet"[^>]*?disabled[^>]*?\/>/)
+    expect(html).toMatch(/id="env-testnet"[^>]*?checked[^>]*?\/>/)
+    expect(html).not.toMatch(/id="env-mainnet"[^>]*?checked[^>]*?\/>/)
+  })
+
+  test('on mainnet: Testnet radio is disabled, Mainnet is checked', () => {
+    process.env.NETWORK_ENV = 'mainnet'
+    const html = LandingPage()
+    expect(html).toMatch(/id="env-testnet"[^>]*?disabled[^>]*?\/>/)
+    expect(html).toMatch(/id="env-mainnet"[^>]*?checked[^>]*?\/>/)
+    expect(html).not.toMatch(/id="env-testnet"[^>]*?checked[^>]*?\/>/)
   })
 })
