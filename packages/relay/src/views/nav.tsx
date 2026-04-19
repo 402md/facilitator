@@ -18,9 +18,6 @@ export const Nav = ({ current }: NavProps) => (
           Dashboard
         </a>
       </div>
-      <a href="/#register" class="nav-cta">
-        Register now
-      </a>
     </div>
   </nav>
 )

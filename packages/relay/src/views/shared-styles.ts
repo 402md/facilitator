@@ -161,78 +161,25 @@ export const sharedStyles = /* css */ `
     font-weight: 500;
   }
 
-  .nav-cta {
-    display: inline-flex;
-    align-items: center;
-    margin-left: auto;
-    padding: var(--space-sm) var(--space-md);
-    background: var(--accent);
-    color: var(--bg);
-    border-radius: var(--radius);
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition:
-      background-color 150ms,
-      transform 80ms;
-  }
-  .nav-cta:hover {
-    background: var(--accent-deep);
-    text-decoration: none;
-  }
-  .nav-cta:active {
-    transform: scale(0.97);
-  }
-
   @media (min-width: 768px) {
     .nav-links {
       gap: var(--space-lg);
       font-size: 0.875rem;
     }
-    .nav-cta {
-      margin-left: 0;
-    }
   }
 
-  @media (max-width: 480px) {
-    .nav {
-      height: auto;
-    }
+  @media (max-width: 767px) {
     .nav-inner {
-      flex-wrap: wrap;
-      padding-top: 10px;
-      padding-bottom: 6px;
-      column-gap: var(--space-sm);
-      row-gap: var(--space-xs);
-    }
-    .nav-cta {
-      margin-left: auto;
-      padding: 6px 12px;
-      font-size: 0.8125rem;
+      gap: var(--space-md);
     }
     .nav-links {
-      order: 3;
-      width: 100%;
-      margin: 0;
-      gap: var(--space-lg);
+      gap: var(--space-md);
       font-size: 0.75rem;
+      min-width: 0;
       overflow-x: auto;
       scrollbar-width: none;
       -webkit-overflow-scrolling: touch;
       scroll-snap-type: x proximity;
-      -webkit-mask-image: linear-gradient(
-        to right,
-        transparent,
-        black 12px,
-        black calc(100% - 12px),
-        transparent
-      );
-      mask-image: linear-gradient(
-        to right,
-        transparent,
-        black 12px,
-        black calc(100% - 12px),
-        transparent
-      );
     }
     .nav-links::-webkit-scrollbar {
       display: none;
@@ -244,20 +191,12 @@ export const sharedStyles = /* css */ `
     }
   }
 
-  /* Very narrow phones — tighten CTA further so it doesn't crowd the brand. */
-  @media (max-width: 360px) {
-    .nav-cta {
-      padding: 6px 10px;
-    }
-  }
-
   /* ══════════════════════════════════════════
      TOUCH TARGETS — enforce 44px on coarse pointers
      Matches Apple HIG / Material. Desktop mouse users
      keep the denser default.
      ══════════════════════════════════════════ */
   @media (pointer: coarse) {
-    .nav-cta,
     .nav-links a,
     .btn-primary,
     .btn-outline,
