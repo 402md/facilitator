@@ -124,11 +124,11 @@ export const dashboardClientScript = /* js */ `
       }
 
       let html = '<table class="matrix"><thead><tr><th class="corner" scope="col"></th>'
-      for (const c of CHAINS) html += '<th scope="col">' + c.label + '</th>'
+      for (const c of CHAINS) html += '<th scope="col" title="' + c.label + '">' + c.symbol + '</th>'
       html += '</tr></thead><tbody>'
 
       for (const row of CHAINS) {
-        html += '<tr><th scope="row">' + row.label + '</th>'
+        html += '<tr><th scope="row" title="' + row.label + '">' + row.symbol + '</th>'
         for (const col of CHAINS) {
           const r = lookup.get(row.caip2 + '|' + col.caip2)
           const sameChain = row.caip2 === col.caip2
