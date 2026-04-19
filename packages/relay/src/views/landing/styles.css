@@ -131,7 +131,7 @@ section h2 {
        HERO
        ══════════════════════════════════════════ */
 .hero {
-  padding: calc(var(--space-3xl) + var(--space-lg)) 0 var(--space-2xl);
+  padding: calc(var(--space-3xl) + var(--space-lg)) 0 var(--space-3xl);
   border-bottom: none;
 }
 
@@ -908,7 +908,7 @@ footer {
   }
 
   .hero {
-    padding: calc(var(--space-4xl) + var(--space-xl)) 0 var(--space-3xl);
+    padding: calc(var(--space-4xl) + var(--space-xl)) 0 var(--space-4xl);
   }
 
   .hero-content {
@@ -938,8 +938,9 @@ footer {
 }
 
 @media (max-width: 480px) {
-  .hero h1 {
-    font-size: 3.75rem;
+  .hero-ctas {
+    flex-direction: column;
+    align-items: flex-start;
   }
   .footer-inner {
     flex-direction: column;

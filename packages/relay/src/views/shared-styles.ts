@@ -103,11 +103,11 @@ export const sharedStyles = /* css */ `
      ══════════════════════════════════════════ */
   .testnet-banner {
     background: var(--warn);
-    color: #000;
+    color: var(--text);
     font-size: 0.75rem;
     font-weight: 500;
     text-align: center;
-    padding: 8px 16px;
+    padding: var(--space-sm) var(--space-md);
   }
   .testnet-banner-cta {
     color: inherit;
