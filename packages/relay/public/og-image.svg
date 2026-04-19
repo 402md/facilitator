@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="accentStripe" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1d35cf"/>
+      <stop offset="0.6" stop-color="#1d35cf"/>
+      <stop offset="1" stop-color="#4a63e0"/>
+    </linearGradient>
+    <pattern id="dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="1.4" cy="1.4" r="1.4" fill="#1d35cf" fill-opacity="0.07"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="630" fill="#f8f3e8"/>
+  <rect width="1200" height="630" fill="url(#dots)"/>
+  <rect width="1200" height="8" fill="url(#accentStripe)"/>
+
+  <g font-family="Bricolage Grotesque, sans-serif">
+    <g transform="translate(80, 96)">
+      <text x="0" y="0" font-size="26" font-weight="500" fill="#1d35cf" letter-spacing="1">
+        402md · facilitator
+      </text>
+    </g>
+
+    <g transform="translate(80, 220)" font-weight="700" font-size="100" letter-spacing="-3">
+      <text x="0" y="0" fill="#2a241e">Any chain in,</text>
+      <g transform="translate(0, 110)">
+        <text x="0" y="0" fill="#1d35cf" transform="skewX(-10)">your chain out.</text>
+      </g>
+    </g>
+
+    <g transform="translate(80, 452)" font-weight="500" font-size="26" fill="#5a5147">
+      <text x="0" y="0">Cross-chain USDC settlement for x402 + MPP.</text>
+    </g>
+
+    <g transform="translate(80, 524)" font-weight="500" font-size="18">
+      <g>
+        <rect x="0" y="0" width="92" height="40" rx="10" fill="#1d35cf" fill-opacity="0.08" stroke="#1d35cf" stroke-opacity="0.2"/>
+        <text x="46" y="26" fill="#1d35cf" text-anchor="middle">BASE</text>
+      </g>
+      <g transform="translate(100, 0)">
+        <rect x="0" y="0" width="82" height="40" rx="10" fill="#1d35cf" fill-opacity="0.08" stroke="#1d35cf" stroke-opacity="0.2"/>
+        <text x="41" y="26" fill="#1d35cf" text-anchor="middle">ETH</text>
+      </g>
+      <g transform="translate(190, 0)">
+        <rect x="0" y="0" width="72" height="40" rx="10" fill="#1d35cf" fill-opacity="0.08" stroke="#1d35cf" stroke-opacity="0.2"/>
+        <text x="36" y="26" fill="#1d35cf" text-anchor="middle">OP</text>
+      </g>
+      <g transform="translate(270, 0)">
+        <rect x="0" y="0" width="82" height="40" rx="10" fill="#1d35cf" fill-opacity="0.08" stroke="#1d35cf" stroke-opacity="0.2"/>
+        <text x="41" y="26" fill="#1d35cf" text-anchor="middle">ARB</text>
+      </g>
+      <g transform="translate(360, 0)">
+        <rect x="0" y="0" width="100" height="40" rx="10" fill="#1d35cf" fill-opacity="0.08" stroke="#1d35cf" stroke-opacity="0.2"/>
+        <text x="50" y="26" fill="#1d35cf" text-anchor="middle">LINEA</text>
+      </g>
+      <g transform="translate(468, 0)">
+        <rect x="0" y="0" width="92" height="40" rx="10" fill="#1d35cf" fill-opacity="0.08" stroke="#1d35cf" stroke-opacity="0.2"/>
+        <text x="46" y="26" fill="#1d35cf" text-anchor="middle">UNI</text>
+      </g>
+      <g transform="translate(568, 0)">
+        <rect x="0" y="0" width="110" height="40" rx="10" fill="#1d35cf" fill-opacity="0.08" stroke="#1d35cf" stroke-opacity="0.2"/>
+        <text x="55" y="26" fill="#1d35cf" text-anchor="middle">WORLD</text>
+      </g>
+      <g transform="translate(686, 0)">
+        <rect x="0" y="0" width="112" height="40" rx="10" fill="#1d35cf" fill-opacity="0.08" stroke="#1d35cf" stroke-opacity="0.2"/>
+        <text x="56" y="26" fill="#1d35cf" text-anchor="middle">SOLANA</text>
+      </g>
+      <g transform="translate(806, 0)">
+        <rect x="0" y="0" width="122" height="40" rx="10" fill="#1d35cf" fill-opacity="0.08" stroke="#1d35cf" stroke-opacity="0.2"/>
+        <text x="61" y="26" fill="#1d35cf" text-anchor="middle">STELLAR</text>
+      </g>
+    </g>
+  </g>
+
+  <g transform="translate(870, 160)" opacity="0.9">
+    <circle cx="120" cy="120" r="118" fill="none" stroke="#1d35cf" stroke-opacity="0.18" stroke-width="1.5"/>
+    <circle cx="120" cy="120" r="80" fill="none" stroke="#1d35cf" stroke-opacity="0.28" stroke-width="1.5"/>
+    <circle cx="120" cy="120" r="42" fill="#1d35cf" fill-opacity="0.1"/>
+    <circle cx="120" cy="120" r="8" fill="#1d35cf"/>
+    <g stroke="#1d35cf" stroke-opacity="0.5" stroke-width="1.5" fill="#f8f3e8">
+      <circle cx="120" cy="2" r="10"/>
+      <circle cx="120" cy="238" r="10"/>
+      <circle cx="2" cy="120" r="10"/>
+      <circle cx="238" cy="120" r="10"/>
+      <circle cx="203" cy="37" r="10"/>
+      <circle cx="37" cy="203" r="10"/>
+      <circle cx="203" cy="203" r="10"/>
+      <circle cx="37" cy="37" r="10"/>
+    </g>
+  </g>
+</svg>
