@@ -20,4 +20,4 @@ COPY packages/relay ./packages/relay
 RUN if [ -d /app/packages/relay/node_modules ]; then true; fi
 WORKDIR /app/packages/relay
 EXPOSE 3000
-CMD ["sh", "-c", "bun run db:migrate && bun run src/index.ts"]
+CMD ["sh", "-c", "bunx drizzle-kit migrate && bun run src/index.ts"]
