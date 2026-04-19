@@ -1,8 +1,22 @@
+import { resolveNetworkEnv } from '@402md/shared/networks'
 import { Layout } from '../layout'
 import { Nav } from '../nav'
 import landingContent from './content.html' with { type: 'text' }
 import landingStyles from './styles.css' with { type: 'text' }
 import landingScript from './script.txt' with { type: 'text' }
+
+const lockEnvToggle = (html: string, env: 'mainnet' | 'testnet'): string => {
+  const disabledId = env === 'testnet' ? 'env-mainnet' : 'env-testnet'
+  const checkedId = env === 'testnet' ? 'env-testnet' : 'env-mainnet'
+  return html
+    .replace(new RegExp(`(id="${disabledId}"[^>]*?)\\s+checked`), '$1 disabled')
+    .replace(new RegExp(`(id="${disabledId}"[^>]*?)(\\s*/>)`), (match, prefix, suffix) =>
+      match.includes(' disabled') ? match : `${prefix} disabled${suffix}`,
+    )
+    .replace(new RegExp(`(id="${checkedId}"[^>]*?)(\\s*/>)`), (match, prefix, suffix) =>
+      match.includes(' checked') ? match : `${prefix} checked${suffix}`,
+    )
+}
 
 export const LandingPage = () => (
   <Layout
@@ -11,7 +25,7 @@ export const LandingPage = () => (
     extraStyles={landingStyles}
   >
     <Nav />
-    {landingContent}
+    {lockEnvToggle(landingContent, resolveNetworkEnv())}
     <script>{landingScript}</script>
   </Layout>
 )
