@@ -17,7 +17,6 @@ COPY packages/shared ./packages/shared
 COPY packages/worker ./packages/worker
 
 RUN cd packages/shared && bun run build
-RUN cd packages/worker && bun run build
 
 WORKDIR /app/packages/worker
-CMD ["node", "dist/worker.js"]
+CMD ["bunx", "tsx", "src/worker.ts"]
