@@ -296,6 +296,7 @@ export const dashboardStyles = /* css */ `
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.8125rem;
     color: var(--text);
+    overflow-wrap: anywhere;
   }
   table.list a {
     color: var(--accent);

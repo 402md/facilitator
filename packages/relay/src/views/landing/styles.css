@@ -34,7 +34,8 @@ h3 {
   font-family: 'Bricolage Grotesque', system-ui, sans-serif;
   line-height: 1.1;
   letter-spacing: -0.02em;
-  text-wrap: balance;
+  text-wrap: pretty;
+  overflow-wrap: break-word;
 }
 
 h1 {
@@ -140,7 +141,7 @@ section h2 {
 }
 
 .hero h1 {
-  font-size: clamp(4.25rem, 6vw + 2.3rem, 5.5rem);
+  font-size: clamp(3rem, 7vw + 1.75rem, 5.5rem);
   margin-bottom: var(--space-md);
 }
 
