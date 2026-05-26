@@ -1,4 +1,4 @@
-export interface PaymentResource {
+interface PaymentResource {
   url: string
   description?: string
 }
@@ -30,7 +30,7 @@ export interface VerifyResponse {
   payer?: string
 }
 
-export interface PaymentAuthorization {
+interface PaymentAuthorization {
   from: string
   to: string
   value: string

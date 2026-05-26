@@ -11,7 +11,7 @@ export interface RegisterResponse {
   codeSnippet: string
 }
 
-export interface DiscoveryNetworkEntry {
+interface DiscoveryNetworkEntry {
   network: string
   payTo: string
   asset: string

@@ -131,7 +131,7 @@ export async function getStats({ window }: { window: Window }): Promise<StatsRes
 // 2. getRoutes
 // ----------------------------------------------------------------------------
 
-export interface RouteRow {
+interface RouteRow {
   buyerNetwork: string
   sellerNetwork: string
   txCount: number
@@ -176,14 +176,14 @@ export async function getRoutes({ window }: { window: Window }): Promise<RoutesR
 // 3. getRankedResources
 // ----------------------------------------------------------------------------
 
-export interface RankedResourceAccept {
+interface RankedResourceAccept {
   scheme: string
   network: string
   payTo: string
   amount: string
 }
 
-export interface RankedResourceItem {
+interface RankedResourceItem {
   resource: string
   type: 'http'
   description: string | null
@@ -334,7 +334,7 @@ export async function getRankedResources(
 // 4. getRankedSellers
 // ----------------------------------------------------------------------------
 
-export interface RankedSellerItem {
+interface RankedSellerItem {
   merchantId: string
   primaryNetwork: string
   txCount: number
@@ -412,7 +412,7 @@ export async function getRankedSellers(
 // 5. getTransactions
 // ----------------------------------------------------------------------------
 
-export interface TransactionItem {
+interface TransactionItem {
   id: string
   type: string
   protocol: string | null
@@ -520,7 +520,7 @@ export async function getTransactions(params: TransactionsParams): Promise<Trans
 // 6. getCostComparison
 // ----------------------------------------------------------------------------
 
-export interface CostComparisonTier {
+interface CostComparisonTier {
   amount: string
   cctpAllowance: string
   percentAlternative: string

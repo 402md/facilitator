@@ -1,6 +1,6 @@
-export type Network = string // CAIP-2: "eip155:8453", "solana:mainnet", "stellar:pubnet"
+type Network = string // CAIP-2: "eip155:8453", "solana:mainnet", "stellar:pubnet"
 
-export interface PaymentResource {
+interface PaymentResource {
   url: string
   description?: string
 }

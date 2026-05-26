@@ -54,7 +54,7 @@ interface WorkflowStatus {
   error?: string
 }
 
-export const statusQuery = defineQuery<WorkflowStatus>('status')
+const statusQuery = defineQuery<WorkflowStatus>('status')
 
 export async function crossChainSettle(
   params: CrossChainSettleParams,
