@@ -20,6 +20,7 @@
     "viem": "^2"
   },
   "devDependencies": {
+    "@temporalio/client": "^1.16.2",
     "@temporalio/testing": "^1.16.2",
     "tsx": "^4",
     "typescript": "^5",
