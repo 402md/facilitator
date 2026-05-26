@@ -6,6 +6,11 @@ import { SellerNotFoundError } from '@/shared/errors'
 
 const isTestnet = resolveNetworkEnv() === 'testnet'
 
+const MPP_SECRET_KEY = process.env.MPP_SECRET_KEY
+if (!MPP_SECRET_KEY) {
+  throw new Error('MPP_SECRET_KEY is required')
+}
+
 function createMppServer(recipient: string) {
   const currency = isTestnet ? USDC_SAC_TESTNET : USDC_SAC_MAINNET
   const network = isTestnet ? STELLAR_TESTNET : STELLAR_PUBNET
@@ -18,7 +23,7 @@ function createMppServer(recipient: string) {
         network,
       }),
     ],
-    secretKey: process.env.MPP_SECRET_KEY ?? 'dev-secret-key-change-in-production',
+    secretKey: MPP_SECRET_KEY,
   })
 }
 

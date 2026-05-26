@@ -37,13 +37,13 @@
     "lint": "eslint src/"
   },
   "dependencies": {
-    "@opentelemetry/auto-instrumentations-node": "^0.72.0",
-    "@opentelemetry/exporter-trace-otlp-http": "^0.214.0",
-    "@opentelemetry/sdk-node": "^0.214.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.76.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.218.0",
+    "@opentelemetry/sdk-node": "^0.218.0",
     "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1",
     "@stellar/stellar-sdk": "^12",
-    "drizzle-orm": "^0.38",
+    "drizzle-orm": "^0.45.2",
     "ioredis": "^5",
     "postgres": "^3",
     "viem": "^2"

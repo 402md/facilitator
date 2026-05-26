@@ -19,11 +19,11 @@
     "@elysiajs/html": "^1.4.0",
     "@elysiajs/swagger": "^1",
     "@kitajs/html": "^4.2.13",
-    "@opentelemetry/exporter-trace-otlp-http": "^0.214.0",
-    "@opentelemetry/sdk-node": "^0.214.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.218.0",
+    "@opentelemetry/sdk-node": "^0.218.0",
     "@stellar/mpp": "^0.4.0",
-    "@temporalio/client": "^1",
-    "drizzle-orm": "^0.38",
+    "@temporalio/client": "^1.16.2",
+    "drizzle-orm": "^0.45.2",
     "elysia": "^1",
     "ioredis": "^5",
     "mppx": "^0.5.7",
@@ -33,7 +33,7 @@
   "devDependencies": {
     "@resvg/resvg-js": "^2.6.2",
     "@types/bun": "latest",
-    "drizzle-kit": "^0.30",
+    "drizzle-kit": "^0.31",
     "typescript": "^5"
   }
 }
