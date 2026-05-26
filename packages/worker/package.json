@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "tsx watch --env-file=.env src/worker.ts",
     "build": "tsc",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "lint": "eslint src/"
   },
   "dependencies": {
@@ -20,8 +20,9 @@
     "viem": "^2"
   },
   "devDependencies": {
-    "vitest": "^3",
+    "@temporalio/testing": "^1.16.2",
     "tsx": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3"
   }
 }
