@@ -154,7 +154,7 @@ export function createEvmAdapter(resolved: ResolvedNetwork): ChainAdapter {
   }
 }
 
-function splitSignature(sig: string): { v: number; r: Hex; s: Hex } {
+export function splitSignature(sig: string): { v: number; r: Hex; s: Hex } {
   const raw = sig.startsWith('0x') ? sig.slice(2) : sig
   return {
     r: `0x${raw.slice(0, 64)}` as Hex,
@@ -163,18 +163,18 @@ function splitSignature(sig: string): { v: number; r: Hex; s: Hex } {
   }
 }
 
-function padAddress(address: string): Hex {
+export function padAddress(address: string): Hex {
   const clean = address.startsWith('0x') ? address.slice(2) : address
   return `0x${clean.padStart(64, '0')}` as Hex
 }
 
-function stellarAddressToBytes32(strkey: string): Hex {
+export function stellarAddressToBytes32(strkey: string): Hex {
   const isContract = StrKey.isValidContract(strkey)
   const raw = isContract ? StrKey.decodeContract(strkey) : StrKey.decodeEd25519PublicKey(strkey)
   return `0x${Buffer.from(raw).toString('hex').padStart(64, '0')}` as Hex
 }
 
-function buildCctpForwarderHookData(forwardRecipientStrkey: string): Hex {
+export function buildCctpForwarderHookData(forwardRecipientStrkey: string): Hex {
   const recipientBytes = Buffer.from(forwardRecipientStrkey, 'utf8')
   const hookData = Buffer.alloc(32 + recipientBytes.length)
   hookData.writeUInt32BE(0, 24) // hook version = 0
@@ -183,7 +183,7 @@ function buildCctpForwarderHookData(forwardRecipientStrkey: string): Hex {
   return `0x${hookData.toString('hex')}` as Hex
 }
 
-function extractMessageHash(receipt: {
+export function extractMessageHash(receipt: {
   logs: readonly { data: string; topics: readonly string[] }[]
 }): string {
   for (const log of receipt.logs) {

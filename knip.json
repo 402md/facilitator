@@ -1,0 +1,27 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "ignore": [".claude/**", "test/e2e/**", "**/dist/**"],
+  "workspaces": {
+    "packages/worker": {
+      "entry": ["src/worker.ts", "src/workflows/**/*.ts", "scripts/**/*.ts"]
+    },
+    "packages/relay": {
+      "entry": ["src/index.ts", "scripts/**/*.ts", "drizzle.config.ts"]
+    },
+    "packages/shared": {
+      "entry": [
+        "src/index.ts",
+        "src/networks/index.ts",
+        "src/db/index.ts",
+        "src/cache/index.ts",
+        "src/tracing/index.ts"
+      ]
+    },
+    "packages/demo-agent": {
+      "entry": ["src/index.ts"]
+    },
+    "packages/demo-seller": {
+      "entry": ["src/index.ts"]
+    }
+  }
+}

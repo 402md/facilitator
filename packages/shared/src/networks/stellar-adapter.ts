@@ -20,12 +20,8 @@ import type {
 } from './adapter.types'
 
 /** Stellar uses 7 decimals for USDC, CCTP uses 6 */
-export function stellarToCctpAmount(stellarMicroUnits: string): string {
+function stellarToCctpAmount(stellarMicroUnits: string): string {
   return (BigInt(stellarMicroUnits) / 10n).toString()
-}
-
-export function cctpToStellarAmount(cctpUnits: string): string {
-  return (BigInt(cctpUnits) * 10n).toString()
 }
 
 export function createStellarAdapter(resolved: ResolvedNetwork): ChainAdapter {

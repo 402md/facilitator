@@ -76,6 +76,3 @@ export async function getDiscovery(merchantId: string): Promise<DiscoveryRespons
     gasFree: true,
   }
 }
-
-// Re-export the default facilitator addresses for consumers that only want the map.
-export { buildFacilitatorAddresses as _facilitatorAddresses }

@@ -15,9 +15,3 @@ export async function findByMerchantId(merchantId: string) {
     where: eq(sellers.merchantId, merchantId),
   })
 }
-
-export async function findByWallet(walletAddress: string, network: string) {
-  return db.query.sellers.findFirst({
-    where: (s, { and, eq }) => and(eq(s.walletAddress, walletAddress), eq(s.network, network)),
-  })
-}

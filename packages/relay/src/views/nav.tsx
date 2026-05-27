@@ -1,4 +1,4 @@
-export type NavPage = 'dashboard'
+type NavPage = 'dashboard'
 
 interface NavProps {
   current?: NavPage

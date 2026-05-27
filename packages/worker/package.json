@@ -5,30 +5,25 @@
   "scripts": {
     "dev": "tsx watch --env-file=.env src/worker.ts",
     "build": "tsc",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "lint": "eslint src/"
   },
   "dependencies": {
     "@402md/shared": "workspace:*",
-    "@opentelemetry/auto-instrumentations-node": "^0.72.0",
-    "@opentelemetry/exporter-trace-otlp-http": "^0.214.0",
-    "@opentelemetry/sdk-node": "^0.214.0",
-    "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1",
     "@stellar/stellar-sdk": "^12",
-    "@temporalio/activity": "^1",
-    "@temporalio/client": "^1",
-    "@temporalio/worker": "^1",
-    "@temporalio/workflow": "^1",
-    "drizzle-orm": "^0.38",
-    "ioredis": "^5",
+    "@temporalio/activity": "^1.16.2",
+    "@temporalio/worker": "^1.16.2",
+    "@temporalio/workflow": "^1.16.2",
+    "drizzle-orm": "^0.45.2",
     "postgres": "^3",
     "viem": "^2"
   },
   "devDependencies": {
-    "@temporalio/testing": "^1",
-    "vitest": "^3",
+    "@temporalio/client": "^1.16.2",
+    "@temporalio/testing": "^1.16.2",
     "tsx": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3"
   }
 }
