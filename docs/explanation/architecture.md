@@ -58,9 +58,10 @@ flowchart TD
     A -->|4. GET /resource + X-PAYMENT header| B
     B -->|5. POST /verify ~ms| R[Relay]
     R -->|isValid: true| B
-    B -->|6. 200 OK + resource| A
-    B -.->|7. POST /settle async| R
-    R -->|8. startWorkflow| W[Worker]
+    B -->|6. POST /settle| R
+    R -->|7. success + capture tx hash| B
+    B -->|8. 200 OK + resource| A
+    R -->|startWorkflow| W[Worker]
     W -->|pullFromBuyer| C1[Source chain]
     W -->|cctpBurn| C1
     W -->|waitAttestation| IRIS[Circle Iris API]
@@ -76,11 +77,11 @@ flowchart TD
     style IRIS fill:#1a1a2e,stroke:#00D4AA,color:#fff
 ```
 
-Steps 1–6 are synchronous from the buyer's perspective; 7–end run in background.
+Steps 1–8 are synchronous from the buyer's perspective: the seller only releases the resource once `/settle` confirms the buyer's USDC was captured on the source chain. The bridge that delivers it to the seller's chain runs in the background.
 
 ## x402 cross-chain settlement
 
-Example: an AI agent on Base pays for a search API hosted by a seller on Stellar. The agent gets the resource in milliseconds. Settlement runs in background via Temporal.
+Example: an AI agent on Base pays for a search API hosted by a seller on Stellar. The agent waits for its payment to be captured on Base — one tx confirmation — and then gets the resource. The CCTP bridge to Stellar runs in the background via Temporal.
 
 When the destination is Stellar, the EVM adapter uses `depositForBurnWithHook` with `CctpForwarder` — the CCTP V2 contract that atomically mints and forwards USDC to the seller's Stellar address.
 
@@ -102,9 +103,6 @@ sequenceDiagram
     Agent->>Seller: GET /search + payment header
     Seller->>Relay: POST /verify (paymentPayload + merchantId)
     Relay-->>Seller: { isValid: true } ~ms
-    Seller-->>Agent: 200 OK + results
-
-    Note over Agent: Agent has results.<br/>Settlement happens async
 
     Seller->>Relay: POST /settle (paymentPayload + merchantId)
     Relay->>Worker: startWorkflow(crossChainSettle)
@@ -113,6 +111,9 @@ sequenceDiagram
         Note over Worker,Dest: Temporal Workflow — crossChainSettle
         Worker->>Source: 1. pullFromBuyer — $1.00 USDC
         Source-->>Worker: pull tx confirmed
+        Relay-->>Seller: { success: true, transaction: pull tx hash }
+        Seller-->>Agent: 200 OK + results
+        Note over Agent: Buyer has paid and has results.<br/>Delivery to Stellar continues below.
         Note over Worker: 2. Retain gas allowance ($0.0005)
         Worker->>Source: 3. depositForBurnWithHook — $0.9995<br/>(mintRecipient = CctpForwarder,<br/>hookData = seller's Stellar address)
         Source-->>Worker: burn tx confirmed

@@ -1,4 +1,4 @@
-import { beforeEach, afterAll, describe, expect, test } from 'bun:test'
+import { beforeEach, describe, expect, test } from 'bun:test'
 import {
   resetAllMocks,
   mockDb,
@@ -14,14 +14,11 @@ import {
 import { verifyPayment, dispatchSettlement, getFeeQuote } from './settlements.service'
 import { ReplayError, CircuitBreakerError } from '@/shared/errors'
 
-// Keep the capture wait short so timeout cases do not stall the suite.
+// Keep the capture wait short so timeout cases do not stall the suite. Left set
+// for the whole process on purpose: clearing it in afterAll would restore the
+// 60s default for whichever settlement file bun happens to run next.
 process.env.SETTLE_WAIT_TIMEOUT_MS = '300'
 process.env.SETTLE_POLL_INTERVAL_MS = '20'
-
-afterAll(() => {
-  delete process.env.SETTLE_WAIT_TIMEOUT_MS
-  delete process.env.SETTLE_POLL_INTERVAL_MS
-})
 
 const SOLANA_SELLER = { ...TEST_SELLER, network: 'solana:mainnet' }
 
@@ -140,6 +137,66 @@ describe('verifyPayment', () => {
     expect(result.isValid).toBe(false)
     expect(result.invalidReason).toBe('invalid_exact_evm_payload_recipient_mismatch')
   })
+
+  describe('non-EVM buyer networks', () => {
+    // Solana and Stellar carry a chain-native authorization, so there is no
+    // EIP-3009 signature to recover — but every other rule still applies.
+    const solanaRequest = (over: Record<string, string> = {}) => ({
+      x402Version: 2,
+      paymentPayload: {
+        payload: {
+          authorization: {
+            from: 'BuyerSolAddr',
+            to: FACILITATOR_ADDRESSES['solana:mainnet'],
+            value: '1000000',
+            validAfter: '0',
+            validBefore: '99999999999',
+            nonce: 'sol-nonce-1',
+            ...over,
+          },
+          signature: 'sol-native-authorization-blob',
+        },
+      },
+      paymentRequirements: {
+        scheme: 'exact',
+        network: 'solana:mainnet',
+        payTo: FACILITATOR_ADDRESSES['solana:mainnet'],
+        amount: '1000000',
+        extra: { merchantId: 'ab-test01' },
+      },
+    })
+
+    test('accepts a chain-native authorization without EIP-3009 recovery', async () => {
+      const result = await verifyPayment(solanaRequest())
+
+      expect(result.isValid).toBe(true)
+      expect(result.payer).toBe('BuyerSolAddr')
+    })
+
+    test('still enforces the amount match', async () => {
+      const result = await verifyPayment(solanaRequest({ value: '1' }))
+
+      expect(result.isValid).toBe(false)
+      expect(result.invalidReason).toBe('invalid_exact_evm_payload_authorization_value_mismatch')
+    })
+
+    test('still enforces the validity window', async () => {
+      const result = await verifyPayment(solanaRequest({ validBefore: '1000' }))
+
+      expect(result.isValid).toBe(false)
+      expect(result.invalidReason).toBe('invalid_exact_evm_payload_authorization_valid_before')
+    })
+
+    test('still requires a signature to be present', async () => {
+      const req = solanaRequest()
+      req.paymentPayload.payload.signature = ''
+
+      const result = await verifyPayment(req)
+
+      expect(result.isValid).toBe(false)
+      expect(result.invalidReason).toBe('invalid_exact_evm_payload_signature')
+    })
+  })
 })
 
 describe('dispatchSettlement', () => {
@@ -176,6 +233,47 @@ describe('dispatchSettlement', () => {
     expect(result.amount).toBe('1000000')
   })
 
+  test('falls back to the workflow result when the status query never yields a hash', async () => {
+    // A settlement that really happened must not be reported as a failure just
+    // because the query side never surfaced the hash.
+    mockTemporal.setQueryError(new Error('query failed: workflow closed'))
+    mockTemporal.setResult({ success: true, pullTxHash: TEST_PULL_TX })
+
+    const result = await dispatchSettlement(await buildPaymentRequest())
+
+    expect(result.success).toBe(true)
+    expect(result.transaction).toBe(TEST_PULL_TX)
+  })
+
+  test('reports a failure when the workflow completes with no hash anywhere', async () => {
+    mockTemporal.setQueryError(new Error('query failed'))
+    mockTemporal.setResult({ success: true })
+
+    const result = await dispatchSettlement(await buildPaymentRequest())
+
+    expect(result.success).toBe(false)
+    expect(result.errorMessage).toContain('without a pull tx hash')
+  })
+
+  test('exposes the workflow id under extensions, where x402 clients keep it', async () => {
+    const result = await dispatchSettlement(await buildPaymentRequest())
+
+    const md = (result.extensions as { '402md': { workflowId: string } })['402md']
+    expect(md.workflowId).toBe(result.workflowId as string)
+    expect(md.workflowId).toStartWith('same-')
+  })
+
+  test('counts volume at dispatch so a slow settlement is not missed', async () => {
+    mockTemporal.setStatus({ step: 'pulling' })
+    mockTemporal.setNeverSettles()
+
+    const result = await dispatchSettlement(await buildPaymentRequest())
+
+    // The wait timed out, but the workflow is live and may still pull.
+    expect(result.success).toBe(false)
+    expect(mockRedis.incrby).toHaveBeenCalled()
+  })
+
   test('does not report success when the workflow fails after being started', async () => {
     mockTemporal.setStatus({ step: 'pulling' })
     mockTemporal.setFailure(new Error('pull reverted: insufficient balance'))
@@ -201,11 +299,11 @@ describe('dispatchSettlement', () => {
     expect(result.workflowId).toBeString()
   })
 
-  test('does not record volume for a settlement that failed', async () => {
-    mockTemporal.setStatus({ step: 'pulling' })
-    mockTemporal.setFailure(new Error('pull reverted'))
+  test('does not count volume for a payment that never started a workflow', async () => {
+    const req = await buildPaymentRequest()
+    req.paymentPayload.payload.signature = '0xdeadbeef'
 
-    await dispatchSettlement(await buildPaymentRequest())
+    await dispatchSettlement(req)
 
     expect(mockRedis.incrby).not.toHaveBeenCalled()
   })

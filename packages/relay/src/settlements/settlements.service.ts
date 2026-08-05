@@ -35,8 +35,13 @@ function settleWaitTimeoutMs(): number {
   return parseInt(process.env.SETTLE_WAIT_TIMEOUT_MS ?? '60000', 10)
 }
 
+/**
+ * Each in-flight `/settle` polls Temporal at this rate for as long as it waits,
+ * so the default trades a little latency on a 1–15s capture for a much smaller
+ * query rate when many settlements are open at once.
+ */
 function settlePollIntervalMs(): number {
-  return parseInt(process.env.SETTLE_POLL_INTERVAL_MS ?? '250', 10)
+  return parseInt(process.env.SETTLE_POLL_INTERVAL_MS ?? '500', 10)
 }
 
 /** Error reasons from the x402 spec (§9), plus the workflow-level ones we add. */
@@ -221,6 +226,9 @@ type WorkflowHandle = {
 
 type WorkflowStatus = { step?: string; pullTxHash?: string; error?: string }
 
+/** Both settle workflows return the capture hash; that is all we read here. */
+type WorkflowResult = { pullTxHash?: string }
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 /**
@@ -233,17 +241,19 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
  * would wait for it, so it stays asynchronous.
  */
 async function waitForCapture(handle: WorkflowHandle): Promise<CaptureOutcome> {
-  let terminalError: Error | null = null
-  let completed = false
+  // A box rather than two `let`s: control-flow narrowing does not see the
+  // assignments made inside the handlers below, and a property read stays
+  // honest where a narrowed local would need a cast.
+  const settlement: { result?: WorkflowResult; error?: Error } = {}
 
   // Attach both handlers up front: a workflow that fails while we are between
   // polls must not surface as an unhandled rejection.
   handle.result().then(
-    () => {
-      completed = true
+    (result) => {
+      settlement.result = (result ?? {}) as WorkflowResult
     },
     (err: Error) => {
-      terminalError = err
+      settlement.error = err
     },
   )
 
@@ -255,23 +265,27 @@ async function waitForCapture(handle: WorkflowHandle): Promise<CaptureOutcome> {
     try {
       status = (await handle.query('status')) as WorkflowStatus
     } catch {
-      // Querying a workflow that just closed can fail; the result handlers
-      // below are authoritative about what happened.
+      // Querying a workflow that just closed can fail; the result below is
+      // authoritative about what happened.
       status = null
     }
 
     if (status?.pullTxHash) {
       return { transaction: status.pullTxHash }
     }
-    if (terminalError) {
-      return captureFailed((terminalError as Error).message)
+    // The workflow returns the same hash, so a query that never surfaced it —
+    // a transient failure, a race with completion — must not cost the seller a
+    // settlement that actually happened.
+    if (settlement.result?.pullTxHash) {
+      return { transaction: settlement.result.pullTxHash }
+    }
+    if (settlement.error) {
+      return captureFailed(settlement.error.message)
     }
     if (status?.step === 'failed') {
       return captureFailed(status.error ?? 'Settlement failed')
     }
-    if (completed) {
-      // Settled without ever exposing a pull hash — treat as a contract bug
-      // rather than reporting success with an empty transaction.
+    if (settlement.result) {
       return captureFailed('Workflow completed without a pull tx hash')
     }
 
@@ -392,31 +406,39 @@ export async function dispatchSettlement(req: SettleRequest): Promise<SettleResp
     throw err
   }
 
+  // Counted at dispatch, not on success: a workflow that outlives our wait can
+  // still pull. The daily limit is a safety ceiling, so over-counting a
+  // settlement that later fails is the harmless direction to be wrong in.
+  await recordVolume(req.paymentRequirements.amount)
+
   const outcome = await waitForCapture(handle)
+
+  // `workflowId` is repeated under `extensions` because the x402 client schema
+  // strips unknown top-level fields — this is the copy a seller behind the
+  // standard middleware actually receives.
+  const locator = { workflowId, extensions: { '402md': { workflowId } } }
 
   if (outcome.failure) {
     // The key is deliberately kept: the workflow may still be running, and its
-    // id is derived from this signature, so a retry lands on the same
-    // execution rather than pulling twice.
+    // id derives from this signature, so a repeat of this exact request lands
+    // on the same execution rather than pulling twice.
     return {
       success: false,
       errorReason: outcome.failure.reason,
       errorMessage: outcome.failure.message,
       transaction: '',
       network: buyerNetwork,
-      workflowId,
+      ...locator,
       ...withPayer,
     }
   }
-
-  await recordVolume(req.paymentRequirements.amount)
 
   return {
     success: true,
     transaction: outcome.transaction,
     network: buyerNetwork,
     amount: req.paymentRequirements.amount,
-    workflowId,
+    ...locator,
     ...withPayer,
   }
 }

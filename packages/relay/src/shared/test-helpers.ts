@@ -110,13 +110,17 @@ let workflowList: unknown[] = []
 let startedWorkflows: { name: string; options: unknown }[] = []
 let resultMode: ResultMode = DEFAULT_RESULT
 let startError: Error | null = null
+let queryError: Error | null = null
 
 // Built on demand so a `reject` mode never produces an unhandled rejection in
 // tests that only query the status and never await the result.
 function makeHandle(workflowId: string) {
   return {
     workflowId,
-    query: mock(async () => workflowStatus),
+    query: mock(async () => {
+      if (queryError) throw queryError
+      return workflowStatus
+    }),
     result: mock(() => {
       if (resultMode.kind === 'reject') return Promise.reject(resultMode.error)
       if (resultMode.kind === 'never') return new Promise(() => {})
@@ -156,6 +160,10 @@ export const mockTemporal = {
   setStartError(error: Error | null) {
     startError = error
   },
+  /** The `status` query fails, so only the workflow result reports the outcome. */
+  setQueryError(error: Error | null) {
+    queryError = error
+  },
   setWorkflows(workflows: unknown[]) {
     workflowList = workflows
     this.workflow.list.mockImplementation(async function* () {
@@ -171,6 +179,7 @@ export const mockTemporal = {
     startedWorkflows = []
     resultMode = DEFAULT_RESULT
     startError = null
+    queryError = null
     this.workflow.start.mockClear()
     this.workflow.getHandle.mockClear()
     this.workflow.list.mockClear()

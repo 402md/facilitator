@@ -73,7 +73,13 @@ Settlement has two legs:
 
 The seller gets a real tx hash to validate, and the funds land on their chain once the bridge completes. Poll [`GET /bridge/status/:workflowId`](#get-bridgestatusworkflowid) to watch the delivery leg.
 
-The capture wait is bounded by `SETTLE_WAIT_TIMEOUT_MS` (default 60 s). On timeout the response is `success: false` with `errorReason: unexpected_settle_error` and the `workflowId` — the workflow keeps running, and because its id derives from the payment signature, a retry joins the same execution rather than pulling twice.
+### Timeouts
+
+The capture wait is bounded by `SETTLE_WAIT_TIMEOUT_MS` (default 60 s), against a capture that normally confirms in 1–15 s. On timeout the response is `success: false` with `errorReason: unexpected_settle_error`, plus the `workflowId` under `extensions['402md']`. The workflow is **not** cancelled — cancelling after the pull transaction is broadcast would strand USDC in the facilitator wallet with no delivery leg.
+
+> **Retry carefully after a timeout.** Repeating the _same_ request is safe: the workflow id derives from the payment signature, so it joins the running execution instead of pulling twice. Signing a **new** authorization is not — that is a distinct payment, and if the timed-out workflow later completes its pull, the buyer is charged twice. On a timeout, poll `/bridge/status/:workflowId` and only re-sign once the workflow is confirmed failed.
+
+Volume is counted against the daily circuit breaker when the workflow is dispatched, not when it succeeds, so a settlement that outlives the wait is still accounted for.
 
 ### Request body
 
@@ -89,8 +95,11 @@ Identical shape to `POST /verify`.
 | `payer`        | string  | Buyer address.                                                                           |
 | `amount`       | string  | Amount settled, in base units.                                                           |
 | `workflowId`   | string  | 402md extension — handle for `/bridge/status/:workflowId`.                               |
+| `extensions`   | object  | `{ "402md": { "workflowId": … } }` — see the note below.                                 |
 | `errorReason`  | string  | Present when `success: false`. See [x402 codes](../error-codes.md#x402-payment-reasons). |
 | `errorMessage` | string  | Human-readable detail.                                                                   |
+
+> `workflowId` appears twice on purpose. The top-level field is for direct API consumers, but x402 client libraries validate the settle response against the spec's schema and **discard unknown top-level fields** — `extensions` is the only copy that survives to a seller running standard middleware, and to the `PAYMENT-RESPONSE` header.
 
 ```json
 {
@@ -99,7 +108,10 @@ Identical shape to `POST /verify`.
   "network": "eip155:8453",
   "payer": "0x857b06519E91e3A54538791bDbb0E22373e36b66",
   "amount": "1000000",
-  "workflowId": "cross-solana:mainnet-eip155:8453-0x1a2b3c4d5e6f7890"
+  "workflowId": "cross-solana:mainnet-eip155:8453-0x1a2b3c4d5e6f7890",
+  "extensions": {
+    "402md": { "workflowId": "cross-solana:mainnet-eip155:8453-0x1a2b3c4d5e6f7890" }
+  }
 }
 ```
 

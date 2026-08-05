@@ -60,6 +60,11 @@ export interface SettleResponse {
   amount?: string
   /** 402md extension: handle for `GET /bridge/status/:workflowId`. */
   workflowId?: string
+  /**
+   * x402 clients strip unknown top-level fields but preserve `extensions`, so
+   * `extensions['402md'].workflowId` is the copy that survives the round trip.
+   */
+  extensions?: Record<string, unknown>
 }
 
 export interface FeeQuote {

@@ -1,4 +1,4 @@
-import { beforeEach, afterAll, describe, expect, test } from 'bun:test'
+import { beforeEach, describe, expect, test } from 'bun:test'
 import {
   resetAllMocks,
   mockDb,
@@ -12,13 +12,9 @@ import {
 import { Elysia } from 'elysia'
 import { settlementsRoutes } from './settlements.routes'
 
+// See the note in settlements.service.test.ts — deliberately not cleaned up.
 process.env.SETTLE_WAIT_TIMEOUT_MS = '300'
 process.env.SETTLE_POLL_INTERVAL_MS = '20'
-
-afterAll(() => {
-  delete process.env.SETTLE_WAIT_TIMEOUT_MS
-  delete process.env.SETTLE_POLL_INTERVAL_MS
-})
 
 const app = new Elysia()
   .onError(({ error, set }) => {
