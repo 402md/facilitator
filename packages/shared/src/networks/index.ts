@@ -31,6 +31,7 @@ function resolveEnvConfig(def: ChainDefinition, envCfg: EnvConfig): ResolvedNetw
     slug: def.slug,
     caip2: envCfg.caip2,
     usdc: envCfg.usdc,
+    usdcEip712: envCfg.usdcEip712,
     cctpDomain: envCfg.cctpDomain,
     cctpTokenMessenger: envCfg.cctpTokenMessenger,
     cctpMessageTransmitter: envCfg.cctpMessageTransmitter,
@@ -116,6 +117,7 @@ export type {
   ResolvedNetwork,
   ChainAdapter,
   ChainSlug,
+  Eip712TokenDomain,
   NetworkEnv,
   PullFromBuyerInput,
   TransferToSellerInput,
@@ -124,6 +126,8 @@ export type {
   CctpMintInput,
   AttestationResult,
 } from './adapter.types'
+export type { TransferAuthorization } from './eip3009'
+export { recoverAuthorizationSigner, supportsEip3009, isWellFormedSignature } from './eip3009'
 export { UnsupportedNetworkError } from './errors'
 export { isChainEnabled, resolveNetworkEnv, validateNetworkEnv } from './env'
 export { getCircleIrisUrl, getCircleAttestationUrl } from './cctp'
