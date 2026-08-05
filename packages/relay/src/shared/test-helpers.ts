@@ -3,7 +3,8 @@ process.env.NETWORK_ENV = 'mainnet'
 process.env.BASE_RPC_URL = 'https://test.base'
 process.env.SOLANA_RPC_URL = 'https://test.solana'
 process.env.STELLAR_RPC_URL = 'https://test.stellar'
-process.env.FACILITATOR_BASE = '0xFacilitatorBase'
+// Must be a real checksummed address: EIP-712 recovery hashes it as an `address`.
+process.env.FACILITATOR_BASE = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
 process.env.FACILITATOR_SOLANA = 'FacilitatorSolAddr'
 process.env.FACILITATOR_STELLAR = 'FacilitatorStellarAddr'
 
@@ -16,7 +17,10 @@ const expiries = new Map<string, number>()
 
 export const mockRedis = {
   get: mock((key: string) => store.get(key) ?? null),
-  set: mock((key: string, value: string, ..._args: unknown[]) => {
+  set: mock((key: string, value: string, ...args: unknown[]) => {
+    // `SET NX` is how replay keys are claimed — the mock has to refuse an
+    // existing key, otherwise the atomicity it buys is untestable.
+    if (args.includes('NX') && store.has(key)) return null
     store.set(key, value)
     return 'OK'
   }),
@@ -88,26 +92,69 @@ export const mockDb = {
 
 // --- Temporal Mock ---
 
-let workflowStatus: unknown = { status: 'settled' }
+export const TEST_PULL_TX = '0xpull0000000000000000000000000000000000000000000000000000000000'
+
+type ResultMode =
+  | { kind: 'resolve'; value: unknown }
+  | { kind: 'reject'; error: Error }
+  | { kind: 'never' }
+
+const DEFAULT_STATUS = { step: 'settled', pullTxHash: TEST_PULL_TX }
+const DEFAULT_RESULT: ResultMode = {
+  kind: 'resolve',
+  value: { success: true, pullTxHash: TEST_PULL_TX },
+}
+
+let workflowStatus: unknown = DEFAULT_STATUS
 let workflowList: unknown[] = []
 let startedWorkflows: { name: string; options: unknown }[] = []
+let resultMode: ResultMode = DEFAULT_RESULT
+let startError: Error | null = null
+
+// Built on demand so a `reject` mode never produces an unhandled rejection in
+// tests that only query the status and never await the result.
+function makeHandle(workflowId: string) {
+  return {
+    workflowId,
+    query: mock(async () => workflowStatus),
+    result: mock(() => {
+      if (resultMode.kind === 'reject') return Promise.reject(resultMode.error)
+      if (resultMode.kind === 'never') return new Promise(() => {})
+      return Promise.resolve(resultMode.value)
+    }),
+  }
+}
 
 export const mockTemporal = {
   workflow: {
     start: mock(async (name: string, options: unknown) => {
       startedWorkflows.push({ name, options })
-      return { workflowId: (options as { workflowId: string }).workflowId }
+      if (startError) throw startError
+      return makeHandle((options as { workflowId: string }).workflowId)
     }),
-    getHandle: mock((workflowId: string) => ({
-      query: mock(async () => workflowStatus),
-      workflowId,
-    })),
+    getHandle: mock((workflowId: string) => makeHandle(workflowId)),
     list: mock(function* () {
       for (const w of workflowList) yield w
     }),
   },
   setStatus(status: unknown) {
     workflowStatus = status
+  },
+  /** Workflow finishes successfully with this result. */
+  setResult(value: unknown) {
+    resultMode = { kind: 'resolve', value }
+  },
+  /** Workflow terminates as failed. */
+  setFailure(error: Error) {
+    resultMode = { kind: 'reject', error }
+  },
+  /** Workflow never reaches a terminal state — used to exercise the wait timeout. */
+  setNeverSettles() {
+    resultMode = { kind: 'never' }
+  },
+  /** `workflow.start` itself blows up (Temporal unreachable). */
+  setStartError(error: Error | null) {
+    startError = error
   },
   setWorkflows(workflows: unknown[]) {
     workflowList = workflows
@@ -119,9 +166,11 @@ export const mockTemporal = {
     return startedWorkflows
   },
   reset() {
-    workflowStatus = { status: 'settled' }
+    workflowStatus = DEFAULT_STATUS
     workflowList = []
     startedWorkflows = []
+    resultMode = DEFAULT_RESULT
+    startError = null
     this.workflow.start.mockClear()
     this.workflow.getHandle.mockClear()
     this.workflow.list.mockClear()
@@ -221,7 +270,95 @@ export const TEST_SELLER: SellerRow = {
 
 // Matches the env vars set at the top of this file.
 export const FACILITATOR_ADDRESSES: Record<string, string> = {
-  'eip155:8453': '0xFacilitatorBase',
+  'eip155:8453': '0x1F98431c8aD98523631AE4a59f267346ea31F984',
   'solana:mainnet': 'FacilitatorSolAddr',
   'stellar:pubnet': 'FacilitatorStellarAddr',
+}
+
+// --- x402 payment fixtures ---
+
+/** Anvil account #0 — a throwaway key, only ever used to sign test payloads. */
+export const TEST_BUYER_PRIVATE_KEY =
+  '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
+export const TEST_BUYER_ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
+
+export const TEST_NONCE = '0x0000000000000000000000000000000000000000000000000000000000000001'
+
+/**
+ * Sign a real EIP-3009 `TransferWithAuthorization` for Base mainnet USDC, so
+ * tests exercise the same recovery path production does instead of a stub.
+ */
+export async function signTestAuthorization(
+  overrides: Partial<{
+    from: string
+    to: string
+    value: string
+    validAfter: string
+    validBefore: string
+    nonce: string
+    privateKey: string
+  }> = {},
+) {
+  const { privateKeyToAccount } = await import('viem/accounts')
+
+  const authorization = {
+    from: overrides.from ?? TEST_BUYER_ADDRESS,
+    to: overrides.to ?? FACILITATOR_ADDRESSES['eip155:8453'],
+    value: overrides.value ?? '1000000',
+    validAfter: overrides.validAfter ?? '0',
+    validBefore: overrides.validBefore ?? '99999999999',
+    nonce: overrides.nonce ?? TEST_NONCE,
+  }
+
+  const account = privateKeyToAccount(
+    (overrides.privateKey ?? TEST_BUYER_PRIVATE_KEY) as `0x${string}`,
+  )
+
+  const signature = await account.signTypedData({
+    domain: {
+      name: 'USD Coin',
+      version: '2',
+      chainId: 8453,
+      verifyingContract: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+    },
+    types: {
+      TransferWithAuthorization: [
+        { name: 'from', type: 'address' },
+        { name: 'to', type: 'address' },
+        { name: 'value', type: 'uint256' },
+        { name: 'validAfter', type: 'uint256' },
+        { name: 'validBefore', type: 'uint256' },
+        { name: 'nonce', type: 'bytes32' },
+      ],
+    },
+    primaryType: 'TransferWithAuthorization',
+    message: {
+      from: authorization.from as `0x${string}`,
+      to: authorization.to as `0x${string}`,
+      value: BigInt(authorization.value),
+      validAfter: BigInt(authorization.validAfter),
+      validBefore: BigInt(authorization.validBefore),
+      nonce: authorization.nonce as `0x${string}`,
+    },
+  })
+
+  return { authorization, signature }
+}
+
+/** A complete, valid x402 settle/verify request for Base mainnet. */
+export async function buildPaymentRequest(
+  overrides: Parameters<typeof signTestAuthorization>[0] = {},
+) {
+  const { authorization, signature } = await signTestAuthorization(overrides)
+  return {
+    x402Version: 2,
+    paymentPayload: { payload: { authorization, signature } },
+    paymentRequirements: {
+      scheme: 'exact',
+      network: 'eip155:8453',
+      payTo: FACILITATOR_ADDRESSES['eip155:8453'],
+      amount: authorization.value,
+      extra: { merchantId: 'ab-test01' },
+    },
+  }
 }

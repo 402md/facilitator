@@ -4,21 +4,23 @@ A buyer paid. You want to know when the USDC arrives, and whether anything faile
 
 ## Option 1 — poll the relay
 
-Every successful `POST /settle` returns a `transaction` field containing the Temporal `workflowId`:
+Every successful `POST /settle` returns `transaction` — the hash of the capture tx that took the USDC from the buyer — and `workflowId`, the handle for the delivery leg:
 
 ```json
 {
   "success": true,
-  "transaction": "x402-hb-a1b2c3-1700000000",
+  "transaction": "0x9f2c...",
   "network": "eip155:8453",
-  "payer": "0xBuyer..."
+  "payer": "0xBuyer...",
+  "amount": "1000000",
+  "workflowId": "cross-stellar:pubnet-eip155:8453-0x1a2b3c4d5e6f7890"
 }
 ```
 
-Poll:
+`success: true` means the buyer has paid. For a cross-chain payment the USDC still has to bridge to your chain, which takes 15–19 minutes — poll the workflow to watch it:
 
 ```bash
-curl https://api.402md.com/bridge/status/x402-hb-a1b2c3-1700000000
+curl https://api.402md.com/bridge/status/cross-stellar:pubnet-eip155:8453-0x1a2b3c4d5e6f7890
 ```
 
 Response for a cross-chain settlement in progress:

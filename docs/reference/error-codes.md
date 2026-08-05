@@ -15,7 +15,7 @@ Every error returned by the relay uses the same JSON envelope:
 | `error`                | HTTP                  | Cause                                                                                                                               | Raised by                                                                                                             |
 | ---------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | `SELLER_NOT_FOUND`     | `404`                 | Unknown `merchantId`.                                                                                                               | `/discover`, `/settle`, `/merchants/:id/mpp/config`, `/merchants/:id/mpp/charge`, `/bazaar/transactions?merchantId=…` |
-| `INVALID_PAYMENT`      | `400`                 | Payment validation failed (missing `merchantId`, zero amount, `payTo` mismatch, invalid signature, amount over per-tx limit).       | `/verify`, `/settle`                                                                                                  |
+| `INVALID_PAYMENT`      | `400`                 | `merchantId` missing from `paymentRequirements.extra`.                                                                              | `/settle`                                                                                                             |
 | `UNSUPPORTED_NETWORK`  | `400`                 | Registration requested a CAIP-2 not enabled on this relay. Response `details` include `supportedNetworks` and an `example` payload. | `/register`                                                                                                           |
 | `REPLAY_DETECTED`      | `409`                 | Signature / nonce already settled.                                                                                                  | `/settle`                                                                                                             |
 | `CIRCUIT_BREAKER`      | `503`                 | Per-tx limit, daily volume limit, or global pause is active.                                                                        | `/settle`                                                                                                             |
@@ -23,6 +23,24 @@ Every error returned by the relay uses the same JSON envelope:
 | `ROUTE_NOT_CONFIGURED` | `404`                 | No gas allowance schedule for the `from` / `to` pair.                                                                               | `/bridge/fees`, `/bazaar/cost-comparison`                                                                             |
 | `ERROR`                | varies (defaults 500) | Custom operational error raised by a route handler.                                                                                 | Any                                                                                                                   |
 | `INTERNAL_ERROR`       | `500`                 | Unhandled exception.                                                                                                                | Any — check logs / traces.                                                                                            |
+
+## x402 payment reasons
+
+`POST /verify` and `POST /settle` do **not** use the envelope above for a payment the facilitator understands but will not accept. They answer `200 OK` with `isValid: false` / `success: false` and a machine-readable code, per the [x402 specification](https://github.com/x402-foundation/x402/blob/main/specs/x402-specification-v2.md) §9. The human-readable detail is in `invalidMessage` / `errorMessage`.
+
+| Code                                                     | Cause                                                                            |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `invalid_payment_requirements`                           | `merchantId` missing or unknown, or `amount` is not a positive integer string.   |
+| `invalid_network`                                        | `network` is not enabled on this relay.                                          |
+| `invalid_payload`                                        | `payload.authorization` is missing or has malformed fields.                      |
+| `invalid_exact_evm_payload_signature`                    | Signature is absent, not 65 bytes, or does not recover to `authorization.from`.  |
+| `invalid_exact_evm_payload_recipient_mismatch`           | `payTo` is not the facilitator address, or `authorization.to` disagrees with it. |
+| `invalid_exact_evm_payload_authorization_value_mismatch` | `authorization.value` does not equal `paymentRequirements.amount`.               |
+| `invalid_exact_evm_payload_authorization_valid_after`    | Authorization is not valid yet.                                                  |
+| `invalid_exact_evm_payload_authorization_valid_before`   | Authorization has expired.                                                       |
+| `unexpected_settle_error`                                | Settlement started but the capture failed or did not confirm in time.            |
+
+> Signature recovery runs on EVM networks. Solana and Stellar carry a chain-native authorization instead, validated by the chain adapter when the pull is submitted.
 
 ## Validation failures
 

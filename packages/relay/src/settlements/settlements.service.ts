@@ -4,12 +4,18 @@ import { SellerNotFoundError, InvalidPaymentError, ReplayError } from '@/shared/
 import {
   calculateFees,
   getCctpDomain,
+  getNetwork,
+  isWellFormedSignature,
+  recoverAuthorizationSigner,
   supportedCaip2s,
+  supportsEip3009,
   getFacilitatorAddress,
 } from '@402md/shared/networks'
 import { checkCircuitBreakers, recordVolume } from '@/shared/circuit-breaker'
-import { checkReplay, markProcessed } from '@/shared/replay'
+import { reserveReplay, releaseReplay } from '@/shared/replay'
 import type {
+  PaymentAuthorization,
+  PaymentRequest,
   VerifyRequest,
   VerifyResponse,
   SettleRequest,
@@ -19,45 +25,263 @@ import type {
 
 const PLATFORM_FEE_BPS = parseInt(process.env.PLATFORM_FEE_BPS ?? '0', 10)
 
-export async function verifyPayment(req: VerifyRequest): Promise<VerifyResponse> {
+/**
+ * How long `/settle` waits for the buyer's USDC to be captured on the source
+ * chain. That is a single tx confirmation, not the CCTP bridge — 60s matches
+ * the x402 default `maxTimeoutSeconds` budget with room for slow chains.
+ * Read per call so tests can shrink it.
+ */
+function settleWaitTimeoutMs(): number {
+  return parseInt(process.env.SETTLE_WAIT_TIMEOUT_MS ?? '60000', 10)
+}
+
+function settlePollIntervalMs(): number {
+  return parseInt(process.env.SETTLE_POLL_INTERVAL_MS ?? '250', 10)
+}
+
+/** Error reasons from the x402 spec (§9), plus the workflow-level ones we add. */
+const REASON = {
+  invalidPaymentRequirements: 'invalid_payment_requirements',
+  invalidNetwork: 'invalid_network',
+  invalidPayload: 'invalid_payload',
+  signature: 'invalid_exact_evm_payload_signature',
+  recipientMismatch: 'invalid_exact_evm_payload_recipient_mismatch',
+  valueMismatch: 'invalid_exact_evm_payload_authorization_value_mismatch',
+  validAfter: 'invalid_exact_evm_payload_authorization_valid_after',
+  validBefore: 'invalid_exact_evm_payload_authorization_valid_before',
+  unexpectedSettleError: 'unexpected_settle_error',
+} as const
+
+interface PaymentRejection {
+  reason: string
+  message: string
+}
+
+type ValidationResult =
+  | { ok: false; rejection: PaymentRejection }
+  | { ok: true; authorization: PaymentAuthorization; signature: string }
+
+function reject(reason: string, message: string): ValidationResult {
+  return { ok: false, rejection: { reason, message } }
+}
+
+function isPositiveIntegerString(value: unknown): value is string {
+  return typeof value === 'string' && /^\d+$/.test(value) && BigInt(value) > 0n
+}
+
+function isUnsignedIntegerString(value: unknown): value is string {
+  return typeof value === 'string' && /^\d+$/.test(value)
+}
+
+/**
+ * Every check that decides whether a payment is acceptable, minus the seller
+ * lookup — callers already hold the seller and report its absence differently.
+ *
+ * `/settle` runs this too, not just `/verify`: a caller can skip `/verify`
+ * entirely, so validating only there would be advisory at best.
+ */
+async function validatePayment(req: PaymentRequest): Promise<ValidationResult> {
   const { paymentPayload, paymentRequirements } = req
 
-  if (!paymentRequirements.extra?.merchantId) {
-    return { isValid: false, invalidReason: 'Missing merchantId in extra' }
-  }
-
-  const seller = await findByMerchantId(paymentRequirements.extra.merchantId)
-  if (!seller) {
-    return { isValid: false, invalidReason: 'Unknown merchantId' }
-  }
-
   if (!supportedCaip2s.includes(paymentRequirements.network)) {
-    return { isValid: false, invalidReason: `Unsupported network: ${paymentRequirements.network}` }
+    return reject(REASON.invalidNetwork, `Unsupported network: ${paymentRequirements.network}`)
   }
 
   const expectedPayTo = getFacilitatorAddress(paymentRequirements.network)
   if (paymentRequirements.payTo !== expectedPayTo) {
-    return { isValid: false, invalidReason: 'payTo does not match facilitator address' }
+    return reject(REASON.recipientMismatch, 'payTo does not match facilitator address')
   }
 
-  if (!paymentPayload.payload.signature || paymentPayload.payload.signature.length < 10) {
-    return { isValid: false, invalidReason: 'Invalid or missing payment signature' }
+  if (!isPositiveIntegerString(paymentRequirements.amount)) {
+    return reject(
+      REASON.invalidPaymentRequirements,
+      'Amount must be an integer string greater than zero',
+    )
   }
 
-  const amount = BigInt(paymentRequirements.amount)
-  if (amount <= 0n) {
-    return { isValid: false, invalidReason: 'Amount must be greater than zero' }
+  const { authorization, signature } = paymentPayload.payload
+
+  if (!authorization) {
+    return reject(REASON.invalidPayload, 'Missing authorization in payload')
   }
 
-  return { isValid: true }
+  const missing = (['from', 'to', 'value', 'validAfter', 'validBefore', 'nonce'] as const).find(
+    (field) => typeof authorization[field] !== 'string' || authorization[field].length === 0,
+  )
+  if (missing) {
+    return reject(REASON.invalidPayload, `Missing authorization.${missing}`)
+  }
+
+  if (authorization.value !== paymentRequirements.amount) {
+    return reject(
+      REASON.valueMismatch,
+      `Authorized ${authorization.value} but requirements ask ${paymentRequirements.amount}`,
+    )
+  }
+
+  if (authorization.to !== paymentRequirements.payTo) {
+    return reject(REASON.recipientMismatch, 'authorization.to does not match payTo')
+  }
+
+  if (
+    !isUnsignedIntegerString(authorization.validAfter) ||
+    !isUnsignedIntegerString(authorization.validBefore)
+  ) {
+    return reject(REASON.invalidPayload, 'validAfter and validBefore must be integer strings')
+  }
+
+  const now = BigInt(Math.floor(Date.now() / 1000))
+  if (BigInt(authorization.validAfter) > now) {
+    return reject(REASON.validAfter, 'Authorization is not valid yet')
+  }
+  if (BigInt(authorization.validBefore) <= now) {
+    return reject(REASON.validBefore, 'Authorization has expired')
+  }
+
+  if (typeof signature !== 'string' || signature.length === 0) {
+    return reject(REASON.signature, 'Missing payment signature')
+  }
+
+  const accepted: ValidationResult = { ok: true, authorization, signature }
+
+  const network = getNetwork(paymentRequirements.network)
+  if (!supportsEip3009(network)) {
+    // Solana and Stellar carry a chain-native authorization instead of an
+    // EIP-3009 signature. Nothing to recover here — the adapter is what
+    // validates it when the pull is submitted.
+    return accepted
+  }
+
+  if (!isWellFormedSignature(signature)) {
+    return reject(REASON.signature, 'Signature must be 65 bytes of hex')
+  }
+
+  let signer: string
+  try {
+    signer = await recoverAuthorizationSigner(network, authorization, signature)
+  } catch (err) {
+    return reject(REASON.signature, `Signature recovery failed: ${(err as Error).message}`)
+  }
+
+  if (signer.toLowerCase() !== authorization.from.toLowerCase()) {
+    return reject(REASON.signature, 'Signature was not produced by authorization.from')
+  }
+
+  return accepted
+}
+
+export async function verifyPayment(req: VerifyRequest): Promise<VerifyResponse> {
+  const payer = req.paymentPayload.payload.authorization?.from
+  const withPayer = payer ? { payer } : {}
+
+  const merchantId = req.paymentRequirements.extra?.merchantId
+  if (!merchantId) {
+    return {
+      isValid: false,
+      invalidReason: REASON.invalidPaymentRequirements,
+      invalidMessage: 'Missing merchantId in extra',
+      ...withPayer,
+    }
+  }
+
+  if (!(await findByMerchantId(merchantId))) {
+    return {
+      isValid: false,
+      invalidReason: REASON.invalidPaymentRequirements,
+      invalidMessage: `Unknown merchantId: ${merchantId}`,
+      ...withPayer,
+    }
+  }
+
+  const result = await validatePayment(req)
+  if (!result.ok) {
+    return {
+      isValid: false,
+      invalidReason: result.rejection.reason,
+      invalidMessage: result.rejection.message,
+      ...withPayer,
+    }
+  }
+
+  return { isValid: true, ...withPayer }
+}
+
+type CaptureOutcome =
+  | { transaction: string; failure?: undefined }
+  | { transaction: ''; failure: PaymentRejection }
+
+function captureFailed(message: string): CaptureOutcome {
+  return { transaction: '', failure: { reason: REASON.unexpectedSettleError, message } }
+}
+
+type WorkflowHandle = {
+  query(name: string): Promise<unknown>
+  result(): Promise<unknown>
+}
+
+type WorkflowStatus = { step?: string; pullTxHash?: string; error?: string }
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+/**
+ * Wait for the buyer's funds to land in the facilitator wallet.
+ *
+ * This is the leg that makes the payment real, and the only one x402 cares
+ * about: once `pullFromBuyer` confirms, the buyer has irreversibly paid and
+ * `transaction` has a genuine tx hash to report. The CCTP burn/attest/mint that
+ * follows is 402md delivering to the seller and takes minutes — no HTTP client
+ * would wait for it, so it stays asynchronous.
+ */
+async function waitForCapture(handle: WorkflowHandle): Promise<CaptureOutcome> {
+  let terminalError: Error | null = null
+  let completed = false
+
+  // Attach both handlers up front: a workflow that fails while we are between
+  // polls must not surface as an unhandled rejection.
+  handle.result().then(
+    () => {
+      completed = true
+    },
+    (err: Error) => {
+      terminalError = err
+    },
+  )
+
+  const deadline = Date.now() + settleWaitTimeoutMs()
+  const interval = settlePollIntervalMs()
+
+  while (Date.now() < deadline) {
+    let status: WorkflowStatus | null
+    try {
+      status = (await handle.query('status')) as WorkflowStatus
+    } catch {
+      // Querying a workflow that just closed can fail; the result handlers
+      // below are authoritative about what happened.
+      status = null
+    }
+
+    if (status?.pullTxHash) {
+      return { transaction: status.pullTxHash }
+    }
+    if (terminalError) {
+      return captureFailed((terminalError as Error).message)
+    }
+    if (status?.step === 'failed') {
+      return captureFailed(status.error ?? 'Settlement failed')
+    }
+    if (completed) {
+      // Settled without ever exposing a pull hash — treat as a contract bug
+      // rather than reporting success with an empty transaction.
+      return captureFailed('Workflow completed without a pull tx hash')
+    }
+
+    await sleep(interval)
+  }
+
+  return captureFailed('Timed out waiting for the payment to be pulled')
 }
 
 export async function dispatchSettlement(req: SettleRequest): Promise<SettleResponse> {
-  await checkCircuitBreakers(req.paymentRequirements.amount)
-  const replayKey = req.paymentPayload.payload.signature
-  if (await checkReplay(replayKey)) throw new ReplayError()
-  await markProcessed(replayKey)
-
   const merchantId = req.paymentRequirements.extra?.merchantId
   if (!merchantId) throw new InvalidPaymentError('Missing merchantId in extra')
 
@@ -65,6 +289,31 @@ export async function dispatchSettlement(req: SettleRequest): Promise<SettleResp
   if (!seller) throw new SellerNotFoundError(merchantId)
 
   const buyerNetwork = req.paymentRequirements.network
+  const payer = req.paymentPayload.payload.authorization?.from
+  const withPayer = payer ? { payer } : {}
+
+  // Ahead of the circuit breakers, which parse `amount` as a bigint and would
+  // throw on a malformed one instead of answering with a payment reason.
+  const validation = await validatePayment(req)
+  if (!validation.ok) {
+    return {
+      success: false,
+      errorReason: validation.rejection.reason,
+      errorMessage: validation.rejection.message,
+      transaction: '',
+      network: buyerNetwork,
+      ...withPayer,
+    }
+  }
+  const { authorization, signature } = validation
+
+  await checkCircuitBreakers(req.paymentRequirements.amount)
+
+  // Claimed only once the payment is known good, and atomically, so two
+  // concurrent settles for the same signature cannot both proceed.
+  const replayKey = signature
+  if (!(await reserveReplay(replayKey))) throw new ReplayError()
+
   const sellerNetwork = seller.network
   const isSameChain = buyerNetwork === sellerNetwork
 
@@ -75,15 +324,12 @@ export async function dispatchSettlement(req: SettleRequest): Promise<SettleResp
     PLATFORM_FEE_BPS,
   )
 
-  const txRef = req.paymentPayload.payload.signature.slice(0, 16)
+  const txRef = replayKey.slice(0, 16)
   const workflowType = isSameChain ? 'same' : 'cross'
   const workflowId = `${workflowType}-${sellerNetwork}-${buyerNetwork}-${txRef}`
   const taskQueue = isSameChain ? 'fast-settlement' : 'cross-settlement'
   const workflowName = isSameChain ? 'sameChainSettle' : 'crossChainSettle'
 
-  const temporal = await getTemporalClient()
-
-  const { authorization, signature } = req.paymentPayload.payload
   const buyerAddress = authorization.from
   const resource = req.paymentPayload.resource
 
@@ -130,19 +376,48 @@ export async function dispatchSettlement(req: SettleRequest): Promise<SettleResp
         scheme: req.paymentRequirements.scheme ?? 'exact',
       }
 
-  await temporal.workflow.start(workflowName, {
-    taskQueue,
-    workflowId,
-    args: [params],
-    workflowExecutionTimeout: isSameChain ? '5m' : '30m',
-  })
+  const temporal = await getTemporalClient()
+
+  let handle: WorkflowHandle
+  try {
+    handle = (await temporal.workflow.start(workflowName, {
+      taskQueue,
+      workflowId,
+      args: [params],
+      workflowExecutionTimeout: isSameChain ? '5m' : '30m',
+    })) as WorkflowHandle
+  } catch (err) {
+    // Nothing is running, so the signature must stay spendable.
+    await releaseReplay(replayKey)
+    throw err
+  }
+
+  const outcome = await waitForCapture(handle)
+
+  if (outcome.failure) {
+    // The key is deliberately kept: the workflow may still be running, and its
+    // id is derived from this signature, so a retry lands on the same
+    // execution rather than pulling twice.
+    return {
+      success: false,
+      errorReason: outcome.failure.reason,
+      errorMessage: outcome.failure.message,
+      transaction: '',
+      network: buyerNetwork,
+      workflowId,
+      ...withPayer,
+    }
+  }
 
   await recordVolume(req.paymentRequirements.amount)
 
   return {
     success: true,
-    transaction: workflowId,
+    transaction: outcome.transaction,
     network: buyerNetwork,
+    amount: req.paymentRequirements.amount,
+    workflowId,
+    ...withPayer,
   }
 }
 

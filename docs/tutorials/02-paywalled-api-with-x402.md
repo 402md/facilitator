@@ -159,14 +159,14 @@ You should see the weather response. Behind the scenes:
 2. Client signs an EIP-3009 `transferWithAuthorization` for `$0.001` USDC on Base Sepolia.
 3. Client retries with the signed payload in the `X-PAYMENT` header.
 4. Your middleware calls `POST /verify` on the relay → `{ isValid: true }`.
-5. Middleware returns the resource.
-6. Middleware calls `POST /settle` asynchronously. The worker pulls, burns on Base Sepolia, waits for Circle's attestation, and mints on Stellar testnet to your wallet.
+5. Middleware calls `POST /settle`. The relay waits for the worker to pull the USDC from the buyer on Base Sepolia and answers with that tx hash.
+6. Middleware returns the resource. The worker then burns on Base Sepolia, waits for Circle's attestation, and mints on Stellar testnet to your wallet.
 
 ## 4. Watch settlement happen
 
 Check the Temporal UI at [http://localhost:8233](http://localhost:8233). You will see a `crossChainSettle` workflow moving through `pulling → burning → attesting → minting → recording → settled`.
 
-The attestation step is the slowest — Circle issues the CCTP V2 attestation after the source chain reaches hard finality (~15–19 min for EVM testnets, seconds on Solana or Stellar). The buyer already got their response; settlement happens in the background.
+The attestation step is the slowest — Circle issues the CCTP V2 attestation after the source chain reaches hard finality (~15–19 min for EVM testnets, seconds on Solana or Stellar). The buyer already paid and got their response; the bridge to your chain finishes in the background.
 
 ## 5. Handle verification failures gracefully
 

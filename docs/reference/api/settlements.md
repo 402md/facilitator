@@ -16,8 +16,8 @@ Standard x402 v2 verification payload:
 | -------------------------------------- | ------ | -------- | -------------------------------------------------------------------------------------- |
 | `x402Version`                          | number | yes      | `2`.                                                                                   |
 | `paymentPayload`                       | object | yes      | x402 payment object.                                                                   |
-| `paymentPayload.payload.signature`     | string | yes      | Buyer's signature (≥ 10 chars).                                                        |
-| `paymentPayload.payload`               | object | yes      | Scheme-specific data (EIP-3009 authorization, Soroban tx, SPL instruction).            |
+| `paymentPayload.payload.signature`     | string | yes      | Buyer's signature. On EVM: 65-byte hex EIP-3009 signature.                             |
+| `paymentPayload.payload.authorization` | object | yes      | Signed authorization: `from`, `to`, `value`, `validAfter`, `validBefore`, `nonce`.     |
 | `paymentRequirements`                  | object | yes      | The server's declared requirements.                                                    |
 | `paymentRequirements.scheme`           | string | yes      | `"exact"`.                                                                             |
 | `paymentRequirements.network`          | string | yes      | CAIP-2.                                                                                |
@@ -36,12 +36,18 @@ Standard x402 v2 verification payload:
 
 ### Validation rules
 
-- `extra.merchantId` must exist.
-- The seller identified by `merchantId` must exist.
+`invalidReason` uses the [x402 error codes](../error-codes.md#x402-payment-reasons).
+
+- `extra.merchantId` must exist and resolve to a registered seller.
 - `network` must be enabled.
 - `payTo` must equal the relay's facilitator address on `network`.
-- `payload.signature` must be present.
-- `amount` must be > 0.
+- `amount` must be an integer string greater than zero.
+- `payload.authorization` must be present with all six fields.
+- `authorization.value` must equal `amount`, and `authorization.to` must equal `payTo`.
+- The authorization must be inside its `validAfter` / `validBefore` window.
+- On EVM: the EIP-3009 signature must recover to `authorization.from`. The EIP-712 domain comes from the relay's own chain registry — chain id, the USDC contract, and that deployment's `name` / `version` — never from the request.
+
+> Solana and Stellar carry a chain-native authorization instead of an EIP-3009 signature. Everything above still applies except the signature recovery, which the chain adapter performs when the pull is submitted.
 
 ### Errors
 
@@ -54,9 +60,20 @@ Standard x402 v2 verification payload:
 
 ## `POST /settle`
 
-Dispatch a Temporal workflow to pull USDC from the buyer and deliver it to the seller. Returns immediately with a `workflowId`; settlement happens asynchronously.
+Collect the buyer's USDC and deliver it to the seller. Runs the same validation as `/verify`, starts a Temporal workflow, and **waits for the buyer's funds to be captured on the source chain** before answering. `success: true` therefore means the buyer has irreversibly paid, and `transaction` is the hash of that capture — an x402 client can treat the payment as settled and release the resource.
 
 **Rate limit:** 500 requests per minute per IP.
+
+### What "settled" means here
+
+Settlement has two legs:
+
+1. **Capture** — `transferWithAuthorization` moves USDC from the buyer to the facilitator on the buyer's chain. One tx confirmation, typically 1–15 s. `/settle` waits for this.
+2. **Delivery** — for a cross-chain payment, CCTP burn → attestation → mint on the seller's chain, 15–19 min. This is the facilitator's obligation to the seller, not a condition of the buyer's payment, so `/settle` does **not** wait for it. Same-chain delivery is a second transfer moments later.
+
+The seller gets a real tx hash to validate, and the funds land on their chain once the bridge completes. Poll [`GET /bridge/status/:workflowId`](#get-bridgestatusworkflowid) to watch the delivery leg.
+
+The capture wait is bounded by `SETTLE_WAIT_TIMEOUT_MS` (default 60 s). On timeout the response is `success: false` with `errorReason: unexpected_settle_error` and the `workflowId` — the workflow keeps running, and because its id derives from the payment signature, a retry joins the same execution rather than pulling twice.
 
 ### Request body
 
@@ -64,14 +81,27 @@ Identical shape to `POST /verify`.
 
 ### Response `200 OK`
 
-| Field          | Type    | Description                                                           |
-| -------------- | ------- | --------------------------------------------------------------------- |
-| `success`      | boolean | `true` if dispatch succeeded.                                         |
-| `transaction`  | string  | The Temporal `workflowId` — use it with `/bridge/status/:workflowId`. |
-| `network`      | string  | Buyer network (CAIP-2).                                               |
-| `payer`        | string  | Buyer address.                                                        |
-| `errorReason`  | string  | Present when `success: false`.                                        |
-| `errorMessage` | string  |                                                                       |
+| Field          | Type    | Description                                                                              |
+| -------------- | ------- | ---------------------------------------------------------------------------------------- |
+| `success`      | boolean | `true` once the buyer's funds are captured on-chain.                                     |
+| `transaction`  | string  | Hash of the capture tx on `network`. Empty string when settlement failed.                |
+| `network`      | string  | Buyer network (CAIP-2) — the chain `transaction` belongs to.                             |
+| `payer`        | string  | Buyer address.                                                                           |
+| `amount`       | string  | Amount settled, in base units.                                                           |
+| `workflowId`   | string  | 402md extension — handle for `/bridge/status/:workflowId`.                               |
+| `errorReason`  | string  | Present when `success: false`. See [x402 codes](../error-codes.md#x402-payment-reasons). |
+| `errorMessage` | string  | Human-readable detail.                                                                   |
+
+```json
+{
+  "success": true,
+  "transaction": "0x9f2c…",
+  "network": "eip155:8453",
+  "payer": "0x857b06519E91e3A54538791bDbb0E22373e36b66",
+  "amount": "1000000",
+  "workflowId": "cross-solana:mainnet-eip155:8453-0x1a2b3c4d5e6f7890"
+}
+```
 
 ### Workflow selection
 
@@ -80,9 +110,11 @@ Identical shape to `POST /verify`.
 
 ### Errors
 
+A payment the facilitator understands but will not accept returns `200 OK` with `success: false` and an `errorReason`, not a `4xx`. The statuses below are reserved for operational conditions.
+
 | Status | `error`            | Cause                                                          |
 | ------ | ------------------ | -------------------------------------------------------------- |
-| `400`  | `INVALID_PAYMENT`  | Missing `merchantId`, zero amount, etc.                        |
+| `400`  | `INVALID_PAYMENT`  | `merchantId` missing from `paymentRequirements.extra`.         |
 | `404`  | `SELLER_NOT_FOUND` | `merchantId` unknown.                                          |
 | `409`  | `REPLAY_DETECTED`  | Same signature already settled (EIP-3009 nonce or equivalent). |
 | `429`  | `RATE_LIMIT`       |                                                                |
