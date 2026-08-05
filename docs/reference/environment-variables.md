@@ -14,6 +14,8 @@ Every env var read by the relay, worker, shared library, and demo packages. Requ
 | `PORT`                        | `3000`                                | HTTP port.                                                       |
 | `FACILITATOR_URL`             | `https://api.402md.com`               | Canonical relay URL, echoed in `/.well-known/x402.json`.         |
 | `PLATFORM_FEE_BPS`            | `0`                                   | Platform fee in basis points.                                    |
+| `SETTLE_WAIT_TIMEOUT_MS`      | `60000`                               | How long `/settle` waits for the buyer's funds to be captured.   |
+| `SETTLE_POLL_INTERVAL_MS`     | `500`                                 | Temporal query interval while waiting. Lower costs query load.   |
 | `MAX_TX_AMOUNT`               | `1000000000`                          | Per-tx circuit breaker (base units).                             |
 | `DAILY_VOLUME_LIMIT`          | `10000000000`                         | Daily volume circuit breaker (base units).                       |
 | `MPP_SECRET_KEY`              | `dev-secret-key-change-in-production` | HMAC secret for MPP challenges.                                  |

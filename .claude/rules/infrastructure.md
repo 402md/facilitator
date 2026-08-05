@@ -38,5 +38,8 @@
 | -------- | ------ |
 | Discovery | < 100ms p95 (cacheable) |
 | REST API | < 200ms p95 |
-| Temporal workflow start | < 100ms (async dispatch) |
-| Settlement | 5-30s (Solana/Stellar), 15-19 min (EVM), ~seconds (Fast Transfer) |
+| Temporal workflow start | < 100ms |
+| `POST /settle` | Bounded by the capture (1 tx confirmation): ~1-2s on Base/Arbitrum/Optimism/Solana, ~12-15s on Ethereum. Hard ceiling `SETTLE_WAIT_TIMEOUT_MS` (60s) |
+| Settlement delivery | 5-30s (Solana/Stellar), 15-19 min (EVM), ~seconds (Fast Transfer) |
+
+> `POST /settle` holds its HTTP connection for the whole capture wait and polls Temporal every `SETTLE_POLL_INTERVAL_MS` (500ms) while it does. Size relay connection pools and Temporal frontend capacity for concurrent in-flight settlements, not for request rate.

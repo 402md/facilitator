@@ -62,9 +62,20 @@ export interface ChainAdapter {
   cctpMint(input: CctpMintInput): Promise<string>
 }
 
+/**
+ * EIP-712 domain of the USDC deployment, used to verify EIP-3009 signatures.
+ * Deployments disagree on the name (`USD Coin`, `USDC`, `USD//C`), so it is
+ * recorded per chain from the on-chain `name()` / `version()` values.
+ */
+export interface Eip712TokenDomain {
+  name: string
+  version: string
+}
+
 export interface EnvConfig {
   caip2: string
   usdc: string
+  usdcEip712?: Eip712TokenDomain
   cctpDomain: number
   cctpTokenMessenger: string
   cctpMessageTransmitter: string
@@ -87,6 +98,7 @@ export interface ResolvedNetwork {
   slug: ChainSlug
   caip2: string
   usdc: string
+  usdcEip712?: Eip712TokenDomain
   cctpDomain: number
   cctpTokenMessenger: string
   cctpMessageTransmitter: string

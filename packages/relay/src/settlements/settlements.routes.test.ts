@@ -4,11 +4,17 @@ import {
   mockDb,
   mockRedis,
   mockTemporal,
+  buildPaymentRequest,
+  TEST_BUYER_ADDRESS,
+  TEST_PULL_TX,
   TEST_SELLER,
-  FACILITATOR_ADDRESSES,
 } from '@/shared/test-helpers'
 import { Elysia } from 'elysia'
 import { settlementsRoutes } from './settlements.routes'
+
+// See the note in settlements.service.test.ts — deliberately not cleaned up.
+process.env.SETTLE_WAIT_TIMEOUT_MS = '300'
+process.env.SETTLE_POLL_INTERVAL_MS = '20'
 
 const app = new Elysia()
   .onError(({ error, set }) => {
@@ -21,168 +27,104 @@ const app = new Elysia()
   })
   .use(settlementsRoutes)
 
-const validRequest = {
-  x402Version: 2,
-  paymentPayload: { payload: { signature: '0xValidSignature1234567890abcdef' } },
-  paymentRequirements: {
-    scheme: 'exact',
-    network: 'eip155:8453',
-    payTo: '0xFacilitatorBase',
-    amount: '1000000',
-    extra: { merchantId: 'ab-test01' },
-  },
-}
+const post = (path: string, body: unknown) =>
+  app.handle(
+    new Request(`http://localhost${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }),
+  )
 
 describe('POST /verify', () => {
   beforeEach(() => {
     resetAllMocks()
+    mockDb.setSellers([TEST_SELLER])
   })
 
   test('returns 200 with isValid true for a valid payment', async () => {
-    mockDb.setSellers([TEST_SELLER])
-
-    const res = await app.handle(
-      new Request('http://localhost/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(validRequest),
-      }),
-    )
+    const res = await post('/verify', await buildPaymentRequest())
 
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.isValid).toBe(true)
+    expect(body.payer).toBe(TEST_BUYER_ADDRESS)
+  })
+
+  test('returns 200 with isValid false and a spec error code for a bad signature', async () => {
+    const req = await buildPaymentRequest()
+    req.paymentPayload.payload.signature = '0xnotasignature'
+
+    const res = await post('/verify', req)
+
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.isValid).toBe(false)
+    expect(body.invalidReason).toBe('invalid_exact_evm_payload_signature')
+    expect(body.invalidMessage).toBeString()
   })
 })
 
 describe('POST /settle', () => {
   beforeEach(() => {
     resetAllMocks()
+    mockDb.setSellers([TEST_SELLER])
   })
 
-  test('returns 200 with success for a valid settlement', async () => {
-    mockDb.setSellers([TEST_SELLER])
-
-    const req = {
-      x402Version: 2,
-      paymentPayload: {
-        payload: {
-          authorization: {
-            from: '0xBuyerAddr',
-            to: '0xFacilitatorBase',
-            value: '1000000',
-            validAfter: '0',
-            validBefore: '9999999999',
-            nonce: '0x1',
-          },
-          signature: '0xSettleRouteSig_aaaa1234567890',
-        },
-      },
-      paymentRequirements: {
-        scheme: 'exact',
-        network: 'eip155:8453',
-        payTo: FACILITATOR_ADDRESSES['eip155:8453'],
-        amount: '1000000',
-        extra: { merchantId: 'ab-test01' },
-      },
-    }
-
-    const res = await app.handle(
-      new Request('http://localhost/settle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(req),
-      }),
-    )
+  test('returns 200 with the capture tx hash for a settled payment', async () => {
+    const res = await post('/settle', await buildPaymentRequest())
 
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.success).toBe(true)
-    expect(body.transaction).toBeString()
+    expect(body.transaction).toBe(TEST_PULL_TX)
     expect(body.network).toBe('eip155:8453')
+    expect(body.payer).toBe(TEST_BUYER_ADDRESS)
+  })
+
+  test('returns 200 with success false when the workflow fails', async () => {
+    mockTemporal.setStatus({ step: 'pulling' })
+    mockTemporal.setFailure(new Error('pull reverted'))
+
+    const res = await post('/settle', await buildPaymentRequest())
+
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.success).toBe(false)
+    expect(body.transaction).toBe('')
+    expect(body.errorReason).toBe('unexpected_settle_error')
+    expect(body.workflowId).toBeString()
+  })
+
+  test('returns 200 with success false for an invalid payment', async () => {
+    const req = await buildPaymentRequest()
+    req.paymentPayload.payload.signature = '0xnotasignature'
+
+    const res = await post('/settle', req)
+
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.success).toBe(false)
+    expect(body.errorReason).toBe('invalid_exact_evm_payload_signature')
   })
 
   test('returns 409 for a replayed transaction', async () => {
-    mockDb.setSellers([TEST_SELLER])
-    const sig = '0xReplayRouteSig_bbbb1234567890ab'
-    mockRedis._store.set(`402md:replay:${sig}`, '1')
+    const req = await buildPaymentRequest()
+    mockRedis._store.set(`402md:replay:${req.paymentPayload.payload.signature}`, '1')
 
-    const req = {
-      x402Version: 2,
-      paymentPayload: {
-        payload: {
-          authorization: {
-            from: '0xBuyerAddr',
-            to: '0xFacilitatorBase',
-            value: '1000000',
-            validAfter: '0',
-            validBefore: '9999999999',
-            nonce: '0x1',
-          },
-          signature: sig,
-        },
-      },
-      paymentRequirements: {
-        scheme: 'exact',
-        network: 'eip155:8453',
-        payTo: FACILITATOR_ADDRESSES['eip155:8453'],
-        amount: '1000000',
-        extra: { merchantId: 'ab-test01' },
-      },
-    }
-
-    const res = await app.handle(
-      new Request('http://localhost/settle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(req),
-      }),
-    )
+    const res = await post('/settle', req)
 
     expect(res.status).toBe(409)
-    const body = await res.json()
-    expect(body.error).toBe('REPLAY_DETECTED')
+    expect((await res.json()).error).toBe('REPLAY_DETECTED')
   })
 
-  test('returns 503 when circuit breaker is active', async () => {
-    mockDb.setSellers([TEST_SELLER])
+  test('returns 503 when the circuit breaker is active', async () => {
     mockRedis._store.set('402md:pause', 'true')
 
-    const req = {
-      x402Version: 2,
-      paymentPayload: {
-        payload: {
-          authorization: {
-            from: '0xBuyerAddr',
-            to: '0xFacilitatorBase',
-            value: '1000000',
-            validAfter: '0',
-            validBefore: '9999999999',
-            nonce: '0x1',
-          },
-          signature: '0xPausedRouteSig_cccc1234567890',
-        },
-      },
-      paymentRequirements: {
-        scheme: 'exact',
-        network: 'eip155:8453',
-        payTo: FACILITATOR_ADDRESSES['eip155:8453'],
-        amount: '1000000',
-        extra: { merchantId: 'ab-test01' },
-      },
-    }
-
-    const res = await app.handle(
-      new Request('http://localhost/settle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(req),
-      }),
-    )
+    const res = await post('/settle', await buildPaymentRequest())
 
     expect(res.status).toBe(503)
-    const body = await res.json()
-    expect(body.error).toBe('CIRCUIT_BREAKER')
+    expect((await res.json()).error).toBe('CIRCUIT_BREAKER')
   })
 })
 
@@ -197,8 +139,7 @@ describe('GET /bridge/status/:id', () => {
     const res = await app.handle(new Request('http://localhost/bridge/status/cross-abc-123'))
 
     expect(res.status).toBe(200)
-    const body = await res.json()
-    expect(body.status).toBe('settled')
+    expect((await res.json()).status).toBe('settled')
   })
 })
 
